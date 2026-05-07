@@ -9,6 +9,8 @@ import { AdminPage } from "./pages/AdminPage";
 import { PaymentResultPage } from "./pages/PaymentResultPage";
 import { LoginPage } from "./pages/LoginPage";
 import { UserDashboardPage } from "./pages/UserDashboardPage";
+import { UserReviewDetailPage } from "./pages/UserReviewDetailPage";
+import { AdminReviewDetailPage } from "./pages/AdminReviewDetailPage";
 import { useCart } from "./hooks/useCart";
 import { appTheme } from "./theme/theme";
 
@@ -27,7 +29,9 @@ function App() {
               <Route path="/blogs" element={<BlogsPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/review/:id" element={<AdminReviewDetailPage />} />
               <Route path="/dashboard" element={<UserDashboardPage />} />
+              <Route path="/dashboard/review/:id" element={<UserReviewDetailPage />} />
               <Route path="/payment/success" element={<PaymentResultPage success />} />
               <Route path="/payment/cancel" element={<PaymentResultPage success={false} />} />
               <Route path="*" element={<Navigate to="/" />} />

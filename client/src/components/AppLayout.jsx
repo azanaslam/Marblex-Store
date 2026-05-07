@@ -23,7 +23,7 @@ export const AppLayout = ({ cartCount, children }) => {
 
   const authUser = authUserFromStorage || (tokenPayload ? { role: tokenPayload.role } : null);
   const isUserLoggedIn = Boolean(authUser);
-  const isCustomer = authUser?.role === "user";
+  const isCustomer = Boolean(authUser) && authUser?.role !== "admin";
   const isAdmin = authUser?.role === "admin";
   const customerLabel = authUser?.name ? `${authUser.name.split(" ")[0]} Dashboard` : "My Dashboard";
   const logout = () => {

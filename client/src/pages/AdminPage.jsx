@@ -53,6 +53,8 @@ export const AdminPage = () => {
   const [blogs, setBlogs] = useState([]);
   const [blog, setBlog] = useState({ title: "", coverImage: "", content: "", tags: "", published: true });
   const [editingBlogId, setEditingBlogId] = useState("");
+  const [reviewItems, setReviewItems] = useState([]);
+  const [orderLookup, setOrderLookup] = useState({ q: "", all: [], filtered: [] });
   const [toast, setToast] = useState({ open: false, type: "success", message: "" });
 
   const showToast = (type, message) => setToast({ open: true, type, message });
@@ -60,13 +62,15 @@ export const AdminPage = () => {
   const loadDashboardData = useCallback(async () => {
     if (!token) return;
     const headers = authHeaders(token);
-    const [overviewRes, blogsRes, websiteRes, whatsappRes, usersRes, productsRes] = await Promise.all([
+    const [overviewRes, blogsRes, websiteRes, whatsappRes, usersRes, productsRes, reviewRes, allOrdersRes] = await Promise.all([
       http.get("/admin/overview", headers),
       http.get("/admin/blogs", headers),
       http.get("/admin/orders/website", headers),
       http.get("/admin/orders/whatsapp", headers),
       http.get("/admin/users", headers),
       http.get("/products"),
+      http.get("/product-reviews/admin/list", headers),
+      http.get("/admin/orders/all", headers),
     ]);
 
     setOverview(overviewRes.data);
@@ -75,6 +79,9 @@ export const AdminPage = () => {
     setWhatsappData(whatsappRes.data);
     setUsersData(usersRes.data);
     setProducts(productsRes.data || []);
+    setReviewItems(reviewRes.data || []);
+    const orders = allOrdersRes.data?.orders || [];
+    setOrderLookup({ q: "", all: orders, filtered: orders });
   }, [token]);
 
   useEffect(() => {
@@ -83,6 +90,12 @@ export const AdminPage = () => {
 
   useEffect(() => {
     const n = location.state?.chatUnread;
+    const backTab = location.state?.adminTab;
+    if (typeof backTab === "number") {
+      setActiveTab(backTab);
+      navigate("/admin", { replace: true, state: {} });
+      return;
+    }
     if (typeof n === "number" && n > 0) {
       showToast("info", `You have ${n} unread message${n === 1 ? "" : "s"} from users. Open the Chats tab.`);
       navigate("/admin", { replace: true, state: {} });
@@ -248,6 +261,19 @@ export const AdminPage = () => {
     showToast("success", nextGranted ? "User approved — they can log in now." : "Login access revoked.");
   };
 
+  const filterOrderLookup = (query, allOrders) => {
+    const q = String(query || "").trim().toLowerCase();
+    if (!q) return allOrders;
+    return allOrders.filter((order) => {
+      const shortId = String(order._id || "").slice(-6).toLowerCase();
+      return shortId.includes(q) || String(order._id || "").toLowerCase().includes(q);
+    });
+  };
+
+  const setOrderLookupQuery = (q) => {
+    setOrderLookup((prev) => ({ ...prev, q, filtered: filterOrderLookup(q, prev.all) }));
+  };
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -289,6 +315,7 @@ export const AdminPage = () => {
     { label: "Sun", value: 66 },
   ];
   const productImagesCount = products.filter((item) => item.imageUrl).length;
+  const reviewQueue = reviewItems.filter((item) => item.status !== "published");
 
   const renderOrderList = (orders) => (
     <Stack spacing={1.5}>
@@ -405,6 +432,8 @@ export const AdminPage = () => {
                 }
               />
               <Tab label="Broadcast" />
+              <Tab label="Product Review" />
+              <Tab label="Order Lookup" />
             </Tabs>
             <Button
               fullWidth
@@ -445,6 +474,8 @@ export const AdminPage = () => {
                 }
               />
               <Tab label="Broadcast" />
+              <Tab label="Review" />
+              <Tab label="Lookup" />
             </Tabs>
             <Button
               fullWidth
@@ -1058,6 +1089,84 @@ export const AdminPage = () => {
           )}
 
           {activeTab === 7 && <AdminBroadcastTab token={token} showToast={showToast} />}
+          {activeTab === 8 && (
+            <Stack spacing={2}>
+              {!reviewQueue.length && (
+                <Paper sx={{ p: 2, borderRadius: 2.5 }}>
+                  <Typography color="text.secondary">No product review submissions yet.</Typography>
+                </Paper>
+              )}
+              <Grid container spacing={1.5}>
+                {reviewQueue.map((item) => (
+                  <Grid key={item._id} size={{ xs: 12, md: 6 }}>
+                    <Card variant="outlined" sx={{ borderRadius: 2.5, height: "100%", cursor: "pointer" }} onClick={() => navigate(`/admin/review/${item._id}`)}>
+                      <CardContent>
+                        <Stack direction="row" spacing={1.25}>
+                          <Box
+                            component="img"
+                            src={item.imageUrl || "/icons.svg"}
+                            alt={item.name}
+                            sx={{ width: 84, height: 84, borderRadius: 1.5, objectFit: "cover", bgcolor: "#f3f4f6", flexShrink: 0 }}
+                          />
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Stack direction="row" justifyContent="space-between" spacing={1}>
+                              <Typography fontWeight={800} noWrap>
+                                {item.name}
+                              </Typography>
+                              <Chip label={item.status} size="small" />
+                            </Stack>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                              by {item.submittedBy?.name || "Subowner"} · PKR {item.price} · Stock {item.stock}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.4 }}>
+                              {item.submittedBy?.email || "—"} · ID: {String(item.submittedBy?._id || "").slice(-8)}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.7 }}>
+                              Comments: {(item.comments || []).length}
+                            </Typography>
+                            <Button size="small" sx={{ mt: 1 }}>
+                              Open review details
+                            </Button>
+                          </Box>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Stack>
+          )}
+          {activeTab === 9 && (
+            <Stack spacing={2}>
+              <Paper sx={{ p: 2, borderRadius: 2.5 }}>
+                <Typography variant="h6" fontWeight={700} mb={1}>
+                  Order lookup
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Search by order shortcut ID (last 6 chars)"
+                  value={orderLookup.q}
+                  onChange={(e) => setOrderLookupQuery(e.target.value)}
+                />
+              </Paper>
+              {orderLookup.filtered.map((order) => (
+                <Paper key={order._id} sx={{ p: 2, borderRadius: 2.5, border: "1px solid #e5e7eb" }}>
+                  <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between">
+                    <Typography fontWeight={800}>
+                      Order #{String(order._id).slice(-6)} ({order.channel})
+                    </Typography>
+                    <Chip label={order.paymentStatus} color={order.paymentStatus === "paid" ? "success" : "warning"} />
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    {order.customerName} · {order.email} · {order.phone}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.6 }}>
+                    Items: {(order.items || []).map((i) => `${i.name} x${i.quantity}`).join(", ")}
+                  </Typography>
+                </Paper>
+              ))}
+            </Stack>
+          )}
         </Grid>
       </Grid>
 

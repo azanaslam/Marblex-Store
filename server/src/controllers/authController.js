@@ -74,9 +74,36 @@ const login = async (req, res) => {
       email: user.email,
       role: user.role,
       isAccessGranted: user.isAccessGranted !== false,
+      avatarUrl: user.avatarUrl || "",
+      phone: user.phone || "",
+      gender: user.gender || "prefer_not_to_say",
     },
     chatUnread,
   });
 };
 
-module.exports = { register, login };
+const getMyProfile = async (req, res) => {
+  const user = await User.findById(req.user.id).select("-passwordHash");
+  if (!user) return res.status(404).json({ message: "User not found" });
+  return res.json(user);
+};
+
+const updateMyProfile = async (req, res) => {
+  const updates = {
+    name: String(req.body?.name || "").trim(),
+    phone: String(req.body?.phone || "").trim(),
+    avatarUrl: String(req.body?.avatarUrl || "").trim(),
+    gender: String(req.body?.gender || "prefer_not_to_say"),
+  };
+  if (!updates.name) {
+    return res.status(400).json({ message: "Name is required" });
+  }
+  const allowedGenders = ["male", "female", "other", "prefer_not_to_say"];
+  if (!allowedGenders.includes(updates.gender)) {
+    return res.status(400).json({ message: "Invalid gender value" });
+  }
+  const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select("-passwordHash");
+  return res.json(user);
+};
+
+module.exports = { register, login, getMyProfile, updateMyProfile };

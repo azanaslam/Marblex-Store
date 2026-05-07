@@ -47,6 +47,11 @@ const getWhatsappOrders = async (_, res) => {
   res.json({ totalOrders: orders.length, totalAmount, orders });
 };
 
+const getAllOrders = async (_, res) => {
+  const orders = await Order.find().sort({ createdAt: -1 });
+  res.json({ totalOrders: orders.length, orders });
+};
+
 const getUsers = async (_, res) => {
   const users = await User.find({}, { passwordHash: 0 }).sort({ createdAt: -1 });
   res.json({ totalUsers: users.length, users });
@@ -106,6 +111,7 @@ module.exports = {
   getPaidOrders,
   getWebsiteOrders,
   getWhatsappOrders,
+  getAllOrders,
   getUsers,
   toggleUserBlockStatus,
   toggleUserAccess,

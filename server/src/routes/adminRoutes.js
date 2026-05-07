@@ -6,6 +6,7 @@ const {
   getPaidOrders,
   getWebsiteOrders,
   getWhatsappOrders,
+  getAllOrders,
   getUsers,
   toggleUserBlockStatus,
   toggleUserAccess,
@@ -24,6 +25,7 @@ router.get("/blogs", auth, adminOnly, getAllBlogs);
 router.get("/orders/paid", auth, adminOnly, getPaidOrders);
 router.get("/orders/website", auth, adminOnly, getWebsiteOrders);
 router.get("/orders/whatsapp", auth, adminOnly, getWhatsappOrders);
+router.get("/orders/all", auth, adminOnly, getAllOrders);
 router.get("/users", auth, adminOnly, getUsers);
 router.patch("/users/:id/block", auth, adminOnly, toggleUserBlockStatus);
 router.patch("/users/:id/access", auth, adminOnly, toggleUserAccess);

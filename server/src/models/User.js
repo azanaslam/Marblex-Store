@@ -9,6 +9,9 @@ const userSchema = new mongoose.Schema(
     isBlocked: { type: Boolean, default: false },
     /** New signups are false until admin approves in dashboard. Admins ignore this. */
     isAccessGranted: { type: Boolean, default: false },
+    avatarUrl: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    gender: { type: String, enum: ["male", "female", "other", "prefer_not_to_say"], default: "prefer_not_to_say" },
   },
   { timestamps: true }
 );
