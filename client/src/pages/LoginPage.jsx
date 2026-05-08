@@ -134,7 +134,14 @@ export const LoginPage = () => {
           </Tabs>
 
           {tab === 0 && (
-            <Stack spacing={1.5}>
+            <Stack
+              spacing={1.5}
+              component="form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                login();
+              }}
+            >
               <TextField
                 label="Email"
                 value={loginForm.email}
@@ -152,7 +159,7 @@ export const LoginPage = () => {
                   setLoginAssist(null);
                 }}
               />
-              <Button variant="contained" size="large" onClick={login}>
+              <Button type="submit" variant="contained" size="large">
                 Login
               </Button>
               {loginAssist && loginAssist.code === "PENDING_APPROVAL" && (
@@ -205,11 +212,18 @@ export const LoginPage = () => {
           )}
 
           {tab === 1 && (
-            <Stack spacing={1.5}>
+            <Stack
+              spacing={1.5}
+              component="form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                register();
+              }}
+            >
               <TextField label="Name" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
               <TextField label="Email" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
               <TextField label="Password" type="password" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
-              <Button variant="contained" size="large" onClick={register}>
+              <Button type="submit" variant="contained" size="large">
                 Create account
               </Button>
               <Typography variant="caption" color="text.secondary">

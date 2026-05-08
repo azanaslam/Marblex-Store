@@ -19,10 +19,11 @@ export const useCart = () => {
   }, [cart]);
 
   const addToCart = (product) => {
+    const qtyToAdd = product.quantity || 1;
     const existing = cart.find((item) => item.productId === product._id);
     const next = existing
-      ? cart.map((item) => (item.productId === product._id ? { ...item, quantity: item.quantity + 1, imageUrl: item.imageUrl || product.imageUrl } : item))
-      : [...cart, { productId: product._id, name: product.name, price: product.price, quantity: 1, imageUrl: product.imageUrl }];
+      ? cart.map((item) => (item.productId === product._id ? { ...item, quantity: item.quantity + qtyToAdd, imageUrl: item.imageUrl || product.imageUrl } : item))
+      : [...cart, { productId: product._id, name: product.name, price: product.price, quantity: qtyToAdd, imageUrl: product.imageUrl }];
     setCart(next);
   };
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Avatar,
   Badge,
@@ -17,6 +17,7 @@ import { getAuthUser } from "../auth/session";
 import { ChatEmojiPickerButton } from "./chat/ChatEmojiPickerButton";
 import { ChatMessageBubble } from "./chat/ChatMessageBubble";
 import { useChatAutoScroll } from "../hooks/useChatAutoScroll";
+import { getAuthedSocket } from "../realtime/socket";
 
 const threadListSx = {
   "&::-webkit-scrollbar": { width: 6 },
@@ -51,13 +52,13 @@ export const AdminMessengerTab = ({ token, showToast }) => {
     loadingMessages
   );
 
-  const headers = authHeaders(token);
+  const headers = useMemo(() => authHeaders(token), [token]);
 
   const loadThreads = useCallback(async () => {
     const res = await http.get("/admin/chat/threads", headers);
     setThreads(res.data || []);
     setLoadingThreads(false);
-  }, [token]);
+  }, [headers]);
 
   const loadMessages = useCallback(
     async (userId) => {
@@ -67,7 +68,7 @@ export const AdminMessengerTab = ({ token, showToast }) => {
       setMessages(res.data || []);
       setLoadingMessages(false);
     },
-    [token]
+    [headers]
   );
 
   useEffect(() => {
@@ -86,12 +87,50 @@ export const AdminMessengerTab = ({ token, showToast }) => {
   }, [selectedUserId, stickToBottomNext]);
 
   useEffect(() => {
-    const t = setInterval(() => {
+    const socket = getAuthedSocket(token);
+    if (!socket) return;
+
+    const mergeMessage = (msg) => {
+      if (!msg?._id) return;
+      setMessages((prev) => {
+        const idx = prev.findIndex((m) => m._id === msg._id);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = msg;
+          return next;
+        }
+        const next = [...prev, msg];
+        next.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        return next;
+      });
+    };
+
+    const maybeMergeSelectedThread = (msg) => {
+      if (!selectedUserId) return;
+      const sid = String(msg?.sender?._id || msg?.sender);
+      const rid = String(msg?.recipient?._id || msg?.recipient);
+      if (sid === String(selectedUserId) || rid === String(selectedUserId)) {
+        mergeMessage(msg);
+      }
+    };
+
+    const onNewMessage = (msg) => {
       loadThreads().catch(() => {});
-      if (selectedUserId) loadMessages(selectedUserId).catch(() => {});
-    }, 6000);
-    return () => clearInterval(t);
-  }, [loadThreads, loadMessages, selectedUserId]);
+      maybeMergeSelectedThread(msg);
+    };
+    const onMessageUpdated = (msg) => {
+      loadThreads().catch(() => {});
+      maybeMergeSelectedThread(msg);
+    };
+
+    socket.on("new_message", onNewMessage);
+    socket.on("message_updated", onMessageUpdated);
+
+    return () => {
+      socket.off("new_message", onNewMessage);
+      socket.off("message_updated", onMessageUpdated);
+    };
+  }, [token, selectedUserId, loadThreads]);
 
   const sendReply = async () => {
     if (!selectedUserId || !draft.trim()) return;
@@ -344,14 +383,14 @@ export const AdminMessengerTab = ({ token, showToast }) => {
                 ) : (
                   <Stack spacing={1.75}>
                     {messages.map((m) => {
-                      const isAdmin = m.sender?.role === "admin";
+                      const isStaff = m.sender?.role === "admin" || m.sender?.role === "subowner";
                       return (
                         <ChatMessageBubble
                           key={m._id}
                           message={m}
                           currentUserId={adminUser?.id}
-                          variant={isAdmin ? "outgoing" : "incoming"}
-                          headerLabel={isAdmin ? "You (Admin)" : m.sender?.name || "User"}
+                          variant={isStaff ? "outgoing" : "incoming"}
+                          headerLabel={isStaff ? "You (Staff)" : m.sender?.name || "User"}
                           reactingId={reactingId}
                           onReact={reactTo}
                         />

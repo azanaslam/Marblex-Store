@@ -108,4 +108,26 @@ const getMyOrders = async (req, res) => {
   res.json(orders);
 };
 
-module.exports = { createOrder, verifyStripeSession, getMyOrders };
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { orderStatus } = req.body;
+    const order = await Order.findByIdAndUpdate(id, { orderStatus }, { new: true });
+    res.json({ success: true, order });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updatePaymentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paymentStatus } = req.body;
+    const order = await Order.findByIdAndUpdate(id, { paymentStatus }, { new: true });
+    res.json({ success: true, order });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createOrder, verifyStripeSession, getMyOrders, updateOrderStatus, updatePaymentStatus };

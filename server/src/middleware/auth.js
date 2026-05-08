@@ -48,4 +48,11 @@ const adminOnly = (req, res, next) => {
   return next();
 };
 
-module.exports = { auth, optionalAuth, adminOnly };
+const staffOnly = (req, res, next) => {
+  if (!req.user || (req.user.role !== "admin" && req.user.role !== "subowner")) {
+    return res.status(403).json({ message: "Staff access required" });
+  }
+  return next();
+};
+
+module.exports = { auth, optionalAuth, adminOnly, staffOnly };

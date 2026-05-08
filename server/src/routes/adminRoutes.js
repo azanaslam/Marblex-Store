@@ -1,5 +1,5 @@
 const express = require("express");
-const { auth, adminOnly } = require("../middleware/auth");
+const { auth, adminOnly, staffOnly } = require("../middleware/auth");
 const {
   getOverview,
   getAllBlogs,
@@ -10,6 +10,9 @@ const {
   getUsers,
   toggleUserBlockStatus,
   toggleUserAccess,
+  updateUserRole,
+  getEmailConfig,
+  updateEmailConfig,
 } = require("../controllers/adminController");
 const {
   getChatThreads,
@@ -17,6 +20,7 @@ const {
   sendAdminReply,
   createBroadcast,
 } = require("../controllers/chatController");
+const { updateOrderStatus, updatePaymentStatus } = require("../controllers/orderController");
 
 const router = express.Router();
 
@@ -26,12 +30,17 @@ router.get("/orders/paid", auth, adminOnly, getPaidOrders);
 router.get("/orders/website", auth, adminOnly, getWebsiteOrders);
 router.get("/orders/whatsapp", auth, adminOnly, getWhatsappOrders);
 router.get("/orders/all", auth, adminOnly, getAllOrders);
+router.patch("/orders/:id/status", auth, adminOnly, updateOrderStatus);
+router.patch("/orders/:id/payment", auth, adminOnly, updatePaymentStatus);
 router.get("/users", auth, adminOnly, getUsers);
 router.patch("/users/:id/block", auth, adminOnly, toggleUserBlockStatus);
 router.patch("/users/:id/access", auth, adminOnly, toggleUserAccess);
-router.get("/chat/threads", auth, adminOnly, getChatThreads);
-router.get("/chat/thread/:userId", auth, adminOnly, getThreadMessages);
-router.post("/chat/thread/:userId", auth, adminOnly, sendAdminReply);
-router.post("/broadcast", auth, adminOnly, createBroadcast);
+router.patch("/users/:id/role", auth, adminOnly, updateUserRole);
+router.get("/chat/threads", auth, staffOnly, getChatThreads);
+router.get("/chat/thread/:userId", auth, staffOnly, getThreadMessages);
+router.post("/chat/thread/:userId", auth, staffOnly, sendAdminReply);
+router.post("/broadcast", auth, staffOnly, createBroadcast);
+router.get("/email-settings", auth, adminOnly, getEmailConfig);
+router.post("/email-settings", auth, adminOnly, updateEmailConfig);
 
 module.exports = router;

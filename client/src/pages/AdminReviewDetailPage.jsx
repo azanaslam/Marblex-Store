@@ -136,121 +136,177 @@ export const AdminReviewDetailPage = () => {
 
   const openMenu = (event, comment) => setMenuState({ anchorEl: event.currentTarget, comment });
   const closeMenu = () => setMenuState({ anchorEl: null, comment: null });
+  const isMyComment = (c) => c.author?._id === me?.id;
 
   if (!token) return <Navigate to="/login" replace />;
 
   return (
-    <Stack spacing={2}>
-      <Button
-        variant="text"
-        startIcon={<ArrowBackRoundedIcon />}
-        sx={{ alignSelf: "flex-start" }}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Back Button */}
+      <button 
         onClick={() => navigate("/admin", { state: { adminTab: 8 } })}
+        className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold transition-colors w-fit px-4 py-2 rounded-xl hover:bg-slate-100"
       >
-        Back to product review
-      </Button>
-      {!item ? (
-        <Alert severity="info">Loading product review...</Alert>
-      ) : (
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 7 }}>
-            <Paper sx={{ p: 2.2, borderRadius: 3 }}>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <Box
-                  component="img"
-                  src={draft.imageUrl || "/icons.svg"}
-                  alt={draft.name}
-                  sx={{ width: { xs: "100%", sm: 240 }, height: 190, objectFit: "cover", borderRadius: 2, bgcolor: "#f3f4f6" }}
-                />
-                <Stack spacing={1} sx={{ minWidth: 0, flex: 1 }}>
-                  <TextField size="small" label="Name" value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} />
-                  <TextField size="small" label="Image URL" value={draft.imageUrl} onChange={(e) => setDraft((p) => ({ ...p, imageUrl: e.target.value }))} />
-                  <Stack direction="row" spacing={1}>
-                    <TextField size="small" label="Price" type="number" value={draft.price} onChange={(e) => setDraft((p) => ({ ...p, price: e.target.value }))} />
-                    <TextField size="small" label="Stock" type="number" value={draft.stock} onChange={(e) => setDraft((p) => ({ ...p, stock: e.target.value }))} />
-                  </Stack>
-                  <TextField size="small" label="Category" value={draft.category} onChange={(e) => setDraft((p) => ({ ...p, category: e.target.value }))} />
-                  <TextField size="small" multiline minRows={3} label="Description" value={draft.description} onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))} />
-                </Stack>
-              </Stack>
+        <ArrowBackRoundedIcon fontSize="small" /> Back to Product Review
+      </button>
 
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mt={1.4}>
-                <Chip label={item.status} color={STATUS_COLOR[item.status] || "default"} />
-                <TextField
-                  select
-                  size="small"
-                  label="Status"
-                  value={item.status || "pending"}
-                  onChange={(e) => updateStatus(e.target.value)}
-                  sx={{ minWidth: 170 }}
-                >
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="looking">Looking</MenuItem>
-                  <MenuItem value="edit">Need Edit</MenuItem>
-                  <MenuItem value="rejected">Reject</MenuItem>
-                  <MenuItem value="published">Published</MenuItem>
-                </TextField>
-                <Button size="small" variant="contained" color="success" onClick={publish}>Publish</Button>
-                <Button size="small" variant="contained" onClick={saveDraftEdits}>Save Draft Edits</Button>
-                <Button size="small" variant="outlined" color="error" startIcon={<DeleteOutlineRoundedIcon />} onClick={deleteSubmission}>
-                  Delete
-                </Button>
-              </Stack>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 5 }}>
-            <Paper sx={{ p: 2.2, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight={800} mb={1.2}>Review comments</Typography>
-              <Stack spacing={1}>
-                {(item.comments || []).map((c) => (
-                  <Paper
-                    key={c._id}
-                    variant="outlined"
-                    onTouchStart={() => onCommentTouchStart(c._id)}
-                    onTouchEnd={onCommentTouchEnd}
-                    onTouchCancel={onCommentTouchEnd}
-                    sx={{
-                      p: 1.2,
-                      borderRadius: 2,
-                      ml: c.author?.role === "admin" ? "auto" : 0,
-                      maxWidth: "88%",
-                      bgcolor: c.author?.role === "admin" ? "rgba(33, 150, 243, 0.08)" : "#fff",
-                      "& .react-trigger": { opacity: { xs: activeMobileCommentId === c._id ? 1 : 0, md: 0 } },
-                      "&:hover .react-trigger": { opacity: { md: 1 } },
-                    }}
+      {!item ? (
+        <div className="bg-blue-50 text-blue-700 p-4 rounded-2xl font-bold animate-pulse border border-blue-100 flex items-center justify-center min-h-[200px]">
+          Loading product review details...
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column: Product Review Form */}
+          <div className="lg:col-span-7">
+            <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
+              <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight mb-6">Review Submission</h2>
+              
+              <div className="flex flex-col sm:flex-row gap-6 mb-8">
+                <div className="w-full sm:w-1/3">
+                  <img
+                    src={draft.imageUrl || "https://placehold.co/400x400/e2e8f0/475569?text=Product"}
+                    alt={draft.name}
+                    className="w-full aspect-square object-cover rounded-2xl bg-slate-100 border border-slate-200 shadow-sm"
+                  />
+                </div>
+                
+                <div className="w-full sm:w-2/3 space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Product Name</label>
+                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Image URL</label>
+                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" value={draft.imageUrl} onChange={(e) => setDraft((p) => ({ ...p, imageUrl: e.target.value }))} />
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Price (PKR)</label>
+                      <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" value={draft.price} onChange={(e) => setDraft((p) => ({ ...p, price: e.target.value }))} />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Stock</label>
+                      <input type="number" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" value={draft.stock} onChange={(e) => setDraft((p) => ({ ...p, stock: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category</label>
+                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" value={draft.category} onChange={(e) => setDraft((p) => ({ ...p, category: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mb-8">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Description</label>
+                <textarea rows="4" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-y" value={draft.description} onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))}></textarea>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center gap-3">
+                <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider border ${item.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : item.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' : item.status === 'edit' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                  {item.status}
+                </span>
+                
+                <div className="relative border border-slate-200 rounded-xl overflow-hidden min-w-[140px] bg-white">
+                  <select
+                    className="w-full appearance-none bg-transparent px-4 py-2 text-sm font-bold text-slate-700 focus:outline-none cursor-pointer"
+                    value={item.status || "pending"}
+                    onChange={(e) => updateStatus(e.target.value)}
                   >
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
-                      <Typography variant="body2" fontWeight={700}>{c.author?.name || "User"}</Typography>
-                      <IconButton className="react-trigger" size="small" onClick={(e) => openMenu(e, c)}>
-                        <MoreVertRoundedIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                    {editingCommentId === c._id ? (
-                      <Stack direction="row" spacing={1} mt={0.5}>
-                        <TextField size="small" fullWidth value={editingBody} onChange={(e) => setEditingBody(e.target.value)} />
-                        <Button size="small" variant="contained" onClick={editComment}>Save</Button>
-                      </Stack>
-                    ) : (
-                      <Typography variant="body2">{c.body}</Typography>
-                    )}
-                    <Stack direction="row" alignItems="center" spacing={1} mt={0.8}>
-                      <Box className="react-trigger" sx={{ transition: "opacity .18s ease" }}>
-                        <ChatEmojiPickerButton size="small" onPick={(emoji) => reactComment(c._id, emoji)} />
-                      </Box>
-                      <Stack direction="row" spacing={0.6} flexWrap="wrap" useFlexGap>
-                        {(grouped.get(c._id) || []).map((x) => (
-                          <Chip key={`${c._id}-${x}`} size="small" variant="outlined" label={x} />
-                        ))}
-                      </Stack>
-                    </Stack>
-                  </Paper>
-                ))}
-              </Stack>
-              <Stack direction="row" spacing={1} mt={1.5}>
+                    <option value="pending">Pending</option>
+                    <option value="looking">Looking</option>
+                    <option value="edit">Need Edit</option>
+                    <option value="rejected">Reject</option>
+                    <option value="published">Published</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-[10px]"></div>
+
+                <button onClick={publish} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 transition-all text-sm">
+                  Publish
+                </button>
+                <button onClick={saveDraftEdits} className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold shadow-md shadow-slate-900/20 transition-all text-sm">
+                  Save Draft Edits
+                </button>
+                <button onClick={deleteSubmission} className="flex items-center gap-1.5 px-4 py-2.5 border border-rose-200 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 rounded-xl font-bold transition-all text-sm">
+                  <DeleteOutlineRoundedIcon fontSize="small" /> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right Column: Review Comments */}
+          <div className="lg:col-span-5 flex flex-col relative">
+            <div className="sticky top-8 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 flex-1 flex flex-col max-h-[550px] lg:h-[550px]">
+              <h3 className="text-xl font-extrabold text-slate-900 mb-6 tracking-tight flex items-center gap-2">
+                Review Comments
+                <span className="bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-lg text-xs border border-blue-100">{(item.comments || []).length}</span>
+              </h3>
+              
+              {/* Chat Area */}
+              <div className="flex-1 overflow-y-auto pr-3 space-y-5 mb-6 custom-scrollbar">
+                {(item.comments || []).map((c) => {
+                  const myComment = isMyComment(c);
+                  return (
+                    <div
+                      key={c._id}
+                      onTouchStart={() => onCommentTouchStart(c._id)}
+                      onTouchEnd={onCommentTouchEnd}
+                      onTouchCancel={onCommentTouchEnd}
+                      className={`relative flex flex-col w-full group ${myComment ? 'items-end' : 'items-start'}`}
+                    >
+                      <div className={`flex flex-col max-w-[85%] ${myComment ? 'items-end' : 'items-start'}`}>
+                        <div className={`px-4 py-2.5 rounded-2xl shadow-sm border ${myComment ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-br-sm border-blue-700/20' : 'bg-slate-50 text-slate-800 rounded-bl-sm border-slate-200'}`}>
+                          <div className="flex items-center justify-between gap-3 mb-1">
+                            <span className={`text-[11px] font-bold uppercase tracking-wider ${myComment ? 'text-blue-100' : 'text-slate-400'}`}>{c.author?.name || "User"}</span>
+                            <button className={`opacity-0 group-hover:opacity-100 transition-opacity ${myComment ? 'text-white/80 hover:text-white' : 'text-slate-400 hover:text-slate-600'}`} onClick={(e) => openMenu(e, c)}>
+                              <MoreVertRoundedIcon sx={{ fontSize: 16 }} />
+                            </button>
+                          </div>
+                          
+                          {editingCommentId === c._id ? (
+                            <div className="flex gap-2 mt-2">
+                              <input type="text" className="w-full bg-white/20 border-white/30 text-white placeholder-white/50 rounded-lg px-2 py-1 text-sm focus:outline-none" value={editingBody} onChange={(e) => setEditingBody(e.target.value)} />
+                              <button className="bg-white text-blue-600 font-bold px-3 py-1 rounded-lg text-sm hover:bg-slate-100" onClick={editComment}>Save</button>
+                            </div>
+                          ) : (
+                            <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{c.body}</p>
+                          )}
+                        </div>
+
+                        {/* Reactions */}
+                        <div className={`flex items-center gap-1.5 mt-1.5 ${myComment ? 'flex-row-reverse' : 'flex-row'}`}>
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity scale-90">
+                            <ChatEmojiPickerButton size="small" onPick={(emoji) => reactComment(c._id, emoji)} />
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {(grouped.get(c._id) || []).map((x) => (
+                              <span key={`${c._id}-${x}`} className="bg-white border border-slate-200 px-2 py-0.5 rounded-full text-[11px] font-medium shadow-sm cursor-pointer hover:bg-slate-50 transition-colors">
+                                {x}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {!item.comments?.length && (
+                  <div className="h-full flex items-center justify-center text-slate-400 font-medium text-sm">
+                    No comments yet. Start the conversation!
+                  </div>
+                )}
+              </div>
+              
+              {/* Input Area */}
+              <div className="mt-auto flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200">
                 <ChatEmojiPickerButton onPick={(emoji) => setComment((p) => `${p}${emoji}`)} />
-                <TextField
-                  fullWidth
-                  size="small"
+                <input
+                  type="text"
+                  className="flex-1 bg-transparent px-3 py-2 text-slate-900 font-medium focus:outline-none"
                   placeholder={replyHint || "Reply to subowner..."}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
@@ -261,19 +317,28 @@ export const AdminReviewDetailPage = () => {
                     }
                   }}
                 />
-                <Button variant="contained" onClick={sendComment}>Send</Button>
-              </Stack>
-            </Paper>
-          </Grid>
-        </Grid>
+                <button 
+                  onClick={sendComment}
+                  disabled={!comment.trim()}
+                  className="bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 text-white w-10 h-10 rounded-xl flex items-center justify-center transition-colors shrink-0 shadow-md shadow-blue-600/20"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-      <Menu anchorEl={menuState.anchorEl} open={Boolean(menuState.anchorEl)} onClose={closeMenu}>
+
+      {/* Menu remains unchanged */}
+      <Menu anchorEl={menuState.anchorEl} open={Boolean(menuState.anchorEl)} onClose={closeMenu} PaperProps={{ sx: { borderRadius: 2, mt: 1, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' } }}>
         <MenuItem
           onClick={() => {
             const c = menuState.comment;
             if (c) setReplyHint(`Replying to ${c.author?.name || "user"}`);
             closeMenu();
           }}
+          sx={{ fontSize: 14, fontWeight: 600, color: '#334155' }}
         >
           Reply
         </MenuItem>
@@ -283,8 +348,9 @@ export const AdminReviewDetailPage = () => {
             if (c?.body) navigator.clipboard?.writeText(c.body);
             closeMenu();
           }}
+          sx={{ fontSize: 14, fontWeight: 600, color: '#334155' }}
         >
-          Copy
+          Copy Text
         </MenuItem>
         {(menuState.comment?.author?._id === me?.id || me?.role === "admin") && (
           <MenuItem
@@ -296,8 +362,9 @@ export const AdminReviewDetailPage = () => {
               }
               closeMenu();
             }}
+            sx={{ fontSize: 14, fontWeight: 600, color: '#334155' }}
           >
-            Edit
+            Edit Message
           </MenuItem>
         )}
         {(menuState.comment?.author?._id === me?.id || me?.role === "admin") && (
@@ -307,11 +374,12 @@ export const AdminReviewDetailPage = () => {
               if (c?._id) deleteComment(c._id);
               closeMenu();
             }}
+            sx={{ fontSize: 14, fontWeight: 600, color: '#e11d48' }}
           >
             Delete
           </MenuItem>
         )}
       </Menu>
-    </Stack>
+    </div>
   );
 };

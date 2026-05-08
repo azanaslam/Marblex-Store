@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppBar, Badge, Box, Button, Stack, Toolbar, Typography } from "@mui/material";
+import { Badge, Box } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { authHeaders, http } from "../api/http";
@@ -11,6 +11,7 @@ export const AppLayout = ({ cartCount, children }) => {
   const [authUserFromStorage, setAuthUserFromStorage] = useState(getAuthUser());
   const [token, setToken] = useState(getAuthToken());
   const [chatUnreadNav, setChatUnreadNav] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
   let tokenPayload = null;
 
   if (token) {
@@ -25,11 +26,20 @@ export const AppLayout = ({ cartCount, children }) => {
   const isUserLoggedIn = Boolean(authUser);
   const isCustomer = Boolean(authUser) && authUser?.role !== "admin";
   const isAdmin = authUser?.role === "admin";
-  const customerLabel = authUser?.name ? `${authUser.name.split(" ")[0]} Dashboard` : "My Dashboard";
+  const customerLabel = authUser?.name ? `${authUser.name.split(" ")[0]}'s Dashboard` : "My Dashboard";
+  
   const logout = () => {
     clearAuthSession();
     navigate("/login", { replace: true });
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const syncAuth = () => {
@@ -50,7 +60,7 @@ export const AppLayout = ({ cartCount, children }) => {
     const load = () => {
       const t = getAuthToken();
       const u = getAuthUser();
-      if (!t || !u || (u.role !== "admin" && u.role !== "user")) {
+      if (!t || !u || (u.role !== "admin" && u.role !== "user" && u.role !== "subowner")) {
         setChatUnreadNav(0);
         return;
       }
@@ -64,101 +74,124 @@ export const AppLayout = ({ cartCount, children }) => {
     return () => clearInterval(id);
   }, [location.pathname, authUserFromStorage, token]);
 
+  const navLinks = [
+    { label: "Home", path: "/" },
+    { label: "About", path: "/about" },
+    { label: "Services", path: "/services" },
+    { label: "Contact", path: "/contact" },
+    { label: "Blogs", path: "/blogs" },
+    { label: "Catalogs", path: "/catalogs" },
+  ];
+
+  const categories = ["Car Mats", "Luxury Car Mats", "PVC Wall Panels", "PVC Wooden Flooring"];
+
   return (
-    <>
-    <Box sx={{ bgcolor: "primary.main", color: "#fff", py: 1, textAlign: "center", fontSize: 13, fontWeight: 700 }}>
-      Free Shipping Nationwide Only On Car Mats
-    </Box>
-    <AppBar position="sticky" color="inherit" elevation={1}>
-      <Toolbar sx={{ justifyContent: "space-between", gap: 2, minHeight: { xs: 62, md: 72 }, px: { xs: 2, md: 5 } }}>
-        <Box
-          component={RouterLink}
-          to="/"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            textDecoration: "none",
-            color: "inherit",
-          }}
-        >
-          <Box
-            component="img"
-            src="/products/Logo.jpeg"
-            alt="Marblex logo"
-            onError={(event) => {
-              event.currentTarget.src = "/icons.svg";
-            }}
-            sx={{
-              width: { xs: 54, md: 58 },
-              height: { xs: 54, md: 58 },
-              borderRadius: 1.5,
-              p: 0,
-              bgcolor: "transparent",
-              border: "none",
-              objectFit: "cover",
-              objectPosition: "center 56%",
-            }}
-          />
-          <Typography variant="h6" fontWeight={800} color="primary.main" sx={{ lineHeight: 1 }}>
-            Marblex Store
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={{ xs: 0.5, sm: 1 }} flexWrap="wrap" justifyContent="flex-end">
-          <Button component={RouterLink} to="/" color="inherit">
-            Shop
-          </Button>
-          <Button component={RouterLink} to="/cart" color="inherit" startIcon={<ShoppingCartIcon />}>
-            Cart ({cartCount})
-          </Button>
-          <Button component={RouterLink} to="/blogs" color="inherit">
-            Blogs
-          </Button>
-          {!isUserLoggedIn && (
-            <Button component={RouterLink} to="/login" color="inherit">
-              Login
-            </Button>
-          )}
-          {isAdmin && (
-            <Badge color="error" badgeContent={chatUnreadNav} max={99} invisible={chatUnreadNav === 0}>
-              <Button component={RouterLink} to="/admin" color="inherit">
-                Admin Dashboard
-              </Button>
-            </Badge>
-          )}
-          {isCustomer && (
-            <Badge color="error" badgeContent={chatUnreadNav} max={99} invisible={chatUnreadNav === 0}>
-              <Button component={RouterLink} to="/dashboard" color="inherit">
-                {customerLabel}
-              </Button>
-            </Badge>
-          )}
-          {isUserLoggedIn && (
-            <Button
-              onClick={logout}
-              color="error"
-              variant="outlined"
-              sx={{ borderRadius: 2, ml: { xs: 0, sm: 0.5 } }}
-            >
-              Logout
-            </Button>
-          )}
-        </Stack>
-      </Toolbar>
-      <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2.5, px: 5, py: 1.2, borderTop: "1px solid #efefef", fontSize: 14 }}>
-        <Button component={RouterLink} to="/" color="inherit" sx={{ p: 0, minWidth: "auto" }}>
-          Home
-        </Button>
-        <Button color="inherit" sx={{ p: 0, minWidth: "auto" }}>Car Mats</Button>
-        <Button color="inherit" sx={{ p: 0, minWidth: "auto" }}>Luxury Car Mats</Button>
-        <Button color="inherit" sx={{ p: 0, minWidth: "auto" }}>PVC Wall Panels</Button>
-        <Button color="inherit" sx={{ p: 0, minWidth: "auto" }}>PVC Wooden Flooring</Button>
-        <Button component={RouterLink} to="/blogs" color="inherit" sx={{ p: 0, minWidth: "auto" }}>
-          Blogs
-        </Button>
-      </Box>
-    </AppBar>
-    {children}
-  </>
+    <div className="flex flex-col min-h-screen relative">
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white py-2 px-4 text-center text-sm font-semibold tracking-wide shadow-md z-50">
+        <span className="text-rose-400 mr-2">✨</span>
+        Free Shipping Nationwide Only On Car Mats
+        <span className="text-rose-400 ml-2">✨</span>
+      </div>
+
+      {/* Sticky Glass Header */}
+      <header 
+        className={`sticky top-0 z-40 transition-all duration-300 ease-in-out w-full border-b ${
+          scrolled 
+            ? "bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg shadow-slate-200/20 py-2" 
+            : "bg-white border-transparent py-4"
+        }`}
+      >
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+          <div className="flex items-center justify-between">
+            
+            {/* Logo area */}
+            <RouterLink to="/" className="flex items-center gap-3 group">
+              <div className="relative overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-100 group-hover:shadow-md transition-all duration-300">
+                <img 
+                  src="/products/Logo.jpeg" 
+                  alt="Marblex Logo" 
+                  className="w-12 h-12 md:w-14 md:h-14 object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => e.currentTarget.src = "/icons.svg"}
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 leading-none">
+                  Marblex
+                </span>
+                <span className="text-sm font-bold text-rose-600 tracking-wider uppercase">
+                  Store
+                </span>
+              </div>
+            </RouterLink>
+
+            {/* Main Navigation */}
+            <nav className="hidden md:flex items-center gap-1 bg-slate-50/80 px-2 py-1.5 rounded-full border border-slate-200/60">
+              {navLinks.map((link) => (
+                <RouterLink 
+                  key={link.label} 
+                  to={link.path}
+                  className="px-5 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white rounded-full transition-all duration-200 hover:shadow-sm"
+                >
+                  {link.label}
+                </RouterLink>
+              ))}
+            </nav>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 md:gap-4">
+              <RouterLink 
+                to="/cart"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all duration-200 text-slate-700 font-semibold text-sm"
+              >
+                <Badge badgeContent={cartCount} color="secondary" sx={{ "& .MuiBadge-badge": { fontWeight: 700 } }}>
+                  <ShoppingCartIcon className="text-slate-600" fontSize="small" />
+                </Badge>
+                <span className="hidden sm:inline ml-1">Cart</span>
+              </RouterLink>
+
+              {!isUserLoggedIn ? (
+                <RouterLink 
+                  to="/login"
+                  className="hidden sm:flex items-center justify-center px-6 py-2.5 rounded-full bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition-all duration-200 shadow-md shadow-slate-900/10"
+                >
+                  Login
+                </RouterLink>
+              ) : (
+                <div className="flex items-center gap-2">
+                  {isAdmin && (
+                    <RouterLink to="/admin" className="hidden lg:flex px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-full transition-colors">
+                      <Badge color="error" variant="dot" invisible={chatUnreadNav === 0}>
+                        Admin
+                      </Badge>
+                    </RouterLink>
+                  )}
+                  {isCustomer && (
+                    <RouterLink to="/dashboard" className="hidden lg:flex px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
+                      <Badge color="error" variant="dot" invisible={chatUnreadNav === 0}>
+                        {customerLabel}
+                      </Badge>
+                    </RouterLink>
+                  )}
+                  <button 
+                    onClick={logout}
+                    className="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-rose-600 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-grow flex flex-col relative z-10 w-full">
+        {children}
+      </main>
+    </div>
   );
 };

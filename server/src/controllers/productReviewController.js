@@ -37,10 +37,27 @@ const getMySubmissions = async (req, res) => {
 const getMySubmissionById = async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ message: "Invalid submission id" });
-  const item = await ProductReviewSubmission.findById(id).populate(listPopulate);
+  
+  let item = await ProductReviewSubmission.findById(id);
   if (!item) return res.status(404).json({ message: "Submission not found" });
+  
   const isOwner = String(item.submittedBy?._id || item.submittedBy) === String(req.user.id);
   if (!isOwner && req.user.role !== "admin") return res.status(403).json({ message: "Not allowed" });
+
+  let needsSave = false;
+  if (isOwner && item.hasSubownerUnread) {
+    item.hasSubownerUnread = false;
+    needsSave = true;
+  }
+  if (!isOwner && req.user.role === "admin" && item.hasAdminUnread) {
+    item.hasAdminUnread = false;
+    needsSave = true;
+  }
+  if (needsSave) {
+    await item.save();
+  }
+
+  item = await ProductReviewSubmission.findById(id).populate(listPopulate);
   return res.json(item);
 };
 
@@ -53,6 +70,13 @@ const addSubmissionComment = async (req, res) => {
   if (!submission) return res.status(404).json({ message: "Submission not found" });
   const isOwner = String(submission.submittedBy) === String(req.user.id);
   if (!isOwner && req.user.role !== "admin") return res.status(403).json({ message: "Not allowed" });
+  
+  if (isOwner) {
+    submission.hasAdminUnread = true;
+  } else {
+    submission.hasSubownerUnread = true;
+  }
+  
   submission.comments.push({ author: req.user.id, body });
   await submission.save();
   const out = await ProductReviewSubmission.findById(id).populate(listPopulate);
@@ -128,6 +152,7 @@ const updateMySubmission = async (req, res) => {
   });
   if (req.body?.price != null) submission.price = Number(req.body.price);
   if (req.body?.stock != null) submission.stock = Number(req.body.stock);
+  submission.hasAdminUnread = true;
   await submission.save();
   const out = await ProductReviewSubmission.findById(id).populate(listPopulate);
   return res.json(out);
@@ -167,6 +192,7 @@ const updateSubmissionStatus = async (req, res) => {
   });
   if (req.body?.price != null) submission.price = Number(req.body.price);
   if (req.body?.stock != null) submission.stock = Number(req.body.stock);
+  submission.hasSubownerUnread = true;
   await submission.save();
   const out = await ProductReviewSubmission.findById(id).populate(listPopulate);
   return res.json(out);
@@ -187,6 +213,7 @@ const publishSubmission = async (req, res) => {
   });
   submission.status = "published";
   submission.publishedProduct = product._id;
+  submission.hasSubownerUnread = true;
   submission.comments.push({ author: req.user.id, body: "Published by admin. Product is now live." });
   await submission.save();
   const out = await ProductReviewSubmission.findById(id).populate(listPopulate);

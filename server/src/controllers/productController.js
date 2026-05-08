@@ -5,6 +5,12 @@ const getProducts = async (_, res) => {
   res.json(products);
 };
 
+const getProductById = async (req, res) => {
+  const product = await Product.findOne({ _id: req.params.id, active: true });
+  if (!product) return res.status(404).json({ message: "Product not found" });
+  return res.json(product);
+};
+
 const createProduct = async (req, res) => {
   const product = await Product.create(req.body);
   res.status(201).json(product);
@@ -22,4 +28,4 @@ const deleteProduct = async (req, res) => {
   return res.json({ ok: true });
 };
 
-module.exports = { getProducts, createProduct, updateProduct, deleteProduct };
+module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct };

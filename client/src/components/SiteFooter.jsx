@@ -1,4 +1,4 @@
-import { Box, Button, Container, IconButton, InputBase, Stack, Typography } from "@mui/material";
+import { Link } from "react-router-dom";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import XIcon from "@mui/icons-material/X";
@@ -8,97 +8,148 @@ import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 
 export const SiteFooter = () => {
   const infoLinks = [
-    "About Us",
-    "Downloads",
-    "Contact Us",
-    "Faq's",
-    "Refund and Returns Policy",
-    "Privacy Policy",
+    { label: "About Us", path: "/about" },
+    { label: "Services", path: "/services" },
+    { label: "Contact Us", path: "/contact" },
+    { label: "Blogs", path: "/blogs" },
+    { label: "Privacy Policy", path: "#" },
   ];
 
   return (
-    <Box sx={{ borderTop: "1px solid #e8e8e8", bgcolor: "#f5f5f5", mt: 2 }}>
-      <Container maxWidth={false} sx={{ px: { xs: 2, md: 6 }, py: { xs: 3, md: 5 } }}>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1.2fr 0.9fr 1.2fr" },
-            gap: { xs: 3, md: 4 },
-          }}
-        >
-          <Box>
-            <Typography variant="h6" fontWeight={700} mb={1.2}>
-              Get in touch
-            </Typography>
-            <Stack spacing={1.2} color="text.secondary">
-              <Stack direction="row" spacing={1} alignItems="center">
-                <LocationOnOutlinedIcon fontSize="small" />
-                <Typography variant="body2">2.6 Km · 40-Ferozpurroad, Lahore, Punjab, Pakistan</Typography>
-              </Stack>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <MailOutlineOutlinedIcon fontSize="small" />
-                <Typography variant="body2">Sales@Themarflexgroup.Com</Typography>
-              </Stack>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <LocalPhoneOutlinedIcon fontSize="small" />
-                <Typography variant="body2">0348-111-66-11</Typography>
-              </Stack>
-            </Stack>
-            <Stack direction="row" spacing={1} sx={{ mt: 1.4 }}>
-              <IconButton component="a" href="#" target="_blank" rel="noreferrer" aria-label="Facebook" size="small">
+    <footer className="bg-slate-900 text-slate-300 pt-16 pb-8 border-t-[6px] border-rose-600 relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-rose-600 blur-[100px]"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-blue-600 blur-[100px]"></div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-6 md:px-10 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-16">
+          
+          {/* Company Info */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-white p-1.5 rounded-xl">
+                <img 
+                  src="/products/Logo.jpeg" 
+                  alt="Marblex Logo" 
+                  className="w-10 h-10 object-cover object-center rounded-lg"
+                  onError={(e) => e.currentTarget.src = "/icons.svg"}
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xl font-extrabold tracking-tight text-white leading-none">
+                  Marblex
+                </span>
+                <span className="text-xs font-bold text-rose-500 tracking-wider uppercase">
+                  Store
+                </span>
+              </div>
+            </div>
+            <p className="text-slate-400 text-sm leading-relaxed pr-4">
+              Premium quality car mats, PVC wall panels, and wooden flooring solutions. Elevating your spaces with unmatched durability and style.
+            </p>
+            <div className="flex gap-3">
+              <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-rose-600 hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-lg">
                 <FacebookIcon fontSize="small" />
-              </IconButton>
-              <IconButton component="a" href="#" target="_blank" rel="noreferrer" aria-label="Instagram" size="small">
+              </a>
+              <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-rose-600 hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-lg">
                 <InstagramIcon fontSize="small" />
-              </IconButton>
-              <IconButton component="a" href="#" target="_blank" rel="noreferrer" aria-label="Twitter / X" size="small">
+              </a>
+              <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-rose-600 hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-lg">
                 <XIcon fontSize="small" />
-              </IconButton>
-            </Stack>
-          </Box>
+              </a>
+            </div>
+          </div>
 
-          <Box>
-            <Typography variant="h6" fontWeight={700} mb={1.2}>
-              Infomation
-            </Typography>
-            <Stack spacing={0.7}>
+          {/* Contact Info */}
+          <div className="lg:col-span-1">
+            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
+              <span className="w-8 h-1 bg-rose-600 rounded-full"></span> Get in touch
+            </h3>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3 group">
+                <div className="mt-0.5 text-rose-500 group-hover:text-rose-400 transition-colors">
+                  <LocationOnOutlinedIcon fontSize="small" />
+                </div>
+                <span className="text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
+                  40-Ferozpur Road, Lahore, Punjab, Pakistan
+                </span>
+              </li>
+              <li className="flex items-start gap-3 group">
+                <div className="mt-0.5 text-rose-500 group-hover:text-rose-400 transition-colors">
+                  <MailOutlineOutlinedIcon fontSize="small" />
+                </div>
+                <a href="mailto:Sales@Themarflexgroup.Com" className="text-sm text-slate-400 group-hover:text-rose-400 transition-colors">
+                  Sales@Themarflexgroup.Com
+                </a>
+              </li>
+              <li className="flex items-start gap-3 group">
+                <div className="mt-0.5 text-rose-500 group-hover:text-rose-400 transition-colors">
+                  <LocalPhoneOutlinedIcon fontSize="small" />
+                </div>
+                <a href="tel:0348-111-66-11" className="text-sm text-slate-400 group-hover:text-rose-400 transition-colors">
+                  0348-111-66-11
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Quick Links */}
+          <div className="lg:col-span-1">
+            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
+              <span className="w-8 h-1 bg-blue-600 rounded-full"></span> Information
+            </h3>
+            <ul className="space-y-3">
               {infoLinks.map((item) => (
-                <Typography key={item} variant="body2" color="text.secondary">
-                  {item}
-                </Typography>
+                <li key={item.label}>
+                  <Link 
+                    to={item.path} 
+                    className="text-sm text-slate-400 hover:text-white hover:pl-2 transition-all duration-300 flex items-center gap-2 before:content-['›'] before:text-blue-500 before:font-bold before:text-lg"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
               ))}
-            </Stack>
-          </Box>
+            </ul>
+          </div>
 
-          <Box>
-            <Typography variant="h6" fontWeight={700} mb={1.2}>
-              Newsletter Signup
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.4, maxWidth: 360 }}>
-              Subscribe to our newsletter and get 10% off your first purchase
-            </Typography>
-            <Stack
-              direction="row"
-              sx={{
-                maxWidth: 380,
-                bgcolor: "#fff",
-                border: "1px solid #d8d8d8",
-                borderRadius: "999px",
-                overflow: "hidden",
-              }}
-            >
-              <InputBase sx={{ px: 2, py: 1, flex: 1, fontSize: 14 }} placeholder="Your email address" />
-              <Button variant="contained" color="secondary" sx={{ borderRadius: 0, px: 3 }}>
-                Subscribe
-              </Button>
-            </Stack>
-          </Box>
-        </Box>
+          {/* Newsletter */}
+          <div className="lg:col-span-1">
+            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
+              <span className="w-8 h-1 bg-emerald-500 rounded-full"></span> Newsletter
+            </h3>
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Subscribe to our newsletter and get <strong className="text-white">10% off</strong> your first purchase.
+            </p>
+            <div className="relative group">
+              <input 
+                type="email" 
+                placeholder="Your email address" 
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3.5 pl-11 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
+              />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                <MailOutlineOutlinedIcon fontSize="small" />
+              </div>
+              <button className="mt-3 w-full bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-bold py-3 rounded-xl shadow-lg shadow-rose-600/20 transition-all hover:-translate-y-0.5 active:translate-y-0">
+                Subscribe Now
+              </button>
+            </div>
+          </div>
+        </div>
 
-        <Typography sx={{ mt: 3, pt: 1.5, borderTop: "1px solid #e1e1e1", textAlign: { xs: "left", md: "center" } }} variant="body2" color="text.secondary">
-          Copyright © {new Date().getFullYear()} Marblex Store. All rights reserved.
-        </Typography>
-      </Container>
-    </Box>
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-slate-500 text-center md:text-left">
+            Copyright © {new Date().getFullYear()} <strong className="text-white">Marblex Store</strong>. All rights reserved.
+          </p>
+          <div className="flex gap-4">
+            {/* Payment methods mock */}
+            <div className="h-8 w-12 bg-white/10 rounded flex items-center justify-center text-xs font-bold text-slate-400">VISA</div>
+            <div className="h-8 w-12 bg-white/10 rounded flex items-center justify-center text-xs font-bold text-slate-400">MC</div>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };

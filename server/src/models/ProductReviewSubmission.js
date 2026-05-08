@@ -30,6 +30,8 @@ const productReviewSubmissionSchema = new mongoose.Schema(
     },
     publishedProduct: { type: mongoose.Schema.Types.ObjectId, ref: "Product", default: null },
     comments: [reviewCommentSchema],
+    hasAdminUnread: { type: Boolean, default: true },
+    hasSubownerUnread: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

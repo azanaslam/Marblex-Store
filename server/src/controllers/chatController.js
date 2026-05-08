@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const DirectMessage = require("../models/DirectMessage");
 const Broadcast = require("../models/Broadcast");
+const { getIO } = require("../socket");
 
 const messageReactionPopulate = {
   path: "reactions.user",
@@ -39,6 +40,12 @@ const sendUserMessage = async (req, res) => {
       .populate("sender", "name email role")
       .populate("recipient", "name email role")
       .populate(messageReactionPopulate);
+
+    // Emit socket event
+    const io = getIO();
+    io.to("role:staff").emit("new_message", populated);
+    io.to(String(req.user.id)).emit("new_message", populated);
+
     return res.status(201).json(populated);
   } catch (e) {
     if (e.statusCode === 500) return res.status(500).json({ message: e.message });
@@ -168,6 +175,9 @@ const sendAdminReply = async (req, res) => {
     .populate("sender", "name email role")
     .populate("recipient", "name email role")
     .populate(messageReactionPopulate);
+  const io = getIO();
+  io.to("role:staff").emit("new_message", populated);
+  io.to(String(userId)).emit("new_message", populated);
   return res.status(201).json(populated);
 };
 
@@ -231,6 +241,10 @@ const reactToMessage = async (req, res) => {
     .populate("sender", "name email role")
     .populate("recipient", "name email role")
     .populate(messageReactionPopulate);
+  const io = getIO();
+  io.to("role:staff").emit("message_updated", populated);
+  io.to(String(populated.sender?._id || msg.sender)).emit("message_updated", populated);
+  io.to(String(populated.recipient?._id || msg.recipient)).emit("message_updated", populated);
   return res.json(populated);
 };
 

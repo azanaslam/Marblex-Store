@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { Box, Button, Divider, Paper, Stack, TextField, Typography } from "@mui/material";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { authHeaders, http } from "../api/http";
 
@@ -35,53 +34,62 @@ export const AdminBroadcastTab = ({ token, showToast }) => {
   };
 
   return (
-    <Stack spacing={2}>
-      <Paper sx={{ p: 2.5, borderRadius: 2, border: "1px solid #e5e7eb" }}>
-        <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-          <CampaignIcon color="primary" />
-          <Typography variant="h6" fontWeight={800}>
+    <div className="space-y-6">
+      <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="bg-rose-50 text-rose-600 p-2 rounded-xl">
+            <CampaignIcon />
+          </div>
+          <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
             Broadcast message
-          </Typography>
-        </Stack>
-        <Typography variant="body2" color="text.secondary" mb={2}>
-          This message appears on every logged-in user&apos;s dashboard (announcements, offers, updates).
-        </Typography>
-        <TextField
-          fullWidth
-          multiline
-          minRows={4}
+          </h2>
+        </div>
+        <p className="text-sm text-slate-500 font-medium mb-6">
+          This message appears on every logged-in user's dashboard (announcements, offers, updates).
+        </p>
+        
+        <textarea
+          rows={5}
+          className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all resize-y mb-4"
           placeholder="Write something for all users…"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-        <Button variant="contained" sx={{ mt: 2 }} onClick={sendBroadcast} disabled={sending || !message.trim()}>
-          Send to all users
-        </Button>
-      </Paper>
+        
+        <button 
+          onClick={sendBroadcast} 
+          disabled={sending || !message.trim()}
+          className="px-8 py-3.5 bg-slate-900 hover:bg-rose-600 disabled:bg-slate-300 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-rose-600/20"
+        >
+          {sending ? "Sending..." : "Send to all users"}
+        </button>
+      </div>
 
-      <Paper sx={{ p: 2.5, borderRadius: 2, border: "1px solid #e5e7eb" }}>
-        <Typography variant="subtitle1" fontWeight={800} mb={2}>
+      <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
+        <h3 className="text-lg font-extrabold text-slate-900 mb-6 tracking-tight">
           Recent broadcasts
-        </Typography>
-        <Stack divider={<Divider flexItem />} spacing={2}>
-          {!items.length && (
-            <Typography color="text.secondary" variant="body2">
-              No broadcasts yet.
-            </Typography>
+        </h3>
+        
+        <div className="space-y-4">
+          {!items.length ? (
+            <div className="text-center py-12 px-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-500 font-medium bg-slate-50/50">
+              No broadcasts sent yet.
+            </div>
+          ) : (
+            items.map((b) => (
+              <div key={b._id} className="p-5 rounded-2xl border border-slate-100 bg-slate-50">
+                <p className="text-slate-800 font-medium whitespace-pre-wrap word-break mb-3 text-lg leading-relaxed">
+                  {b.message}
+                </p>
+                <p className="text-xs font-bold text-slate-400">
+                  {new Date(b.createdAt).toLocaleString()}
+                  {b.createdBy?.name ? ` · Admin: ${b.createdBy.name}` : ""}
+                </p>
+              </div>
+            ))
           )}
-          {items.map((b) => (
-            <Box key={b._id}>
-              <Typography variant="body1" sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                {b.message}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {new Date(b.createdAt).toLocaleString()}
-                {b.createdBy?.name ? ` · ${b.createdBy.name}` : ""}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-      </Paper>
-    </Stack>
+        </div>
+      </div>
+    </div>
   );
 };

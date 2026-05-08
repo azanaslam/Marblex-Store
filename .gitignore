@@ -3,3 +3,7 @@ node_modules/
 .DS_Store
 dist/
 build/
+
+# Prevent accidentally committing generated pdf tooling/venv
+client/public/pdfs/venv/
+client/public/pdfs/extracted_images/

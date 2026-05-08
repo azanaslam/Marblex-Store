@@ -19,6 +19,7 @@ const orderSchema = new mongoose.Schema(
     ],
     subtotal: { type: Number, required: true, min: 0 },
     paymentStatus: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
+    orderStatus: { type: String, enum: ["pending", "processing", "on the way", "delivered", "cancelled"], default: "pending" },
     stripeSessionId: { type: String, default: "" },
     stripePaymentIntentId: { type: String, default: "" },
   },

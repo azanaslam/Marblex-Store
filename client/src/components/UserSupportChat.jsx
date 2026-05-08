@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Button, CircularProgress, Paper, Stack, TextField, Typography } from "@mui/material";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import SupportAgentRoundedIcon from "@mui/icons-material/SupportAgentRounded";
@@ -7,6 +7,7 @@ import { getAuthUser } from "../auth/session";
 import { ChatEmojiPickerButton } from "./chat/ChatEmojiPickerButton";
 import { ChatMessageBubble } from "./chat/ChatMessageBubble";
 import { useChatAutoScroll } from "../hooks/useChatAutoScroll";
+import { getAuthedSocket } from "../realtime/socket";
 
 const scrollSx = {
   flex: 1,
@@ -31,13 +32,13 @@ export const UserSupportChat = ({ token, showToast }) => {
   const [reactingId, setReactingId] = useState(null);
   const { scrollContainerRef, bottomMarkerRef, onScroll, stickToBottomNext } = useChatAutoScroll(messages, loading);
 
-  const headers = authHeaders(token);
+  const headers = useMemo(() => authHeaders(token), [token]);
 
   const loadMessages = useCallback(async () => {
     const res = await http.get("/chat/messages", headers);
     setMessages(res.data || []);
     setLoading(false);
-  }, [token]);
+  }, [headers]);
 
   useEffect(() => {
     loadMessages().catch(() => {
@@ -47,11 +48,35 @@ export const UserSupportChat = ({ token, showToast }) => {
   }, [loadMessages, showToast]);
 
   useEffect(() => {
-    const t = setInterval(() => {
-      loadMessages().catch(() => {});
-    }, 6000);
-    return () => clearInterval(t);
-  }, [loadMessages]);
+    const socket = getAuthedSocket(token);
+    if (!socket) return;
+
+    const mergeMessage = (msg) => {
+      if (!msg?._id) return;
+      setMessages((prev) => {
+        const idx = prev.findIndex((m) => m._id === msg._id);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = msg;
+          return next;
+        }
+        const next = [...prev, msg];
+        next.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        return next;
+      });
+    };
+
+    const onNewMessage = (msg) => mergeMessage(msg);
+    const onMessageUpdated = (msg) => mergeMessage(msg);
+
+    socket.on("new_message", onNewMessage);
+    socket.on("message_updated", onMessageUpdated);
+
+    return () => {
+      socket.off("new_message", onNewMessage);
+      socket.off("message_updated", onMessageUpdated);
+    };
+  }, [token]);
 
   const send = async () => {
     if (!draft.trim()) return;
@@ -137,16 +162,16 @@ export const UserSupportChat = ({ token, showToast }) => {
         ) : (
           <Stack spacing={1.75}>
             {messages.map((m) => {
-              const isAdmin = m.sender?.role === "admin";
+              const isStaff = m.sender?.role === "admin" || m.sender?.role === "subowner";
               const isMine = String(m.sender?._id) === String(user?.id);
-              const outgoing = isMine && !isAdmin;
+              const outgoing = isMine && !isStaff;
               return (
                 <ChatMessageBubble
                   key={m._id}
                   message={m}
                   currentUserId={user?.id}
                   variant={outgoing ? "outgoing" : "incoming"}
-                  headerLabel={isAdmin ? "Marblex Admin" : "You"}
+                  headerLabel={isStaff ? "Marblex Team" : "You"}
                   reactingId={reactingId}
                   onReact={reactTo}
                 />
