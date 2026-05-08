@@ -38,10 +38,11 @@ const chatScrollSx = {
   ...threadListSx,
 };
 
-export const AdminMessengerTab = ({ token, showToast }) => {
+export const AdminMessengerTab = ({ token, showToast, initialUserId, onUserSelected }) => {
   const adminUser = getAuthUser();
   const [threads, setThreads] = useState([]);
-  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(initialUserId || null);
+  const [selectedUserDetails, setSelectedUserDetails] = useState(null);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
   const [loadingThreads, setLoadingThreads] = useState(true);
@@ -79,8 +80,32 @@ export const AdminMessengerTab = ({ token, showToast }) => {
   }, [loadThreads, showToast]);
 
   useEffect(() => {
-    if (selectedUserId) loadMessages(selectedUserId);
-  }, [selectedUserId, loadMessages]);
+    if (initialUserId) {
+      setSelectedUserId(initialUserId);
+    }
+  }, [initialUserId]);
+
+  const loadUserDetails = useCallback(async (userId) => {
+    if (!userId) return;
+    try {
+      const res = await http.get(`/admin/users/${userId}`, headers);
+      setSelectedUserDetails(res.data);
+    } catch (err) {
+      console.error("Failed to load user details", err);
+    }
+  }, [headers]);
+
+  useEffect(() => {
+    if (selectedUserId) {
+      loadMessages(selectedUserId);
+      const thread = threads.find((t) => t.userId === selectedUserId);
+      if (thread) {
+        setSelectedUserDetails(thread.user);
+      } else {
+        loadUserDetails(selectedUserId);
+      }
+    }
+  }, [selectedUserId, loadMessages, threads, loadUserDetails]);
 
   useEffect(() => {
     if (selectedUserId) stickToBottomNext();
@@ -240,7 +265,10 @@ export const AdminMessengerTab = ({ token, showToast }) => {
                   return (
                     <Box
                       key={th.userId}
-                      onClick={() => setSelectedUserId(th.userId)}
+                      onClick={() => {
+                        setSelectedUserId(th.userId);
+                        onUserSelected?.(th.userId);
+                      }}
                       sx={{
                         display: "flex",
                         alignItems: "flex-start",
@@ -363,14 +391,14 @@ export const AdminMessengerTab = ({ token, showToast }) => {
                     border: "3px solid #fff",
                   }}
                 >
-                  {(selectedThread?.user?.name || "U").charAt(0).toUpperCase()}
+                  {(selectedUserDetails?.name || "U").charAt(0).toUpperCase()}
                 </Avatar>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography fontWeight={900} fontSize="1.1rem" letterSpacing="-0.02em" noWrap>
-                    {selectedThread?.user?.name}
+                    {selectedUserDetails?.name || "User"}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" noWrap fontWeight={500}>
-                    {selectedThread?.user?.email}
+                    {selectedUserDetails?.email || "No email provided"}
                   </Typography>
                 </Box>
               </Stack>

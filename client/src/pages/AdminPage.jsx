@@ -54,6 +54,7 @@ export const AdminPage = () => {
   const location = useLocation();
   const [token, setToken] = useState(getAuthToken());
   const [activeTab, setActiveTab] = useState(0);
+  const [selectedChatUserId, setSelectedChatUserId] = useState(null);
   const [chatUnreadTotal, setChatUnreadTotal] = useState(0);
   const [overview, setOverview] = useState(null);
   const [websiteData, setWebsiteData] = useState({ totalOrders: 0, totalAmount: 0, orders: [] });
@@ -1088,7 +1089,10 @@ export const AdminPage = () => {
                           <td className="py-4 px-6">
                             <div className="flex justify-end items-center gap-2">
                               <button 
-                                onClick={() => setActiveTab(6)}
+                                onClick={() => {
+                                  setSelectedChatUserId(user._id);
+                                  setActiveTab(6);
+                                }}
                                 className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm"
                                 title="Open chat"
                               >
@@ -1371,7 +1375,12 @@ export const AdminPage = () => {
 
           {activeTab === 6 && (
             <Box sx={{ p: { xs: 0, sm: 0.5 } }}>
-              <AdminMessengerTab token={token} showToast={showToast} />
+              <AdminMessengerTab 
+                token={token} 
+                showToast={showToast} 
+                initialUserId={selectedChatUserId}
+                onUserSelected={(id) => setSelectedChatUserId(id)}
+              />
             </Box>
           )}
 

@@ -8,6 +8,7 @@ const {
   getWhatsappOrders,
   getAllOrders,
   getUsers,
+  getUserById,
   toggleUserBlockStatus,
   toggleUserAccess,
   updateUserRole,
@@ -33,6 +34,7 @@ router.get("/orders/all", auth, adminOnly, getAllOrders);
 router.patch("/orders/:id/status", auth, adminOnly, updateOrderStatus);
 router.patch("/orders/:id/payment", auth, adminOnly, updatePaymentStatus);
 router.get("/users", auth, adminOnly, getUsers);
+router.get("/users/:id", auth, staffOnly, getUserById);
 router.patch("/users/:id/block", auth, adminOnly, toggleUserBlockStatus);
 router.patch("/users/:id/access", auth, adminOnly, toggleUserAccess);
 router.patch("/users/:id/role", auth, adminOnly, updateUserRole);

@@ -7,6 +7,7 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
+import { FloatingChatWidget } from "./FloatingChatWidget";
 
 export const AppLayout = ({ cartCount, children }) => {
   const location = useLocation();
@@ -278,6 +279,9 @@ export const AppLayout = ({ cartCount, children }) => {
       <main className="flex-grow flex flex-col relative z-10 w-full">
         {children}
       </main>
+
+      {/* Floating Chat for Customers */}
+      <FloatingChatWidget />
     </div>
   );
 };

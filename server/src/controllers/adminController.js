@@ -58,6 +58,13 @@ const getUsers = async (_, res) => {
   res.json({ totalUsers: users.length, users });
 };
 
+const getUserById = async (req, res) => {
+  const { id } = req.params;
+  const user = await User.findById(id, { passwordHash: 0 });
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res.json(user);
+};
+
 const toggleUserBlockStatus = async (req, res) => {
   const { id } = req.params;
   const { isBlocked } = req.body;
@@ -144,6 +151,7 @@ module.exports = {
   getWhatsappOrders,
   getAllOrders,
   getUsers,
+  getUserById,
   toggleUserBlockStatus,
   toggleUserAccess,
   updateUserRole,
