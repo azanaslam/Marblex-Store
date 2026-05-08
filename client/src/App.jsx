@@ -16,6 +16,7 @@ import { CatalogsPage } from "./pages/CatalogsPage";
 import { ServicesPage } from "./pages/ServicesPage";
 import { ContactPage } from "./pages/ContactPage";
 import { AboutPage } from "./pages/AboutPage";
+import { BlogDetailsPage } from "./pages/BlogDetailsPage";
 import { useCart } from "./hooks/useCart";
 import { appTheme } from "./theme/theme";
 
@@ -37,6 +38,7 @@ function App() {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/blogs" element={<BlogsPage />} />
+                <Route path="/blogs/:id" element={<BlogDetailsPage />} />
                 <Route path="/catalogs" element={<CatalogsPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/admin" element={<AdminPage />} />

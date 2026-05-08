@@ -28,6 +28,7 @@ export const LoginPage = () => {
   const [toast, setToast] = useState({ open: false, message: "", severity: "error" });
   const [loginAssist, setLoginAssist] = useState(null);
   const [registerAssist, setRegisterAssist] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const showToast = (message, severity = "error") => {
     setToast({ open: true, message, severity });
@@ -35,6 +36,7 @@ export const LoginPage = () => {
 
   const login = async () => {
     setLoginAssist(null);
+    setLoading(true);
     try {
       const res = await http.post("/auth/login", loginForm);
       setAuthSession(res.data);
@@ -56,11 +58,14 @@ export const LoginPage = () => {
         });
       }
       showToast(message, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
   const register = async () => {
     setRegisterAssist(null);
+    setLoading(true);
     try {
       const snap = { ...registerForm };
       const res = await http.post("/auth/register", registerForm);
@@ -80,6 +85,8 @@ export const LoginPage = () => {
     } catch (error) {
       const message = error?.response?.data?.message || "Registration failed. Please try again.";
       showToast(message, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -159,8 +166,13 @@ export const LoginPage = () => {
                   setLoginAssist(null);
                 }}
               />
-              <Button type="submit" variant="contained" size="large">
-                Login
+              <Button 
+                type="submit" 
+                variant="contained" 
+                size="large" 
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Login"}
               </Button>
               {loginAssist && loginAssist.code === "PENDING_APPROVAL" && (
                 <Alert severity="warning" sx={{ borderRadius: 2 }}>
@@ -223,8 +235,13 @@ export const LoginPage = () => {
               <TextField label="Name" value={registerForm.name} onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })} />
               <TextField label="Email" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} />
               <TextField label="Password" type="password" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} />
-              <Button type="submit" variant="contained" size="large">
-                Create account
+              <Button 
+                type="submit" 
+                variant="contained" 
+                size="large"
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Create account"}
               </Button>
               <Typography variant="caption" color="text.secondary">
                 After sign-up, an admin must approve your account before you can log in.

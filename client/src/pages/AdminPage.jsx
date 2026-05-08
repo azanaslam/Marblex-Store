@@ -74,6 +74,7 @@ export const AdminPage = () => {
   const [emailConfig, setEmailConfig] = useState({ user: "", pass: "" });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [statusConfirmDialog, setStatusConfirmDialog] = useState({ open: false, order: null, newStatus: "" });
+  const [isSaving, setIsSaving] = useState(false);
 
   const showToast = (type, message) => setToast({ open: true, type, message });
   const copyOrderId = async (id) => {
@@ -173,15 +174,22 @@ export const AdminPage = () => {
       return;
     }
 
-    if (editingProductId) {
-      await http.put(`/products/${editingProductId}`, product, authHeaders(token));
-    } else {
-      await http.post("/products", product, authHeaders(token));
-    }
+    setIsSaving(true);
+    try {
+      if (editingProductId) {
+        await http.put(`/products/${editingProductId}`, product, authHeaders(token));
+      } else {
+        await http.post("/products", product, authHeaders(token));
+      }
 
-    resetProductForm();
-    await loadDashboardData();
-    showToast("success", editingProductId ? "Product updated successfully." : "Product saved successfully.");
+      resetProductForm();
+      await loadDashboardData();
+      showToast("success", editingProductId ? "Product updated successfully." : "Product saved successfully.");
+    } catch (err) {
+      showToast("error", "Failed to save product.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleProductImageUpload = (event) => {
@@ -247,15 +255,22 @@ export const AdminPage = () => {
         .filter(Boolean),
     };
 
-    if (editingBlogId) {
-      await http.put(`/blogs/${editingBlogId}`, payload, authHeaders(token));
-    } else {
-      await http.post("/blogs", payload, authHeaders(token));
-    }
+    setIsSaving(true);
+    try {
+      if (editingBlogId) {
+        await http.put(`/blogs/${editingBlogId}`, payload, authHeaders(token));
+      } else {
+        await http.post("/blogs", payload, authHeaders(token));
+      }
 
-    await refreshBlogs();
-    resetBlogForm();
-    showToast("success", editingBlogId ? "Blog updated successfully." : "Blog created successfully.");
+      await refreshBlogs();
+      resetBlogForm();
+      showToast("success", editingBlogId ? "Blog updated successfully." : "Blog created successfully.");
+    } catch (err) {
+      showToast("error", "Failed to save blog article.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const startEditBlog = (blogItem) => {
@@ -1165,9 +1180,10 @@ export const AdminPage = () => {
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <button 
                       onClick={saveProduct}
-                      className="px-8 py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl font-bold shadow-md shadow-rose-600/20 transition-all hover:-translate-y-0.5"
+                      disabled={isSaving}
+                      className="px-8 py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl font-bold shadow-md shadow-rose-600/20 transition-all hover:-translate-y-0.5 disabled:opacity-50"
                     >
-                      {editingProductId ? "Update Product" : "Save Product"}
+                      {isSaving ? "Saving..." : (editingProductId ? "Update Product" : "Save Product")}
                     </button>
                     {editingProductId && (
                       <button 
@@ -1302,8 +1318,12 @@ export const AdminPage = () => {
                           Cancel
                         </button>
                       )}
-                      <button onClick={saveBlog} className="px-8 py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl font-bold shadow-md shadow-rose-600/20 transition-all hover:-translate-y-0.5">
-                        {editingBlogId ? "Update Blog" : "Save Blog"}
+                      <button 
+                        onClick={saveBlog} 
+                        disabled={isSaving}
+                        className="px-8 py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white rounded-xl font-bold shadow-md shadow-rose-600/20 transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                      >
+                        {isSaving ? "Processing..." : (editingBlogId ? "Update Blog" : "Save Blog")}
                       </button>
                     </div>
                   </div>

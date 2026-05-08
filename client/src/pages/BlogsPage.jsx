@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Container, Typography, Grid, Box, Chip, Avatar } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -6,6 +7,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { http } from "../api/http";
 
 export const BlogsPage = () => {
+  const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -107,7 +109,10 @@ export const BlogsPage = () => {
                         <span className="text-xs font-black text-slate-900 uppercase tracking-wider">Marblex Editor</span>
                       </div>
                       
-                      <button className="flex items-center gap-2 text-rose-600 font-black text-xs uppercase tracking-[0.2em] group/btn">
+                      <button 
+                        onClick={() => navigate(`/blogs/${blog._id}`)}
+                        className="flex items-center gap-2 text-rose-600 font-black text-xs uppercase tracking-[0.2em] group/btn"
+                      >
                         Read More 
                         <ArrowForwardIcon sx={{ fontSize: 16 }} className="transition-transform group-hover/btn:translate-x-1" />
                       </button>
