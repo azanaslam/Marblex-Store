@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Badge, Box } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
@@ -12,7 +15,10 @@ export const AppLayout = ({ cartCount, children }) => {
   const [token, setToken] = useState(getAuthToken());
   const [chatUnreadNav, setChatUnreadNav] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   let tokenPayload = null;
+
+  const isHomePage = location.pathname === "/";
 
   if (token) {
     try {
@@ -30,6 +36,7 @@ export const AppLayout = ({ cartCount, children }) => {
   
   const logout = () => {
     clearAuthSession();
+    setIsMenuOpen(false);
     navigate("/login", { replace: true });
   };
 
@@ -40,6 +47,10 @@ export const AppLayout = ({ cartCount, children }) => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const syncAuth = () => {
@@ -83,8 +94,6 @@ export const AppLayout = ({ cartCount, children }) => {
     { label: "Catalogs", path: "/catalogs" },
   ];
 
-  const categories = ["Car Mats", "Luxury Car Mats", "PVC Wall Panels", "PVC Wooden Flooring"];
-
   return (
     <div className="flex flex-col min-h-screen relative">
       {/* Top Banner */}
@@ -97,8 +106,8 @@ export const AppLayout = ({ cartCount, children }) => {
       {/* Sticky Glass Header */}
       <header 
         className={`sticky top-0 z-40 transition-all duration-300 ease-in-out w-full border-b ${
-          scrolled 
-            ? "bg-white/80 backdrop-blur-md border-slate-200/60 shadow-lg shadow-slate-200/20 py-2" 
+          scrolled || isMenuOpen
+            ? "bg-white border-slate-200/60 shadow-lg shadow-slate-200/20 py-2" 
             : "bg-white border-transparent py-4"
         }`}
       >
@@ -106,26 +115,36 @@ export const AppLayout = ({ cartCount, children }) => {
           <div className="flex items-center justify-between">
             
             {/* Logo area */}
-            <RouterLink to="/" className="flex items-center gap-3 group">
-              <div className="relative overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-100 group-hover:shadow-md transition-all duration-300">
-                <img 
-                  src="/products/Logo.jpeg" 
-                  alt="Marblex Logo" 
-                  className="w-12 h-12 md:w-14 md:h-14 object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => e.currentTarget.src = "/icons.svg"}
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 leading-none">
-                  Marblex
-                </span>
-                <span className="text-sm font-bold text-rose-600 tracking-wider uppercase">
-                  Store
-                </span>
-              </div>
-            </RouterLink>
+            <div className="flex items-center gap-2">
+              {!isHomePage && (
+                <button 
+                  onClick={() => navigate(-1)}
+                  className="md:hidden p-2 -ml-2 rounded-full hover:bg-slate-100 text-slate-700 transition-colors"
+                >
+                  <ArrowBackIosNewIcon sx={{ fontSize: 18 }} />
+                </button>
+              )}
+              <RouterLink to="/" className="flex items-center gap-2 sm:gap-3 group">
+                <div className="relative overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-100 group-hover:shadow-md transition-all duration-300">
+                  <img 
+                    src="/products/Logo.jpeg" 
+                    alt="Marblex Logo" 
+                    className="w-8 h-8 sm:w-10 sm:h-10 md:w-14 md:h-14 object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => e.currentTarget.src = "/icons.svg"}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-base sm:text-lg md:text-2xl font-extrabold tracking-tight text-slate-900 leading-none">
+                    Marblex
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] md:text-sm font-bold text-rose-600 tracking-wider uppercase">
+                    Store
+                  </span>
+                </div>
+              </RouterLink>
+            </div>
 
-            {/* Main Navigation */}
+            {/* Main Navigation - Desktop */}
             <nav className="hidden md:flex items-center gap-1 bg-slate-50/80 px-2 py-1.5 rounded-full border border-slate-200/60">
               {navLinks.map((link) => (
                 <RouterLink 
@@ -139,10 +158,10 @@ export const AppLayout = ({ cartCount, children }) => {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex items-center gap-1 md:gap-4">
               <RouterLink 
                 to="/cart"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all duration-200 text-slate-700 font-semibold text-sm"
+                className="flex items-center gap-2 p-2 md:px-4 md:py-2.5 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all duration-200 text-slate-700 font-semibold text-sm"
               >
                 <Badge badgeContent={cartCount} color="secondary" sx={{ "& .MuiBadge-badge": { fontWeight: 700 } }}>
                   <ShoppingCartIcon className="text-slate-600" fontSize="small" />
@@ -158,16 +177,16 @@ export const AppLayout = ({ cartCount, children }) => {
                   Login
                 </RouterLink>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2">
                   {isAdmin && (
-                    <RouterLink to="/admin" className="hidden lg:flex px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-full transition-colors">
+                    <RouterLink to="/admin" className="px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-full transition-colors">
                       <Badge color="error" variant="dot" invisible={chatUnreadNav === 0}>
                         Admin
                       </Badge>
                     </RouterLink>
                   )}
                   {isCustomer && (
-                    <RouterLink to="/dashboard" className="hidden lg:flex px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
+                    <RouterLink to="/dashboard" className="px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
                       <Badge color="error" variant="dot" invisible={chatUnreadNav === 0}>
                         {customerLabel}
                       </Badge>
@@ -181,10 +200,77 @@ export const AppLayout = ({ cartCount, children }) => {
                   </button>
                 </div>
               )}
+
+              {/* Mobile Menu Toggle */}
+              <button 
+                className="md:hidden p-2 rounded-full hover:bg-slate-100 transition-colors"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
+              </button>
             </div>
           </div>
+        </div>
 
-
+        {/* Mobile Navigation Menu */}
+        <div 
+          className={`md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 transition-all duration-300 ease-in-out overflow-hidden ${
+            isMenuOpen ? "max-h-[500px] opacity-100 py-6" : "max-h-0 opacity-0 py-0"
+          }`}
+        >
+          <div className="flex flex-col px-6 gap-4">
+            {navLinks.map((link) => (
+              <RouterLink 
+                key={link.label} 
+                to={link.path}
+                className="text-lg font-bold text-slate-800 hover:text-rose-600 transition-colors py-2 border-b border-slate-50"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.label}
+              </RouterLink>
+            ))}
+            
+            <div className="pt-4 flex flex-col gap-3">
+              {!isUserLoggedIn ? (
+                <RouterLink 
+                  to="/login"
+                  className="flex items-center justify-center w-full py-4 rounded-2xl bg-slate-900 text-white font-bold text-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login
+                </RouterLink>
+              ) : (
+                <>
+                  {isAdmin && (
+                    <RouterLink 
+                      to="/admin" 
+                      className="flex items-center justify-between w-full py-3 px-4 rounded-xl bg-rose-50 text-rose-600 font-bold"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Admin Dashboard
+                      <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
+                    </RouterLink>
+                  )}
+                  {isCustomer && (
+                    <RouterLink 
+                      to="/dashboard" 
+                      className="flex items-center justify-between w-full py-3 px-4 rounded-xl bg-slate-50 text-slate-700 font-bold"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {customerLabel}
+                      <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
+                    </RouterLink>
+                  )}
+                  <button 
+                    onClick={logout}
+                    className="w-full py-3 text-center font-bold text-slate-500 hover:text-rose-600"
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 

@@ -216,6 +216,18 @@ export const AdminPage = () => {
     showToast("success", "Product deleted successfully.");
   };
 
+  const handleBlogImageUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setBlog((prev) => ({ ...prev, coverImage: String(reader.result || "") }));
+      showToast("success", `${file.name} selected successfully.`);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const resetBlogForm = () => {
     setBlog({ title: "", coverImage: "", content: "", tags: "", published: true });
     setEditingBlogId("");
@@ -1247,8 +1259,26 @@ export const AdminPage = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1.5">Cover Image URL</label>
-                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all" value={blog.coverImage} onChange={(e) => setBlog({ ...blog, coverImage: e.target.value })} />
+                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all" value={blog.coverImage} onChange={(e) => setBlog({ ...blog, coverImage: e.target.value })} placeholder="https://example.com/image.jpg" />
                   </div>
+                  <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                    <Button variant="outlined" component="label" sx={{ borderRadius: 3, px: 3, py: 1.5, textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      Upload Cover Image
+                      <input hidden accept="image/*" type="file" onChange={handleBlogImageUpload} />
+                    </Button>
+                    <span className="text-[10px] text-slate-500 font-medium bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
+                      Auto-fills the URL field. JPG, PNG, WEBP.
+                    </span>
+                  </div>
+                  {blog.coverImage && (
+                    <div className="mt-2">
+                      <img
+                        src={blog.coverImage}
+                        alt="Blog cover preview"
+                        className="w-full h-48 object-cover rounded-2xl shadow-sm border border-slate-200 bg-slate-50"
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1.5">Tags (comma separated)</label>
                     <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all" value={blog.tags} onChange={(e) => setBlog({ ...blog, tags: e.target.value })} />

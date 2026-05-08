@@ -37,68 +37,77 @@ export const ContactPage = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen relative overflow-hidden">
+    <Box className="bg-white min-h-screen relative overflow-x-hidden w-full flex flex-col items-center">
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-rose-50 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none opacity-60"></div>
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-50 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2 pointer-events-none opacity-60"></div>
 
-      <Container maxWidth="lg" className="relative z-10 pt-16 pb-24">
+      <Container maxWidth="lg" className="relative z-10 pt-10 md:pt-20 pb-24 px-4 sm:px-6 mx-auto">
         {/* Header Section */}
-        <Box className="text-center mb-16">
-          <span className="inline-block py-1 px-4 rounded-full bg-rose-50 text-rose-600 font-black text-[10px] tracking-widest uppercase mb-4 border border-rose-100 shadow-sm">
+        <Box className="text-center mb-12 md:mb-20">
+          <span className="inline-block py-1.5 px-6 rounded-full bg-rose-50 text-rose-600 font-black text-[10px] tracking-[0.3em] uppercase mb-6 border border-rose-100 shadow-sm">
             Contact Us
           </span>
-          <Typography variant="h1" className="text-4xl md:text-6xl font-black text-slate-900 mb-4 tracking-tight leading-tight">
+          <Typography variant="h1" className="text-3xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
             Get in <span className="text-rose-600">Touch</span>
           </Typography>
-          <Typography className="text-base md:text-lg text-slate-500 font-medium max-w-xl mx-auto leading-relaxed text-center">
+          <Typography
+            component="p"
+            className="text-base md:text-lg text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed px-4 sm:px-0 text-center text-pretty"
+          >
             Have a project in mind or need professional advice? Reach out to our specialized team across Pakistan.
           </Typography>
         </Box>
 
-        <Grid container spacing={4} alignItems="stretch">
+        <Grid container spacing={{ xs: 4, lg: 6 }} justifyContent="center">
           {/* Contact Info Cards */}
-          <Grid item xs={12} md={5}>
-            <div className="flex flex-col h-full gap-4">
-              <div className="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-rose-500/10 hover:border-rose-200 transition-all duration-500 flex flex-col items-center text-center">
+          <Grid item xs={12} md={5} lg={4}>
+            <div className="flex flex-col gap-6">
+              <div className="group bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-rose-500/10 hover:border-rose-200 transition-all duration-500 flex flex-col items-center text-center">
                 <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all duration-500">
                   <LocationOnIcon />
                 </div>
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Our Headquarters</h4>
-                <p className="text-xl font-black text-slate-900 leading-tight">40-Ferozpur Road, Lahore, Pakistan</p>
+                <p className="text-lg md:text-xl font-black text-slate-900 leading-tight">40-Ferozpur Road, Lahore, Pakistan</p>
               </div>
 
-              <div className="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:border-blue-200 transition-all duration-500 flex flex-col items-center text-center">
+              <div className="group bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:border-blue-200 transition-all duration-500 flex flex-col items-center text-center">
                 <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
                   <PhoneIcon />
                 </div>
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Customer Hotline</h4>
-                <p className="text-xl font-black text-slate-900 leading-tight">0348-111-66-11</p>
+                <p className="text-lg md:text-xl font-black text-slate-900 leading-tight">0348-111-66-11</p>
               </div>
 
-              <div className="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-200 transition-all duration-500 flex flex-col items-center text-center">
+              <div className="group bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-200 transition-all duration-500 flex flex-col items-center text-center">
                 <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
                   <EmailIcon />
                 </div>
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Support Email</h4>
-                <p className="text-xl font-black text-slate-900 leading-tight">Sales@themarflexgroup.com</p>
+                <a
+                  href="mailto:Sales@themarflexgroup.com"
+                  className="text-base md:text-lg font-black text-slate-900 leading-tight break-words px-2 w-full max-w-full"
+                >
+                  Sales@themarflexgroup.com
+                </a>
               </div>
             </div>
           </Grid>
 
           {/* Contact Form */}
-          <Grid item xs={12} md={7}>
-            <div className="bg-slate-900 p-8 md:p-10 rounded-[3rem] shadow-2xl shadow-slate-900/20 relative overflow-hidden h-full flex flex-col justify-center">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-rose-600/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+          <Grid item xs={12} md={7} lg={8}>
+            <div className="bg-slate-900 p-8 sm:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl shadow-slate-900/40 relative overflow-hidden h-full flex flex-col justify-center min-h-[600px]">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-rose-600/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
               
               {success ? (
-                <div className="flex flex-col items-center justify-center text-center py-6">
-                  <div className="w-24 h-24 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-8 border border-emerald-500/20">
-                    <VerifiedUserIcon sx={{ fontSize: 48 }} />
+                <div className="flex flex-col items-center justify-center text-center py-6 relative z-10">
+                  <div className="w-20 h-20 md:w-28 md:h-28 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-10 border border-emerald-500/20 shadow-lg shadow-emerald-500/10 animate-bounce">
+                    <VerifiedUserIcon sx={{ fontSize: { xs: 40, md: 56 } }} />
                   </div>
-                  <h3 className="text-4xl font-black text-white mb-4">Message Sent!</h3>
-                  <p className="text-slate-400 font-medium text-lg mb-10 max-w-sm">Thank you for reaching out. Our team will contact you within 24 hours.</p>
-                  <button onClick={() => setSuccess(false)} className="bg-white text-slate-900 px-10 py-4 rounded-2xl font-black text-sm hover:bg-rose-500 hover:text-white transition-all shadow-xl">
+                  <h3 className="text-3xl md:text-5xl font-black text-white mb-6">Message Sent!</h3>
+                  <p className="text-slate-400 font-medium text-lg md:text-xl mb-12 max-w-md px-4 leading-relaxed">Thank you for reaching out. Our experts will get back to you within 24 hours.</p>
+                  <button onClick={() => setSuccess(false)} className="bg-white text-slate-900 px-12 py-5 rounded-2xl font-black text-sm hover:bg-rose-500 hover:text-white transition-all shadow-xl hover:-translate-y-1">
                     Send Another Message
                   </button>
                 </div>
@@ -113,8 +122,8 @@ export const ContactPage = () => {
                         value={formData.name}
                         onChange={handleChange}
                         required
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-7 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 text-center"
-                        placeholder="John Doe"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 text-center text-base focus:bg-white/10"
+                        placeholder="Mubashir Khan"
                       />
                     </div>
                     <div className="space-y-3">
@@ -125,8 +134,8 @@ export const ContactPage = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-7 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 text-center"
-                        placeholder="john@example.com"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 text-center text-base focus:bg-white/10"
+                        placeholder="mubashir@example.com"
                       />
                     </div>
                   </div>
@@ -139,8 +148,8 @@ export const ContactPage = () => {
                       value={formData.subject}
                       onChange={handleChange}
                       required
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-7 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 text-center"
-                      placeholder="How can we help?"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 text-center text-base focus:bg-white/10"
+                      placeholder="Service Inquiry"
                     />
                   </div>
 
@@ -152,8 +161,8 @@ export const ContactPage = () => {
                       onChange={handleChange}
                       required
                       rows={5}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-7 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 resize-none text-center"
-                      placeholder="Describe your project or inquiry..."
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 resize-none text-center text-base focus:bg-white/10"
+                      placeholder="Tell us about your project or needs..."
                     />
                   </div>
 
@@ -172,6 +181,6 @@ export const ContactPage = () => {
           </Grid>
         </Grid>
       </Container>
-    </div>
+    </Box>
   );
 };
