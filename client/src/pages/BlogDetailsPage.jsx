@@ -7,6 +7,8 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ShareIcon from "@mui/icons-material/Share";
 import { http } from "../api/http";
 
+import { BlogDetailSkeleton } from "../components/LoaderSkeleton";
+
 export const BlogDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -34,12 +36,7 @@ export const BlogDetailsPage = () => {
   };
 
   if (loading) {
-    return (
-      <Box className="min-h-screen flex flex-col items-center justify-center bg-white">
-        <div className="w-16 h-16 border-4 border-slate-100 border-t-rose-600 rounded-full animate-spin"></div>
-        <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-xs">Loading article...</p>
-      </Box>
-    );
+    return <BlogDetailSkeleton />;
   }
 
   if (!blog) {

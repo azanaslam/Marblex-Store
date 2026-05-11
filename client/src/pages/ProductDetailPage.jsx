@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { http } from "../api/http";
 import { ProductCard } from "../components/ProductCard";
+import { ProductDetailSkeleton } from "../components/LoaderSkeleton";
 
 export const ProductDetailPage = ({ addToCart }) => {
   const { id } = useParams();
@@ -12,6 +15,7 @@ export const ProductDetailPage = ({ addToCart }) => {
   const [moreProducts, setMoreProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(!location.state?.product);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -68,11 +72,7 @@ export const ProductDetailPage = ({ addToCart }) => {
       </button>
 
       {/* Loading & Error States */}
-      {loading && (
-        <div className="bg-blue-50 text-blue-700 p-4 rounded-2xl font-bold animate-pulse border border-blue-100">
-          Loading product details...
-        </div>
-      )}
+      {loading && <ProductDetailSkeleton />}
       {!loading && !product && (
         <div className="bg-red-50 text-red-700 p-4 rounded-2xl font-bold border border-red-100">
           Product not found.
@@ -106,8 +106,29 @@ export const ProductDetailPage = ({ addToCart }) => {
                 PKR {product.price?.toLocaleString()}
               </div>
               
-              <div className="prose prose-slate prose-lg text-slate-500 mb-10 whitespace-pre-wrap font-medium leading-relaxed">
-                {product.description || "No description available for this product."}
+              <div className="relative mb-10 group/desc">
+                <div 
+                  className={`prose prose-slate prose-lg text-slate-500 whitespace-pre-wrap font-medium leading-relaxed transition-all duration-500 ease-in-out ${!isDescriptionExpanded ? 'max-h-[120px] overflow-hidden lg:max-h-none' : 'max-h-[2000px]'}`}
+                >
+                  {product.description || "No description available for this product."}
+                </div>
+                
+                {!isDescriptionExpanded && (
+                  <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white via-white/80 to-transparent lg:hidden transition-opacity duration-500" />
+                )}
+                
+                <button 
+                  onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                  className="relative z-10 mt-4 flex items-center gap-2 text-rose-600 font-black text-sm uppercase tracking-widest lg:hidden group/btn hover:text-rose-700 transition-colors"
+                >
+                  <span className="bg-rose-50 px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm border border-rose-100 group-hover/btn:bg-rose-100 transition-colors">
+                    {isDescriptionExpanded ? (
+                      <>Show Less <KeyboardArrowUpIcon sx={{ fontSize: 18 }} /></>
+                    ) : (
+                      <>Read Full Description <KeyboardArrowDownIcon sx={{ fontSize: 18 }} className="animate-bounce-slow" /></>
+                    )}
+                  </span>
+                </button>
               </div>
               
               <div className="mt-auto space-y-6">

@@ -5,6 +5,7 @@ import SupportAgentRoundedIcon from "@mui/icons-material/SupportAgentRounded";
 import { authHeaders, http } from "../api/http";
 import { getAuthUser } from "../auth/session";
 import { ChatEmojiPickerButton } from "./chat/ChatEmojiPickerButton";
+import { ChatSkeleton } from "./LoaderSkeleton";
 import { ChatMessageBubble } from "./chat/ChatMessageBubble";
 import { useChatAutoScroll } from "../hooks/useChatAutoScroll";
 import { getAuthedSocket } from "../realtime/socket";
@@ -156,9 +157,7 @@ export const UserSupportChat = ({ token, showToast }) => {
 
       <Box ref={scrollContainerRef} onScroll={onScroll} sx={scrollSx}>
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-            <CircularProgress size={36} thickness={4} sx={{ color: "primary.main" }} />
-          </Box>
+          <ChatSkeleton />
         ) : (
           <Stack spacing={1.75}>
             {messages.map((m) => {

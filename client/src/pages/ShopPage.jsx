@@ -40,16 +40,25 @@ const demoProducts = [
 import { beforeAfterPairs, galleryImages } from "../config/constants";
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import { ProductCardSkeleton } from "../components/LoaderSkeleton";
 
 export const ShopPage = ({ addToCart }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     http
       .get("/products")
-      .then((res) => setProducts(Array.isArray(res.data) && res.data.length ? res.data : demoProducts))
-      .catch(() => setProducts(demoProducts));
+      .then((res) => {
+        setProducts(Array.isArray(res.data) && res.data.length ? res.data : demoProducts);
+        setLoading(false);
+      })
+      .catch(() => {
+        setProducts(demoProducts);
+        setLoading(false);
+      });
   }, []);
 
   return (
@@ -74,15 +83,21 @@ export const ShopPage = ({ addToCart }) => {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10">
-        {products.map((product) => (
-          <div key={product._id} className="h-full">
-            <ProductCard
-              product={product}
-              onAddToCart={addToCart}
-              onOpenProduct={(item) => navigate(`/product/${item._id}`, { state: { product: item } })}
-            />
-          </div>
-        ))}
+        {loading ? (
+          [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <ProductCardSkeleton key={i} />
+          ))
+        ) : (
+          products.map((product) => (
+            <div key={product._id} className="h-full">
+              <ProductCard
+                product={product}
+                onAddToCart={addToCart}
+                onOpenProduct={(item) => navigate(`/product/${item._id}`, { state: { product: item } })}
+              />
+            </div>
+          ))
+        )}
       </div>
 
       {/* Before & After Section */}

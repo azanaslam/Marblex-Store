@@ -29,6 +29,7 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, setAuthSession } from "../auth/session";
 import { UserSupportChat } from "../components/UserSupportChat";
+import { ListSkeleton } from "../components/LoaderSkeleton";
 
 const STATUS_COLOR = {
   pending: "warning",
@@ -55,6 +56,9 @@ export const UserDashboardPage = () => {
   const [toast, setToast] = useState({ open: false, message: "", severity: "error" });
   const [myOrders, setMyOrders] = useState([]);
   const [ordersWithUpdate, setOrdersWithUpdate] = useState(new Set());
+  const [loadingBroadcasts, setLoadingBroadcasts] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(true);
   const [currentUser, setCurrentUser] = useState(getAuthUser());
   const lastBroadcastTopIdRef = useRef("");
   const user = currentUser;
@@ -102,41 +106,54 @@ export const UserDashboardPage = () => {
   };
 
   const loadBroadcasts = async () => {
-    const res = await http.get("/chat/broadcasts", authHeaders(token));
-    const items = res.data || [];
-    setBroadcasts(items);
-    const topId = items[0]?._id || "";
-    if (!lastBroadcastTopIdRef.current) {
-      lastBroadcastTopIdRef.current = topId;
-      setFloatingBroadcasts(items.slice(0, 2));
-      return;
-    }
-    if (topId && topId !== lastBroadcastTopIdRef.current) {
-      lastBroadcastTopIdRef.current = topId;
-      setFloatingBroadcasts(items.slice(0, 2));
+    setLoadingBroadcasts(true);
+    try {
+      const res = await http.get("/chat/broadcasts", authHeaders(token));
+      const items = res.data || [];
+      setBroadcasts(items);
+      const topId = items[0]?._id || "";
+      if (!lastBroadcastTopIdRef.current) {
+        lastBroadcastTopIdRef.current = topId;
+        setFloatingBroadcasts(items.slice(0, 2));
+      } else if (topId && topId !== lastBroadcastTopIdRef.current) {
+        lastBroadcastTopIdRef.current = topId;
+        setFloatingBroadcasts(items.slice(0, 2));
+      }
+    } finally {
+      setLoadingBroadcasts(false);
     }
   };
 
   const loadSubmissions = async () => {
-    const res = await http.get("/product-reviews/mine", authHeaders(token));
-    setSubmissions(res.data || []);
+    setLoadingSubmissions(true);
+    try {
+      const res = await http.get("/product-reviews/mine", authHeaders(token));
+      setSubmissions(res.data || []);
+    } finally {
+      setLoadingSubmissions(false);
+    }
   };
   const loadMyOrders = async () => {
-    const res = await http.get("/orders/my", authHeaders(token));
-    const newOrders = res.data || [];
-    
-    // Check for updates compared to last viewed statuses
-    const lastStatuses = JSON.parse(localStorage.getItem("marblex_last_order_statuses") || "{}");
-    const updatedIds = new Set();
-    
-    newOrders.forEach(order => {
-      if (lastStatuses[order._id] && lastStatuses[order._id] !== order.orderStatus) {
-        updatedIds.add(order._id);
-      }
-    });
-    
-    setOrdersWithUpdate(updatedIds);
-    setMyOrders(newOrders);
+    setLoadingOrders(true);
+    try {
+      const res = await http.get("/orders/my", authHeaders(token));
+      const newOrders = res.data || [];
+      
+      // Check for updates compared to last viewed statuses
+      const lastStatuses = JSON.parse(localStorage.getItem("marblex_last_order_statuses") || "{}");
+      const updatedIds = new Set();
+      
+      newOrders.forEach(order => {
+        if (lastStatuses[order._id] && lastStatuses[order._id] !== order.orderStatus) {
+          updatedIds.add(order._id);
+        }
+      });
+      
+      setOrdersWithUpdate(updatedIds);
+      setMyOrders(newOrders);
+    } finally {
+      setLoadingOrders(false);
+    }
   };
 
   useEffect(() => {
@@ -435,11 +452,13 @@ export const UserDashboardPage = () => {
         {!isSubowner && currentTab === "orders" && (
           <div className="space-y-6">
             <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Order History</h2>
-            {!myOrders.length && (
+            {loadingOrders ? (
+              <ListSkeleton />
+            ) : !myOrders.length ? (
               <div className="py-12 text-center text-slate-500 font-medium border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
                 You haven't placed any orders yet.
               </div>
-            )}
+            ) : (
             <div className="space-y-4">
               {myOrders.map((order) => (
                 <div key={order._id} className={`group bg-white border ${ordersWithUpdate.has(order._id) ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-200'} rounded-[2rem] overflow-hidden hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300`}>
@@ -535,18 +554,21 @@ export const UserDashboardPage = () => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
         {/* Broadcasts Tab (Both User & Subowner) */}
         {currentTab === "broadcasts" && (
           <div className="space-y-6">
             <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Admin Broadcasts</h2>
-            {!broadcasts.length && (
+            {loadingBroadcasts ? (
+              <ListSkeleton />
+            ) : !broadcasts.length ? (
               <div className="py-12 text-center text-slate-500 font-medium border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
                 No broadcasts received yet.
               </div>
-            )}
+            ) : (
             <div className="space-y-4">
               {broadcasts.map((b) => (
                 <div key={b._id} className="bg-blue-50 border border-blue-100 p-5 rounded-2xl">
@@ -555,8 +577,9 @@ export const UserDashboardPage = () => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
         {/* Subowner - Create Product Tab */}
         {isSubowner && currentTab === "create" && (
@@ -633,11 +656,13 @@ export const UserDashboardPage = () => {
               </span>
             </div>
             
-            {!submissions.length && (
+            {loadingSubmissions ? (
+              <ListSkeleton />
+            ) : !submissions.length ? (
               <div className="py-12 text-center text-slate-500 font-medium border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
                 You haven't submitted any products for review.
               </div>
-            )}
+            ) : (
             
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {submissions.map((item) => (
@@ -682,8 +707,9 @@ export const UserDashboardPage = () => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
         {/* Chat Tab */}
         {currentTab === "chat" && (

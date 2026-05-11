@@ -20,6 +20,7 @@ import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import { authHeaders, http } from "../api/http";
 import { getAuthToken, getAuthUser } from "../auth/session";
 import { ChatEmojiPickerButton } from "../components/chat/ChatEmojiPickerButton";
+import { ProductDetailSkeleton } from "../components/LoaderSkeleton";
 
 const STATUS_COLOR = {
   pending: "warning",
@@ -151,9 +152,7 @@ export const AdminReviewDetailPage = () => {
       </button>
 
       {!item ? (
-        <div className="bg-blue-50 text-blue-700 p-4 rounded-2xl font-bold animate-pulse border border-blue-100 flex items-center justify-center min-h-[200px]">
-          Loading product review details...
-        </div>
+        <ProductDetailSkeleton />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Product Review Form */}

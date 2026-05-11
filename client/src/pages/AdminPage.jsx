@@ -48,6 +48,7 @@ import { clearAuthSession, getAuthToken, getAuthUser } from "../auth/session";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { Drawer } from "@mui/material";
+import { AdminOverviewSkeleton } from "../components/LoaderSkeleton";
 
 export const AdminPage = () => {
   const navigate = useNavigate();
@@ -854,7 +855,10 @@ export const AdminPage = () => {
             )}
 
             {activeTab === 0 && (
-            <div className="space-y-6">
+              !overview ? (
+                <AdminOverviewSkeleton />
+              ) : (
+                <div className="space-y-6">
               {/* Stats Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {stats.map((item) => (
@@ -947,7 +951,8 @@ export const AdminPage = () => {
                 {renderCompactOrderTable(overview?.recentOrders || [])}
               </div>
             </div>
-          )}
+          )
+        )}
 
           {activeTab === 1 && (
             <div className="space-y-6">

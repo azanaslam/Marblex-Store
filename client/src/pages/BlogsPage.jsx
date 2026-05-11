@@ -5,6 +5,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { http } from "../api/http";
+import { BlogCardSkeleton } from "../components/LoaderSkeleton";
 
 export const BlogsPage = () => {
   const navigate = useNavigate();
@@ -52,10 +53,13 @@ export const BlogsPage = () => {
         </Box>
 
         {loading ? (
-          <div className="flex flex-col items-center py-20">
-            <div className="w-16 h-16 border-4 border-slate-100 border-t-rose-600 rounded-full animate-spin"></div>
-            <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-xs">Curating stories...</p>
-          </div>
+          <Grid container spacing={4}>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Grid item xs={12} md={i === 1 ? 12 : 6} lg={i === 1 ? 12 : 4} key={i}>
+                <BlogCardSkeleton />
+              </Grid>
+            ))}
+          </Grid>
         ) : blogs.length === 0 ? (
           <div className="text-center py-24 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-100">
             <Typography className="text-slate-400 font-bold text-xl">No articles published yet.</Typography>

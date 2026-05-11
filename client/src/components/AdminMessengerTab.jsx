@@ -15,6 +15,7 @@ import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import { authHeaders, http } from "../api/http";
 import { getAuthUser } from "../auth/session";
 import { ChatEmojiPickerButton } from "./chat/ChatEmojiPickerButton";
+import { ChatSkeleton, AdminThreadSkeleton } from "./LoaderSkeleton";
 import { ChatMessageBubble } from "./chat/ChatMessageBubble";
 import { useChatAutoScroll } from "../hooks/useChatAutoScroll";
 import { getAuthedSocket } from "../realtime/socket";
@@ -250,9 +251,7 @@ export const AdminMessengerTab = ({ token, showToast, initialUserId, onUserSelec
           </Box>
           <Box sx={{ overflow: "auto", flex: 1, py: 1, ...threadListSx }}>
             {loadingThreads ? (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                <CircularProgress size={36} thickness={4} sx={{ color: "primary.main" }} />
-              </Box>
+              <AdminThreadSkeleton />
             ) : (
               <Stack spacing={0.5} sx={{ px: 1, pb: 1 }}>
                 {!threads.length && (
@@ -405,9 +404,7 @@ export const AdminMessengerTab = ({ token, showToast, initialUserId, onUserSelec
 
               <Box ref={scrollContainerRef} onScroll={onScroll} sx={chatScrollSx}>
                 {loadingMessages ? (
-                  <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-                    <CircularProgress size={36} thickness={4} />
-                  </Box>
+                  <ChatSkeleton />
                 ) : (
                   <Stack spacing={1.75}>
                     {messages.map((m) => {
