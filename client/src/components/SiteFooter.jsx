@@ -33,6 +33,8 @@ export const SiteFooter = () => {
                 <img 
                   src="/products/Logo.jpeg" 
                   alt="Marblex Logo" 
+                  loading="lazy"
+                  decoding="async"
                   className="w-10 h-10 object-cover object-center rounded-lg"
                   onError={(e) => e.currentTarget.src = "/icons.svg"}
                 />

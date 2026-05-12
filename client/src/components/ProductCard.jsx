@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
-export const ProductCard = ({ product, onAddToCart, onOpenProduct }) => {
+const ProductCardComponent = ({ product, onAddToCart, onOpenProduct }) => {
   const [quantity, setQuantity] = useState(1);
 
   const handleAddToCart = (e) => {
@@ -32,6 +32,8 @@ export const ProductCard = ({ product, onAddToCart, onOpenProduct }) => {
         <img
           src={product.imageUrl}
           alt={product.name}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         
@@ -90,3 +92,5 @@ export const ProductCard = ({ product, onAddToCart, onOpenProduct }) => {
     </div>
   );
 };
+
+export const ProductCard = memo(ProductCardComponent);

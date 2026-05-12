@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const CART_KEY = "marblex_cart";
 
@@ -18,14 +18,23 @@ export const useCart = () => {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
   }, [cart]);
 
-  const addToCart = (product) => {
+  const addToCart = useCallback((product) => {
     const qtyToAdd = product.quantity || 1;
-    const existing = cart.find((item) => item.productId === product._id);
-    const next = existing
-      ? cart.map((item) => (item.productId === product._id ? { ...item, quantity: item.quantity + qtyToAdd, imageUrl: item.imageUrl || product.imageUrl } : item))
-      : [...cart, { productId: product._id, name: product.name, price: product.price, quantity: qtyToAdd, imageUrl: product.imageUrl }];
-    setCart(next);
-  };
+    setCart((prev) => {
+      const existing = prev.find((item) => item.productId === product._id);
+      if (existing) {
+        return prev.map((item) =>
+          item.productId === product._id
+            ? { ...item, quantity: item.quantity + qtyToAdd, imageUrl: item.imageUrl || product.imageUrl }
+            : item
+        );
+      }
+      return [
+        ...prev,
+        { productId: product._id, name: product.name, price: product.price, quantity: qtyToAdd, imageUrl: product.imageUrl },
+      ];
+    });
+  }, []);
 
   return { cart, setCart, addToCart };
 };

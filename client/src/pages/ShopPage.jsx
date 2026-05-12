@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { http } from "../api/http";
 import { HeroBanner } from "../components/HeroBanner";
 import { ProductCard } from "../components/ProductCard";
+import { beforeAfterPairs, galleryImages } from "../config/constants";
 import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import { ProductCardSkeleton } from "../components/LoaderSkeleton";
 
 const demoProducts = [
   {
@@ -37,15 +41,17 @@ const demoProducts = [
   },
 ];
 
-import { beforeAfterPairs, galleryImages } from "../config/constants";
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
-import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
-import { ProductCardSkeleton } from "../components/LoaderSkeleton";
-
 export const ShopPage = ({ addToCart }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleOpenProduct = useCallback(
+    (item) => {
+      navigate(`/product/${item._id}`, { state: { product: item } });
+    },
+    [navigate]
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -93,7 +99,7 @@ export const ShopPage = ({ addToCart }) => {
               <ProductCard
                 product={product}
                 onAddToCart={addToCart}
-                onOpenProduct={(item) => navigate(`/product/${item._id}`, { state: { product: item } })}
+                onOpenProduct={handleOpenProduct}
               />
             </div>
           ))
@@ -115,11 +121,11 @@ export const ShopPage = ({ addToCart }) => {
             <div key={idx} className="group">
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="flex-1 relative rounded-3xl overflow-hidden border border-slate-200 shadow-lg">
-                  <img src={pair.before} alt="Before" className="w-full h-[300px] object-cover" />
+                  <img src={pair.before} alt="Before" loading="lazy" decoding="async" className="w-full h-[300px] object-cover" />
                   <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">Before</div>
                 </div>
                 <div className="flex-1 relative rounded-3xl overflow-hidden border border-rose-200 shadow-xl shadow-rose-500/10 scale-105 sm:scale-100 group-hover:scale-105 transition-transform duration-500">
-                  <img src={pair.after} alt="After" className="w-full h-[300px] object-cover" />
+                  <img src={pair.after} alt="After" loading="lazy" decoding="async" className="w-full h-[300px] object-cover" />
                   <div className="absolute top-4 right-4 bg-rose-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">After</div>
                 </div>
               </div>
@@ -151,6 +157,8 @@ export const ShopPage = ({ addToCart }) => {
               <img 
                 src={img} 
                 alt={`Showcase ${idx}`} 
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover min-h-[200px] transition-transform duration-700 group-hover:scale-110" 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
@@ -181,6 +189,8 @@ export const ShopPage = ({ addToCart }) => {
                 <img 
                   src="/assets/brochures/Profile_marblex_page_1.jpg" 
                   alt="Company Profile" 
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" 
                 />
               </div>
@@ -200,6 +210,8 @@ export const ShopPage = ({ addToCart }) => {
                 <img 
                   src="/assets/brochures/real_one_page_1.jpg" 
                   alt="Construction Projects" 
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" 
                 />
               </div>
@@ -219,6 +231,8 @@ export const ShopPage = ({ addToCart }) => {
                 <img 
                   src="/assets/brochures/Water_Stopper_123_page_1.jpg" 
                   alt="Rubber Water Stopper" 
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" 
                 />
               </div>

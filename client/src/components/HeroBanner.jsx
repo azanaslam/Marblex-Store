@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
@@ -8,33 +8,44 @@ import { bannerImages } from "../config/constants";
 export const HeroBanner = () => {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
+  const bannerCount = bannerImages.length;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % bannerImages.length);
+      setCurrent((prev) => (prev + 1) % bannerCount);
     }, 4500);
     return () => clearInterval(interval);
-  }, []);
+  }, [bannerCount]);
 
-  const move = (delta) => {
-    setCurrent((prev) => (prev + delta + bannerImages.length) % bannerImages.length);
-  };
+  const move = useCallback((delta) => {
+    setCurrent((prev) => (prev + delta + bannerCount) % bannerCount);
+  }, [bannerCount]);
+
+  const goTo = useCallback((idx) => {
+    setCurrent(idx);
+  }, []);
 
   return (
     <div className="relative mb-10 md:mb-16 rounded-3xl overflow-hidden h-[480px] sm:h-[500px] md:h-[600px] bg-slate-900 shadow-2xl shadow-slate-900/20 group">
       {/* Background Images with smooth crossfade and zoom */}
-      {bannerImages.map((img, index) => (
+      {bannerImages.map((img, index) => {
+        const isActive = current === index;
+        return (
         <img
           key={img}
           src={img}
           alt={`Marblex banner ${index + 1}`}
+          loading={index === 0 ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={isActive ? "high" : "low"}
           className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${
-            current === index 
+            isActive
               ? "opacity-100 scale-105 z-10" 
               : "opacity-0 scale-100 z-0"
           }`}
         />
-      ))}
+      );
+      })}
 
       {/* Dark overlay gradient - Stronger on mobile for readability */}
       <div className="absolute inset-0 z-20 bg-gradient-to-t md:bg-gradient-to-r from-slate-950/90 via-slate-900/60 to-transparent flex flex-col justify-center p-6 sm:p-12 md:p-20">
@@ -93,7 +104,7 @@ export const HeroBanner = () => {
         {bannerImages.map((_, idx) => (
           <button
             key={idx}
-            onClick={() => setCurrent(idx)}
+            onClick={() => goTo(idx)}
             className={`transition-all duration-500 rounded-full ${
               current === idx 
                 ? "w-8 h-1.5 bg-rose-500" 

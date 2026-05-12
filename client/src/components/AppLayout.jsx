@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Badge, Box } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -7,7 +7,10 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
-import { FloatingChatWidget } from "./FloatingChatWidget";
+
+const FloatingChatWidget = lazy(() =>
+  import("./FloatingChatWidget").then((m) => ({ default: m.FloatingChatWidget }))
+);
 
 export const AppLayout = ({ cartCount, children }) => {
   const location = useLocation();
@@ -281,7 +284,9 @@ export const AppLayout = ({ cartCount, children }) => {
       </main>
 
       {/* Floating Chat for Customers */}
-      <FloatingChatWidget />
+      <Suspense fallback={null}>
+        <FloatingChatWidget />
+      </Suspense>
     </div>
   );
 };
