@@ -258,15 +258,14 @@ export const ProductDetailPage = ({ addToCart }) => {
             </button>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {moreProducts.map((item) => (
-              <div key={item._id} className="h-full">
-                <ProductCard
-                  product={item}
-                  onAddToCart={addToCart}
-                  onOpenProduct={(prod) => navigate(`/product/${prod._id}`, { state: { product: prod } })}
-                />
-              </div>
+              <ProductCard
+                key={item._id}
+                product={item}
+                onAddToCart={addToCart}
+                onOpenProduct={(prod) => navigate(`/product/${prod._id}`, { state: { product: prod } })}
+              />
             ))}
           </div>
           
