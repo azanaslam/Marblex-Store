@@ -62,7 +62,7 @@ export const AdminPage = () => {
   const [whatsappData, setWhatsappData] = useState({ totalOrders: 0, totalAmount: 0, orders: [] });
   const [usersData, setUsersData] = useState({ totalUsers: 0, users: [] });
   const [products, setProducts] = useState([]);
-  const [product, setProduct] = useState({ name: "", imageUrl: "", description: "", price: 0, stock: 0 });
+  const [product, setProduct] = useState({ name: "", imageUrl: "", extraImages: ["", "", ""], description: "", price: 0, stock: 0 });
   const [editingProductId, setEditingProductId] = useState("");
   const [blogs, setBlogs] = useState([]);
   const [blog, setBlog] = useState({ title: "", coverImage: "", content: "", tags: "", published: true });
@@ -162,7 +162,7 @@ export const AdminPage = () => {
   };
 
   const resetProductForm = () => {
-    setProduct({ name: "", imageUrl: "", description: "", price: 0, stock: 0 });
+    setProduct({ name: "", imageUrl: "", extraImages: ["", "", ""], description: "", price: 0, stock: 0 });
     setEditingProductId("");
   };
 
@@ -211,6 +211,7 @@ export const AdminPage = () => {
     setProduct({
       name: item.name || "",
       imageUrl: item.imageUrl || "",
+      extraImages: item.extraImages?.length === 3 ? item.extraImages : ["", "", ""],
       description: item.description || "",
       price: Number(item.price) || 0,
       stock: Number(item.stock) || 0,
@@ -1146,14 +1147,14 @@ export const AdminPage = () => {
                   <TextField fullWidth label="Product Name" value={product.name} onChange={(e) => setProduct({ ...product, name: e.target.value })} />
                   <TextField
                     fullWidth
-                    label="Image URL"
+                    label="Main Image URL"
                     helperText="Paste an image URL or upload one from your computer."
                     value={product.imageUrl}
                     onChange={(e) => setProduct({ ...product, imageUrl: e.target.value })}
                   />
                   <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                     <Button variant="outlined" component="label" sx={{ borderRadius: 3, px: 3, py: 1.5, textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                      Upload Image
+                      Upload Main Image
                       <input hidden accept="image/*" type="file" onChange={handleProductImageUpload} />
                     </Button>
                     <span className="text-xs text-slate-500 font-medium bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
@@ -1169,6 +1170,48 @@ export const AdminPage = () => {
                       />
                     </div>
                   )}
+
+                  <div className="mt-4 border-t border-slate-100 pt-4">
+                    <h4 className="text-sm font-bold text-slate-900 mb-3">Extra Images (Optional - Up to 3)</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {[0, 1, 2].map((idx) => (
+                        <div key={idx} className="flex flex-col gap-2">
+                          <TextField
+                            size="small"
+                            label={`Extra Image ${idx + 1} URL`}
+                            value={product.extraImages ? product.extraImages[idx] : ""}
+                            onChange={(e) => {
+                              const newExtra = [...(product.extraImages || ["", "", ""])];
+                              newExtra[idx] = e.target.value;
+                              setProduct({ ...product, extraImages: newExtra });
+                            }}
+                          />
+                          <Button variant="outlined" size="small" component="label" sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+                            Upload Image
+                            <input hidden accept="image/*" type="file" onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                const newExtra = [...(product.extraImages || ["", "", ""])];
+                                newExtra[idx] = String(reader.result || "");
+                                setProduct({ ...product, extraImages: newExtra });
+                                showToast("success", `Extra image ${idx + 1} selected.`);
+                              };
+                              reader.readAsDataURL(file);
+                            }} />
+                          </Button>
+                          {product.extraImages && product.extraImages[idx] && (
+                            <img
+                              src={product.extraImages[idx]}
+                              alt={`Extra ${idx + 1}`}
+                              className="w-full h-20 object-cover rounded-xl shadow-sm border border-slate-200 bg-slate-50"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                   <TextField fullWidth label="Description" multiline minRows={2} value={product.description} onChange={(e) => setProduct({ ...product, description: e.target.value })} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <TextField

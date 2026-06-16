@@ -9,6 +9,9 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { ProductCardSkeleton } from "../components/LoaderSkeleton";
+import { useScrollReveal } from "../hooks/useScrollReveal";
+
+let globalProductsCache = null;
 
 const demoProducts = [
   {
@@ -45,6 +48,7 @@ export const ShopPage = ({ addToCart }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useScrollReveal();
 
   const handleOpenProduct = useCallback(
     (item) => {
@@ -54,25 +58,40 @@ export const ShopPage = ({ addToCart }) => {
   );
 
   useEffect(() => {
+    if (globalProductsCache) {
+      setProducts(globalProductsCache);
+      setLoading(false);
+      // Optional: still fetch in background to keep it updated silently
+      http.get("/products").then((res) => {
+         const data = Array.isArray(res.data) && res.data.length ? res.data : demoProducts;
+         globalProductsCache = data;
+         setProducts(data);
+      }).catch(() => {});
+      return;
+    }
+
     setLoading(true);
     http
       .get("/products")
       .then((res) => {
-        setProducts(Array.isArray(res.data) && res.data.length ? res.data : demoProducts);
+        const data = Array.isArray(res.data) && res.data.length ? res.data : demoProducts;
+        globalProductsCache = data;
+        setProducts(data);
         setLoading(false);
       })
       .catch(() => {
+        globalProductsCache = demoProducts;
         setProducts(demoProducts);
         setLoading(false);
       });
   }, []);
 
   return (
-    <div className="pb-16 w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
+    <div ref={scrollRef} className="pb-16 w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
       <HeroBanner />
       
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 border-b border-slate-200 pb-6 gap-4">
+      <div className="scroll-reveal flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 border-b border-slate-200 pb-6 gap-4">
         <div>
           <h3 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight mb-3">
             Featured <span className="text-rose-600">Products</span>
@@ -88,14 +107,14 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10 scroll-reveal-stagger">
         {loading ? (
           [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <ProductCardSkeleton key={i} />
           ))
         ) : (
           products.map((product) => (
-            <div key={product._id} className="h-full">
+            <div key={product._id} className="h-full scroll-reveal">
               <ProductCard
                 product={product}
                 onAddToCart={addToCart}
@@ -107,7 +126,7 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* Before & After Section */}
-      <div className="mt-32">
+      <div className="mt-32 scroll-reveal">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-rose-50 text-rose-600 px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase mb-4 border border-rose-100">
             <CompareArrowsIcon sx={{ fontSize: 16 }} /> Transformation
@@ -116,9 +135,9 @@ export const ShopPage = ({ addToCart }) => {
           <p className="text-slate-500 font-medium text-lg max-w-2xl mx-auto">See the difference our specialized chemicals and professional application make.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 scroll-reveal-stagger">
           {beforeAfterPairs.map((pair, idx) => (
-            <div key={idx} className="group">
+            <div key={idx} className="group scroll-reveal">
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="flex-1 relative rounded-3xl overflow-hidden border border-slate-200 shadow-lg">
                   <img src={pair.before} alt="Before" loading="lazy" decoding="async" className="w-full h-[300px] object-cover" />
@@ -139,7 +158,7 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* Work Showcase Gallery */}
-      <div className="mt-32">
+      <div className="mt-32 scroll-reveal">
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
           <div className="text-center md:text-left">
             <h3 className="text-3xl md:text-5xl font-black text-slate-900 mb-2">Work Showcase</h3>
@@ -151,9 +170,9 @@ export const ShopPage = ({ addToCart }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 scroll-reveal-stagger">
           {galleryImages.map((img, idx) => (
-            <div key={idx} className={`relative rounded-3xl overflow-hidden group border border-slate-200 ${idx === 0 || idx === 5 ? 'md:col-span-2 md:row-span-2' : ''}`}>
+            <div key={idx} className={`relative rounded-3xl overflow-hidden group border border-slate-200 scroll-reveal ${idx === 0 || idx === 5 ? 'md:col-span-2 md:row-span-2' : ''}`}>
               <img 
                 src={img} 
                 alt={`Showcase ${idx}`} 
@@ -170,7 +189,7 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* Services & Expertise Showcase */}
-      <div className="mt-32 mb-16 bg-slate-900 rounded-[3rem] p-8 md:p-16 text-white overflow-hidden relative">
+      <div className="mt-32 mb-16 bg-slate-900 rounded-[3rem] p-8 md:p-16 text-white overflow-hidden relative scroll-reveal">
         <div className="absolute top-0 right-0 w-96 h-96 bg-rose-600/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
         
         <div className="relative z-10">

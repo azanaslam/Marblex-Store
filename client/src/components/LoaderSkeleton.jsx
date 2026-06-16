@@ -22,7 +22,7 @@ export const BlogCardSkeleton = () => (
 
 export const ProductCardSkeleton = () => (
   <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-xl shadow-slate-200/50 flex flex-col h-full animate-pulse">
-    <Skeleton variant="rectangular" height={260} className="w-full" />
+    <Skeleton variant="rectangular" height={240} className="w-full" />
     <div className="p-6 flex flex-col flex-1">
       <Skeleton variant="text" width="30%" height={20} className="mb-4" />
       <Skeleton variant="text" width="90%" height={32} className="mb-3" />

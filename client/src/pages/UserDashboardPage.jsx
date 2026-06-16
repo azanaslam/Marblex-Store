@@ -39,7 +39,7 @@ const STATUS_COLOR = {
   rejected: "error",
 };
 
-const emptySubmission = { name: "", imageUrl: "", description: "", price: "", stock: "", category: "General", comment: "" };
+const emptySubmission = { name: "", imageUrl: "", extraImages: ["", "", ""], description: "", price: "", stock: "", category: "General", comment: "" };
 const CART_KEY = "marblex_cart";
 
 export const UserDashboardPage = () => {
@@ -588,16 +588,58 @@ export const UserDashboardPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-5">
                 <TextField fullWidth label="Product Name" value={submission.name} onChange={(e) => setSubmission((p) => ({ ...p, name: e.target.value }))} />
-                <TextField fullWidth label="Image URL" value={submission.imageUrl} onChange={(e) => setSubmission((p) => ({ ...p, imageUrl: e.target.value }))} />
+                <TextField fullWidth label="Main Image URL" value={submission.imageUrl} onChange={(e) => setSubmission((p) => ({ ...p, imageUrl: e.target.value }))} />
                 
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                   <Button variant="outlined" component="label" sx={{ borderRadius: 3, px: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
-                    <CloudUploadOutlinedIcon sx={{ mr: 1 }} /> Upload Image
+                    <CloudUploadOutlinedIcon sx={{ mr: 1 }} /> Upload Main Image
                     <input hidden accept="image/*" type="file" onChange={onProductImageUpload} />
                   </Button>
                   <span className="text-xs text-slate-500 font-medium bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
                     PNG/JPG/WEBP supported.
                   </span>
+                </div>
+
+                <div className="border-t border-slate-100 pt-5">
+                  <h4 className="text-sm font-bold text-slate-900 mb-3">Extra Images (Optional - Up to 3)</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[0, 1, 2].map((idx) => (
+                      <div key={idx} className="flex flex-col gap-2">
+                        <TextField
+                          size="small"
+                          label={`Extra Image ${idx + 1} URL`}
+                          value={submission.extraImages ? submission.extraImages[idx] : ""}
+                          onChange={(e) => {
+                            const newExtra = [...(submission.extraImages || ["", "", ""])];
+                            newExtra[idx] = e.target.value;
+                            setSubmission((p) => ({ ...p, extraImages: newExtra }));
+                          }}
+                        />
+                        <Button variant="outlined" size="small" component="label" sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+                          Upload Image
+                          <input hidden accept="image/*" type="file" onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              const newExtra = [...(submission.extraImages || ["", "", ""])];
+                              newExtra[idx] = String(reader.result || "");
+                              setSubmission((p) => ({ ...p, extraImages: newExtra }));
+                              showToast("success", `Extra image ${idx + 1} selected.`);
+                            };
+                            reader.readAsDataURL(file);
+                          }} />
+                        </Button>
+                        {submission.extraImages && submission.extraImages[idx] && (
+                          <img
+                            src={submission.extraImages[idx]}
+                            alt={`Extra ${idx + 1}`}
+                            className="w-full h-20 object-cover rounded-xl shadow-sm border border-slate-200 bg-slate-50"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">

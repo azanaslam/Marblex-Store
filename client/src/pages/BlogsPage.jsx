@@ -7,15 +7,29 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { http } from "../api/http";
 import { BlogCardSkeleton } from "../components/LoaderSkeleton";
 
+let globalBlogsCache = null;
+
 export const BlogsPage = () => {
   const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (globalBlogsCache) {
+      setBlogs(globalBlogsCache);
+      setLoading(false);
+      http.get("/blogs").then((res) => {
+        globalBlogsCache = res.data || [];
+        setBlogs(globalBlogsCache);
+      }).catch(() => {});
+      return;
+    }
+
+    setLoading(true);
     http.get("/blogs")
       .then((res) => {
-        setBlogs(res.data || []);
+        globalBlogsCache = res.data || [];
+        setBlogs(globalBlogsCache);
         setLoading(false);
       })
       .catch((err) => {
