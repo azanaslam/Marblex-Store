@@ -107,20 +107,19 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10 scroll-reveal-stagger">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10">
         {loading ? (
           [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <ProductCardSkeleton key={i} />
           ))
         ) : (
           products.map((product) => (
-            <div key={product._id} className="h-full scroll-reveal">
-              <ProductCard
-                product={product}
-                onAddToCart={addToCart}
-                onOpenProduct={handleOpenProduct}
-              />
-            </div>
+            <ProductCard
+              key={product._id}
+              product={product}
+              onAddToCart={addToCart}
+              onOpenProduct={handleOpenProduct}
+            />
           ))
         )}
       </div>
