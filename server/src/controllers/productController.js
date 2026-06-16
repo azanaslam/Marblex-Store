@@ -4,7 +4,7 @@ const Product = require("../models/Product");
 
 const getProducts = async (_, res) => {
 
-  const products = await Product.find({ active: true }).sort({ createdAt: -1 });
+  const products = await Product.find({ active: { $ne: false } }).sort({ createdAt: -1 });
 
   res.json(products);
 
@@ -14,7 +14,7 @@ const getProducts = async (_, res) => {
 
 const getProductById = async (req, res) => {
 
-  const product = await Product.findOne({ _id: req.params.id, active: true });
+  const product = await Product.findOne({ _id: req.params.id, active: { $ne: false } });
 
   if (!product) return res.status(404).json({ message: "Product not found" });
 
