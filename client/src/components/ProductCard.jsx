@@ -24,22 +24,29 @@ const ProductCardComponent = ({ product, onAddToCart, onOpenProduct }) => {
     }
   };
 
+  const priceLabel = Number(product.price ?? 0).toLocaleString();
+  const imageSrc = product.imageUrl?.trim() || "/products/Banner1.jpeg";
+
   return (
-    <div className="group relative flex flex-col h-full bg-white rounded-3xl overflow-hidden border border-slate-200 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-slate-200/50 hover:border-rose-300">
+    <div className="group relative flex w-full flex-col bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-slate-200/50 hover:border-rose-300">
       
       {/* Image Section */}
-      <div className="relative h-[240px] overflow-hidden bg-slate-50 cursor-pointer" onClick={() => onOpenProduct?.(product)}>
+      <div className="relative h-[240px] shrink-0 overflow-hidden bg-slate-100 cursor-pointer" onClick={() => onOpenProduct?.(product)}>
         <img
-          src={product.imageUrl}
-          alt={product.name}
+          src={imageSrc}
+          alt={product.name || "Product"}
           loading="lazy"
           decoding="async"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "/products/Banner1.jpeg";
+          }}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         
         {/* Price Badge */}
         <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md text-slate-900 px-4 py-1.5 rounded-xl font-black text-sm shadow-lg shadow-slate-900/10 border border-slate-100">
-          PKR {product.price.toLocaleString()}
+          PKR {priceLabel}
         </div>
         
         {/* Overlay on Hover */}
