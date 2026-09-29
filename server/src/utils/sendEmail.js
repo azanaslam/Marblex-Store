@@ -32,8 +32,9 @@ const getTransporter = async () => {
 
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false, // Port 587 uses STARTTLS
+    requireTLS: true,
     family: 4, // CRITICAL: Force IPv4 to prevent ENETUNREACH on Render/Cloud platforms
     auth: {
       user: emailUser,
@@ -44,6 +45,7 @@ const getTransporter = async () => {
     socketTimeout: 15000,
     tls: {
       rejectUnauthorized: false,
+      minVersion: "TLSv1.2",
     },
   });
 

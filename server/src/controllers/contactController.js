@@ -51,8 +51,9 @@ exports.replyToRequest = async (req, res) => {
     // Create a transporter dynamically
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
+      requireTLS: true,
       family: 4,
       auth: {
         user: emailUser,
@@ -63,6 +64,7 @@ exports.replyToRequest = async (req, res) => {
       socketTimeout: 15000,
       tls: {
         rejectUnauthorized: false,
+        minVersion: "TLSv1.2",
       },
     });
 
