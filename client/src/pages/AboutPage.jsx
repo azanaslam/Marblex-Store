@@ -1,12 +1,19 @@
-import { useState } from "react";
-import { Container, Box, Typography, TextField, Button, Grid, Paper, Divider } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import SendIcon from "@mui/icons-material/Send";
-import BusinessIcon from "@mui/icons-material/Business";
-import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
-import SpeedIcon from "@mui/icons-material/Speed";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
+import ConstructionOutlinedIcon from "@mui/icons-material/ConstructionOutlined";
+import WorkspacePremiumOutlinedIcon from "@mui/icons-material/WorkspacePremiumOutlined";
+import WaterDropOutlinedIcon from "@mui/icons-material/WaterDropOutlined";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import MailOutlineOutlinedIcon from "@mui/icons-material/MailOutlineOutlined";
+import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { http } from "../api/http";
+import gsap from "gsap";
 
 export const AboutPage = () => {
   const navigate = useNavigate();
@@ -18,6 +25,18 @@ export const AboutPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (containerRef.current) {
+      gsap.fromTo(
+        containerRef.current.querySelectorAll(".anim-reveal"),
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: "power2.out" }
+      );
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,247 +51,381 @@ export const AboutPage = () => {
       setFormData({ name: "", email: "", phone: "", message: "" });
     } catch (err) {
       console.error("Error sending message:", err);
-      alert("Failed to send message. Please try again later.");
+      alert("Failed to send message. Please try again later or contact us directly via WhatsApp.");
     } finally {
       setLoading(false);
     }
   };
 
-  const values = [
+  const pillars = [
     {
-      icon: <BusinessIcon sx={{ fontSize: 40, color: '#e11d48' }} />,
-      title: "Industry Leadership",
-      desc: "Leading the market in construction chemicals and premium car accessories since inception."
+      icon: <WaterDropOutlinedIcon sx={{ fontSize: 32, color: "#ff6b4a" }} />,
+      title: "Structural Waterproofing",
+      desc: "Monolithic elastomeric liquid membranes, SBS/APP bitumen sheets, and deep crack-bridging barrier systems for basements, roofs, and foundations.",
     },
     {
-      icon: <VerifiedUserIcon sx={{ fontSize: 40, color: '#2563eb' }} />,
-      title: "Quality Assurance",
-      desc: "Every product and service meets the highest international standards of durability and safety."
+      icon: <ScienceOutlinedIcon sx={{ fontSize: 32, color: "#10b981" }} />,
+      title: "Construction Chemicals",
+      desc: "High-build epoxy floor coatings, concrete admixtures, bonding agents, non-shrink structural grouts, and protective primers.",
     },
     {
-      icon: <SpeedIcon sx={{ fontSize: 40, color: '#059669' }} />,
-      title: "Rapid Execution",
-      desc: "Quick turnaround times for project consultations and product deliveries nationwide."
-    }
+      icon: <ConstructionOutlinedIcon sx={{ fontSize: 32, color: "#38bdf8" }} />,
+      title: "Industrial Rubber Solutions",
+      desc: "Engineered vulcanized rubber waterstops, bridge bearing pads, expansion joint profiles, and custom elastomeric seals for hydrostatic load resistance.",
+    },
+    {
+      icon: <WorkspacePremiumOutlinedIcon sx={{ fontSize: 32, color: "#f59e0b" }} />,
+      title: "Certified Engineering Standards",
+      desc: "Rigorous quality control adhering to ISO 9001:2015, ASTM D412, and BS 8102 standards with accredited laboratory test verification.",
+    },
+  ];
+
+  const metrics = [
+    { value: "15+", label: "Years of Excellence", sub: "Serving Civil & Industrial Projects" },
+    { value: "500+", label: "Mega Projects Completed", sub: "Commercial, Dams & Infrastructure" },
+    { value: "100%", label: "Hydrostatic Protection", sub: "Zero Water Ingress Warranty" },
+    { value: "50+", label: "Engineered Formulations", sub: "Tested & Certified Products" },
   ];
 
   return (
-    <div className="bg-slate-50 min-h-screen font-sans overflow-x-hidden">
-      {/* Hero Section */}
-      <Box sx={{ 
-        bgcolor: '#0f172a', 
-        color: 'white', 
-        pt: { xs: 10, md: 15 }, 
-        pb: { xs: 14, md: 20 },
-        position: 'relative',
-        overflow: 'hidden',
-        textAlign: 'center',
-        px: 2
-      }}>
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,#e11d48,transparent_60%)] blur-[100px]"></div>
-        </div>
+    <div ref={containerRef} className="w-full space-y-12 sm:space-y-16 pb-12">
+      
+      {/* 1. Hero Section (Deep Navy Teal Brand Atmosphere) */}
+      <section className="anim-reveal relative rounded-3xl sm:rounded-[2.5rem] bg-gradient-to-br from-[#0a3d52] via-[#0b4860] to-[#082a38] border border-[#0d4e68]/50 text-white overflow-hidden shadow-2xl p-8 sm:p-12 lg:p-16">
         
-        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
-          <Typography variant="overline" sx={{ letterSpacing: 4, fontWeight: 800, color: '#f43f5e', mb: 2, display: 'block', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
-            SINCE 2010
-          </Typography>
-          <Typography variant="h1" sx={{ fontWeight: 900, fontSize: { xs: '2rem', sm: '3rem', md: '4.5rem' }, mb: 4, lineHeight: 1.1 }}>
-            Innovation in <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-rose-600">Construction</span> & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">Style</span>
-          </Typography>
-          <Typography variant="h6" sx={{ color: '#94a3b8', fontWeight: 500, lineHeight: 1.8, maxWidth: 800, mx: 'auto', fontSize: { xs: '0.95rem', md: '1.25rem' } }}>
-            Marblex is a premier provider of waterproofing solutions and luxury car accessories, blending structural integrity with aesthetic excellence.
-          </Typography>
-        </Container>
-      </Box>
+        {/* Ambient Glows */}
+        <div className="absolute top-0 right-1/4 w-[450px] h-[450px] bg-[#ff6b4a]/20 rounded-full blur-[130px] pointer-events-none -translate-y-1/3" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#0ea5e9]/15 rounded-full blur-[120px] pointer-events-none translate-y-1/3" />
 
-      {/* Story Section */}
-      <Container maxWidth="lg" sx={{ mt: { xs: -4, md: -8 }, mb: 12, px: { xs: 2, sm: 3 } }}>
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={7}>
-            <Paper elevation={0} sx={{ p: { xs: 3, sm: 5, md: 8 }, borderRadius: { xs: 4, md: 6 }, border: '1px solid #f1f5f9', height: '100%', shadow: '0 20px 50px -12px rgba(0,0,0,0.05)' }}>
-              <Typography variant="h3" sx={{ fontWeight: 900, mb: 3, color: '#1e293b', fontSize: { xs: '1.75rem', md: '3rem' } }}>The Marblex Legacy</Typography>
-              <div className="w-20 h-1.5 bg-rose-600 rounded-full mb-8"></div>
-              <Typography variant="body1" sx={{ color: '#475569', lineHeight: 1.8, mb: 4, fontSize: { xs: '1rem', md: '1.1rem' } }}>
-                At Marblex, we don't just sell products; we provide peace of mind. Our specialized waterproofing treatments protect thousands of structures across Pakistan, while our premium car mats bring luxury to every drive.
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#475569', lineHeight: 1.8, mb: 6, fontSize: { xs: '1rem', md: '1.1rem' } }}>
-                With over a decade of experience, we have built a reputation for using only the finest chemicals and materials, ensuring that our customers receive nothing but the best.
-              </Typography>
-              <Button 
-                variant="contained" 
-                onClick={() => navigate('/catalogs')}
-                endIcon={<ArrowForwardIcon />}
-                fullWidth={window.innerWidth < 640}
-                sx={{ bgcolor: '#e11d48', borderRadius: 2, px: 6, py: 2, fontWeight: 800, textTransform: 'none', fontSize: '1.1rem', '&:hover': { bgcolor: '#be123c' } }}
-              >
-                Explore Catalog
-              </Button>
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={5}>
-            <Box sx={{ position: 'relative', height: '100%', borderRadius: { xs: 4, md: 6 }, overflow: 'hidden', minHeight: { xs: 300, md: 400 }, border: { xs: '4px solid white', md: '8px solid white' }, shadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
-              <img 
-                src="/assets/brochures/Profile_marblex_page_1.jpg" 
-                alt="Marblex Quality" 
-                className="w-full h-full object-cover"
-              />
-            </Box>
-          </Grid>
-        </Grid>
+        {/* Subtle Grid Overlay */}
+        <div 
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+          }}
+        />
 
-        {/* Values Section */}
-        <Box sx={{ py: { xs: 8, md: 15 } }}>
-          <Box sx={{ textAlign: 'center', mb: 8 }}>
-            <Typography variant="overline" sx={{ color: '#f43f5e', fontWeight: 900, letterSpacing: 4, display: 'block', mb: 2, fontSize: { xs: '0.7rem', md: '0.9rem' } }}>
-              OUR VALUES
-            </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 900, color: '#1e293b', mb: 3, fontSize: { xs: '1.75rem', md: '3rem' } }}>Our Core Principles</Typography>
-            <Typography variant="body1" sx={{ color: '#64748b', maxWidth: 600, mx: 'auto', fontWeight: 500, fontSize: { xs: '0.9rem', md: '1rem' } }}>
-              We are driven by a commitment to excellence, ensuring every project reflects our high standards of quality and integrity.
-            </Typography>
-          </Box>
-          
-          <Grid container spacing={3} justifyContent="center">
-            {values.map((v, i) => (
-              <Grid item xs={12} sm={4} key={i}>
-                <div className="group bg-white p-8 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 hover:border-rose-500/30 transition-all duration-500 h-full flex flex-col items-center text-center max-w-[400px] mx-auto">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-rose-50 transition-all duration-500 border border-slate-100 group-hover:border-rose-100">
-                    {v.icon}
-                  </div>
-                  <h4 className="text-xl md:text-2xl font-black text-slate-900 mb-4">{v.title}</h4>
-                  <p className="text-slate-500 font-medium leading-relaxed text-sm md:text-base">
-                    {v.desc}
-                  </p>
-                </div>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-      </Container>
+        <div className="relative z-10 max-w-3xl space-y-5">
+          {/* Top Pill Tag */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold text-[#ff8c73] uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-[#ff6b4a] animate-pulse" />
+            <span>ESTABLISHED 2010 • MARBLEX PAKISTAN</span>
+          </div>
 
-      {/* Contact Section */}
-      <Box id="contact-form" sx={{ py: { xs: 10, md: 20 }, bgcolor: '#0f172a', color: 'white', position: 'relative', overflow: 'hidden', px: 2 }}>
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-600/10 rounded-full blur-[120px] pointer-events-none translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 translate-y-1/2"></div>
+          {/* Main Headline */}
+          <h1 
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.15] tracking-tight"
+            style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
+          >
+            Engineering Durability & <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff6b4a] via-[#ff8c73] to-[#ffb199]">
+              Chemical Excellence
+            </span> <br />
+            For Civil Infrastructure.
+          </h1>
 
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-          <Grid container spacing={6} alignItems="center">
-            <Grid item xs={12} md={5}>
-              <Box>
-                <Typography variant="overline" sx={{ color: '#f43f5e', fontWeight: 900, letterSpacing: 4, display: 'block', mb: 2, fontSize: { xs: '0.7rem', md: '0.9rem' } }}>
-                  REACH OUT
-                </Typography>
-                <Typography variant="h2" sx={{ fontWeight: 900, mb: 4, fontSize: { xs: '2rem', sm: '2.5rem', md: '4rem' }, lineHeight: 1.1 }}>
-                  Let's Build <br /> Something <span className="text-rose-500">Great</span>
-                </Typography>
-                <Typography variant="body1" sx={{ color: '#94a3b8', mb: 8, fontSize: { xs: '1rem', md: '1.25rem' }, lineHeight: 1.8, maxWidth: 400 }}>
-                  Our specialists are ready to help you with your construction or style needs.
-                </Typography>
-                
-                <div className="space-y-6 md:space-y-8">
-                  <div className="flex items-center gap-6 group">
-                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-all duration-300">
-                      <BusinessIcon />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Corporate Office</p>
-                      <p className="text-base md:text-lg font-bold">40-Ferozpur Road, Lahore</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6 group">
-                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300">
-                      <SendIcon />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Direct Email</p>
-                      <p className="text-base md:text-lg font-bold">Sales@themarflexgroup.com</p>
-                    </div>
-                  </div>
-                </div>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} md={7}>
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-2xl">
-                {success ? (
-                  <div className="text-center py-10">
-                    <div className="w-16 h-16 md:w-20 md:h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
-                      <VerifiedUserIcon sx={{ fontSize: { xs: 30, md: 40 } }} />
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-black mb-4">Message Sent!</h3>
-                    <p className="text-slate-400 font-medium mb-8 text-sm md:text-base">Thank you for reaching out. We will get back to you shortly.</p>
-                    <button onClick={() => setSuccess(false)} className="bg-white text-slate-900 px-8 py-3 rounded-2xl font-black text-sm hover:bg-rose-500 hover:text-white transition-all">
-                      Send Another
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
-                        <input 
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          required
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-600 text-sm md:text-base"
-                          placeholder="Mubashir Khan"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
-                        <input 
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          required
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-600 text-sm md:text-base"
-                          placeholder="mubashir@example.com"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone Number</label>
-                      <input 
-                        type="text"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-600 text-sm md:text-base"
-                        placeholder="0348-xxxxxxx"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Your Message</label>
-                      <textarea 
-                        name="message"
-                        value={formData.message}
-                        onChange={handleChange}
-                        required
-                        rows={4}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-600 resize-none text-sm md:text-base"
-                        placeholder="Tell us about your project..."
-                      />
-                    </div>
-                    <button 
-                      type="submit" 
-                      disabled={loading}
-                      className="w-full bg-gradient-to-r from-rose-600 to-rose-500 py-4 md:py-5 rounded-2xl text-white font-black text-base md:text-lg shadow-xl shadow-rose-600/20 hover:shadow-rose-600/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
-                    >
-                      {loading ? "Processing..." : (
-                        <>Submit Inquiry <SendIcon fontSize="small" /></>
-                      )}
-                    </button>
-                  </form>
-                )}
+          {/* Subtitle */}
+          <p className="text-slate-100 text-sm sm:text-base lg:text-lg leading-relaxed font-normal opacity-95">
+            MARBLEX is an industry-leading manufacturer and supplier of advanced construction chemicals, polymer waterproofing membranes, and heavy-duty vulcanized rubber solutions engineered for extreme environmental resilience and hydrostatic load containment.
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-wrap items-center gap-3 pt-3">
+            <button
+              onClick={() => navigate("/catalogs")}
+              className="btn-3d-accent px-7 py-3.5 rounded-xl text-white font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ff6b4a]/30"
+            >
+              <span>Explore Technical Catalog</span>
+              <ArrowForwardIcon sx={{ fontSize: 16 }} />
+            </button>
+
+            <a
+              href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20would%20like%20to%20consult%20regarding%20a%20construction%20chemical%20project."
+              target="_blank"
+              rel="noreferrer"
+              className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white font-bold text-xs sm:text-sm uppercase tracking-wider border border-white/20 backdrop-blur-md flex items-center gap-2 transition"
+            >
+              <WhatsAppIcon sx={{ fontSize: 18, color: "#10b981" }} />
+              <span>Direct Engineering WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. Key Metrics Bar */}
+      <section className="anim-reveal grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {metrics.map((m, idx) => (
+          <div 
+            key={idx}
+            className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#0e2735] border border-slate-200 dark:border-slate-800 shadow-xs hover:border-[#ff6b4a]/40 transition-all text-center space-y-1.5"
+          >
+            <div 
+              className="text-3xl sm:text-4xl font-black text-[#0a3d52] dark:text-[#38bdf8]"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              {m.value}
+            </div>
+            <div className="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm">
+              {m.label}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400">
+              {m.sub}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* 3. Company Story & Heritage */}
+      <section className="anim-reveal grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center bg-white dark:bg-[#0e2735] p-6 sm:p-10 lg:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        
+        {/* Left Column: Story Content */}
+        <div className="lg:col-span-7 space-y-5">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0a3d52]/10 dark:bg-white/10 text-[#0a3d52] dark:text-[#38bdf8] text-xs font-bold uppercase tracking-wider">
+            <ShieldOutlinedIcon sx={{ fontSize: 15 }} />
+            <span>THE MARBLEX HERITAGE</span>
+          </div>
+
+          <h2 
+            className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white leading-tight tracking-tight"
+            style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
+          >
+            Built on Rigorous Chemistry & Structural Integrity.
+          </h2>
+
+          <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+            Founded with a clear engineering objective, <strong>MARBLEX — Chemical & Rubber</strong> has grown into Pakistan’s premier manufacturer and trusted supplier of specialized construction solutions. We solve critical structural challenges: water seepage, chemical abrasion, concrete deterioration, and joint expansion.
+          </p>
+
+          <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+            From high-rise commercial basements in Lahore and Karachi to national dam projects and industrial flooring for pharmaceutical plants, MARBLEX formulations are backed by extensive laboratory testing, certified compliance, and on-site application support.
+          </p>
+
+          {/* Quick Value Highlights */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+              <CheckCircleRoundedIcon sx={{ fontSize: 18, color: "#10b981" }} />
+              <span>Certified ISO 9001:2015 Quality</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+              <CheckCircleRoundedIcon sx={{ fontSize: 18, color: "#10b981" }} />
+              <span>Monolithic Joint-Free Seals</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+              <CheckCircleRoundedIcon sx={{ fontSize: 18, color: "#10b981" }} />
+              <span>ASTM D412 Standard Verification</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+              <CheckCircleRoundedIcon sx={{ fontSize: 18, color: "#10b981" }} />
+              <span>Nationwide Technical Logistics</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Specimen Image Grid */}
+        <div className="lg:col-span-5 grid grid-cols-2 gap-3.5">
+          <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm aspect-[4/5]">
+            <img 
+              src="/products/Banner1.jpeg" 
+              alt="MARBLEX Waterproofing Application" 
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm aspect-[4/5] mt-6">
+            <img 
+              src="/products/Banner3.jpeg" 
+              alt="MARBLEX Polymer Membrane" 
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Core Engineering Capabilities (4 Pillars Grid) */}
+      <section className="anim-reveal space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#ff6b4a]">
+            OUR CORE COMPETENCIES
+          </span>
+          <h2 
+            className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight"
+            style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
+          >
+            Engineering Pillars of MARBLEX
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Comprehensive solutions tailored for architects, civil engineers, structural consultants, and industrial contractors.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {pillars.map((p, idx) => (
+            <div 
+              key={idx}
+              className="bg-white dark:bg-[#0e2735] p-7 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-lg hover:border-[#ff6b4a]/30 transition-all flex flex-col justify-between space-y-4 group"
+            >
+              <div className="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 group-hover:scale-110 transition-transform">
+                {p.icon}
               </div>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+              <div className="space-y-2">
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                  {p.title}
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                  {p.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 5. Contact & Technical Project Consultation Form */}
+      <section className="anim-reveal bg-white dark:bg-[#0e2735] p-6 sm:p-10 lg:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          
+          {/* Left Column: Office & Direct Info */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="space-y-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#ff6b4a]">
+                TECHNICAL CONSULTATION
+              </span>
+              <h2 
+                className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                Discuss Your Construction Specifications
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                Connect directly with our chemical engineers and technical product specialists for material datasheets, site testing, and tailored quotations.
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-[#0a3d52] dark:text-[#38bdf8]">
+                  <LocationOnOutlinedIcon sx={{ fontSize: 20 }} />
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Headquarters</div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">40-Ferozpur Road, Lahore, Pakistan</div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-[#ff6b4a]">
+                  <MailOutlineOutlinedIcon sx={{ fontSize: 20 }} />
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Direct Sales & Support</div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Marblexpak@gmail.com</div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-[#10b981]">
+                  <LocalPhoneOutlinedIcon sx={{ fontSize: 20 }} />
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Engineering Hotline</div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">+92 348 1116611</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Inquiry Form */}
+          <div className="lg:col-span-7 bg-slate-50 dark:bg-slate-800/60 p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-700">
+            {success ? (
+              <div className="text-center py-8 space-y-4">
+                <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800">
+                  <CheckCircleRoundedIcon sx={{ fontSize: 32 }} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Technical Inquiry Received</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                  Thank you for contacting MARBLEX. Our technical engineering team will review your specifications and get in touch promptly.
+                </p>
+                <button
+                  onClick={() => setSuccess(false)}
+                  className="px-6 py-2.5 rounded-xl bg-[#0a3d52] text-white font-bold text-xs uppercase tracking-wider"
+                >
+                  Submit Another Inquiry
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Your Full Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      placeholder="e.g. Engr. Ahmad Hassan"
+                      className="w-full bg-white dark:bg-[#0e2735] border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Email Address</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      placeholder="e.g. ahmad@construction.com"
+                      className="w-full bg-white dark:bg-[#0e2735] border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a]"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Phone / WhatsApp Number</label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="e.g. 0348-1116611"
+                    className="w-full bg-white dark:bg-[#0e2735] border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Project Requirements / Specifications</label>
+                  <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    required
+                    rows={4}
+                    placeholder="Provide details about your project, chemical specs, or required rubber profiles..."
+                    className="w-full bg-white dark:bg-[#0e2735] border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a] resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full btn-3d-accent py-3.5 rounded-xl text-white font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+                >
+                  {loading ? "Processing..." : (
+                    <>
+                      <span>Submit Technical Inquiry</span>
+                      <SendRoundedIcon sx={{ fontSize: 16 }} />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+
+        </div>
+      </section>
+
     </div>
   );
 };

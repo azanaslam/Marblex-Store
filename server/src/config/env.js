@@ -1,5 +1,10 @@
 const dotenv = require("dotenv");
+const path = require("path");
 
+// Load .env from various possible locations
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 dotenv.config();
 
 module.exports = {
@@ -11,4 +16,10 @@ module.exports = {
   adminPassword: process.env.ADMIN_PASSWORD || "admin123",
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
+  emailUser: process.env.EMAIL_USER || "",
+  emailPass: process.env.EMAIL_PASS || "",
 };
+

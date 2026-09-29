@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Container, Box, Typography, Grid } from "@mui/material";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import PhoneIcon from "@mui/icons-material/Phone";
-import EmailIcon from "@mui/icons-material/Email";
-import SendIcon from "@mui/icons-material/Send";
-import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
+import MailOutlineOutlinedIcon from "@mui/icons-material/MailOutlineOutlined";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { http } from "../api/http";
 
 export const ContactPage = () => {
@@ -37,150 +37,160 @@ export const ContactPage = () => {
   };
 
   return (
-    <Box className="bg-white min-h-screen relative overflow-x-hidden w-full flex flex-col items-center">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-rose-50 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none opacity-60"></div>
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-50 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2 pointer-events-none opacity-60"></div>
+    <div className="w-full max-w-[1400px] mx-auto min-h-screen pb-24 px-4 sm:px-6 lg:px-8 pt-8">
+      {/* Header */}
+      <div className="text-center mb-16 max-w-2xl mx-auto">
+        <span className="inline-block py-1.5 px-4 rounded-full bg-[#ff6b4a]/10 text-[#ff6b4a] font-bold text-xs tracking-widest uppercase mb-4 border border-[#ff6b4a]/20">
+          Get In Touch
+        </span>
+        <h1 className="text-4xl md:text-6xl font-black text-[#0f1929] mb-4 tracking-tight" style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}>
+          Contact <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff6b4a] to-[#ff8c73]">MARBLEX Desk</span>
+        </h1>
+        <p className="text-base md:text-lg text-[#565e69] font-normal leading-relaxed">
+          Request technical datasheets, site consultations, or customized quotations for large-scale construction projects.
+        </p>
+      </div>
 
-      <Container maxWidth="lg" className="relative z-10 pt-10 md:pt-20 pb-24 px-4 sm:px-6 mx-auto">
-        {/* Header Section */}
-        <Box className="text-center mb-12 md:mb-20">
-          <span className="inline-block py-1.5 px-6 rounded-full bg-rose-50 text-rose-600 font-black text-[10px] tracking-[0.3em] uppercase mb-6 border border-rose-100 shadow-sm">
-            Contact Us
-          </span>
-          <Typography variant="h1" className="text-3xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
-            Get in <span className="text-rose-600">Touch</span>
-          </Typography>
-          <Typography
-            component="p"
-            className="text-base md:text-lg text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed px-4 sm:px-0 text-center text-pretty"
-          >
-            Have a project in mind or need professional advice? Reach out to our specialized team across Pakistan.
-          </Typography>
-        </Box>
-
-        <Grid container spacing={{ xs: 4, lg: 6 }} justifyContent="center">
-          {/* Contact Info Cards */}
-          <Grid item xs={12} md={5} lg={4}>
-            <div className="flex flex-col gap-6">
-              <div className="group bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-rose-500/10 hover:border-rose-200 transition-all duration-500 flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all duration-500">
-                  <LocationOnIcon />
-                </div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Our Headquarters</h4>
-                <p className="text-lg md:text-xl font-black text-slate-900 leading-tight">40-Ferozpur Road, Lahore, Pakistan</p>
-              </div>
-
-              <div className="group bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-blue-500/10 hover:border-blue-200 transition-all duration-500 flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
-                  <PhoneIcon />
-                </div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Customer Hotline</h4>
-                <p className="text-lg md:text-xl font-black text-slate-900 leading-tight">0348-111-66-11</p>
-              </div>
-
-              <div className="group bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-200 transition-all duration-500 flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
-                  <EmailIcon />
-                </div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Support Email</h4>
-                <a
-                  href="mailto:Sales@themarflexgroup.com"
-                  className="text-base md:text-lg font-black text-slate-900 leading-tight break-words px-2 w-full max-w-full"
-                >
-                  Sales@themarflexgroup.com
-                </a>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left 5 Cols: Contact Channels */}
+        <div className="lg:col-span-5 space-y-5">
+          <div className="bg-white p-7 rounded-3xl border border-[#e0e6ed] card-shadow flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#0a3d52]/10 text-[#0a3d52] flex items-center justify-center shrink-0">
+              <LocationOnOutlinedIcon />
             </div>
-          </Grid>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#565e69] mb-1 font-subheading">Plant & Headquarters</h4>
+              <p className="text-base font-bold text-[#0f1929]">40-Ferozpur Road, Industrial Area, Lahore, Pakistan</p>
+            </div>
+          </div>
 
-          {/* Contact Form */}
-          <Grid item xs={12} md={7} lg={8}>
-            <div className="bg-slate-900 p-8 sm:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl shadow-slate-900/40 relative overflow-hidden h-full flex flex-col justify-center min-h-[600px]">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-rose-600/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+          <div className="bg-white p-7 rounded-3xl border border-[#e0e6ed] card-shadow flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#ff6b4a]/10 text-[#ff6b4a] flex items-center justify-center shrink-0">
+              <LocalPhoneOutlinedIcon />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#565e69] mb-1 font-subheading">Direct Sales Hotline</h4>
+              <a href="tel:0348-111-66-11" className="text-base font-bold text-[#0f1929] hover:text-[#ff6b4a] transition-colors">
+                +92 348 111 6611
+              </a>
+            </div>
+          </div>
+
+          <div className="bg-white p-7 rounded-3xl border border-[#e0e6ed] card-shadow flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <MailOutlineOutlinedIcon />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#565e69] mb-1 font-subheading">Corporate Inquiry</h4>
+              <a href="mailto:Marblexpak@gmail.com" className="text-base font-bold text-[#0f1929] hover:text-[#ff6b4a] transition-colors break-all">
+                Marblexpak@gmail.com
+              </a>
+            </div>
+          </div>
+
+          {/* Quick WhatsApp Card */}
+          <div className="bg-gradient-to-br from-emerald-600 to-teal-700 p-7 rounded-3xl text-white shadow-xl flex items-center justify-between">
+            <div>
+              <h4 className="text-lg font-bold">WhatsApp Engineering Desk</h4>
+              <p className="text-xs text-emerald-100 mt-1">Instant replies during business hours</p>
+            </div>
+            <a
+              href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20have%20an%20inquiry."
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2.5 rounded-xl bg-white text-emerald-800 font-bold text-xs uppercase tracking-wider hover:bg-emerald-50 shadow-md transition-all active:scale-95"
+            >
+              <WhatsAppIcon sx={{ fontSize: 16 }} className="mr-1 inline" /> Chat
+            </a>
+          </div>
+        </div>
+
+        {/* Right 7 Cols: Interactive Form */}
+        <div className="lg:col-span-7 bg-white p-8 sm:p-12 rounded-3xl border border-[#e0e6ed] card-shadow">
+          {success ? (
+            <div className="flex flex-col items-center justify-center text-center py-12">
+              <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-6 border border-emerald-200 shadow-md">
+                <CheckCircleRoundedIcon sx={{ fontSize: 44 }} />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-bold text-[#0a3d52] mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Inquiry Transmitted</h3>
+              <p className="text-[#565e69] text-sm sm:text-base mb-8 max-w-md">
+                Thank you for contacting MARBLEX. Our chemical and sales specialists will review your requirements and respond within 24 hours.
+              </p>
+              <button 
+                onClick={() => setSuccess(false)}
+                className="btn-3d-navy px-8 py-3 rounded-xl text-white font-bold text-xs uppercase tracking-wider"
+              >
+                Send Another Inquiry
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-[#0a3d52] uppercase tracking-wider mb-2 font-subheading">Your Full Name</label>
+                  <input 
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    placeholder="e.g. Tariq Mehmood"
+                    className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-4 py-3 text-xs sm:text-sm text-[#0f1929] focus:bg-white focus:outline-none focus:border-[#ff6b4a] focus:ring-4 focus:ring-[#ff6b4a]/10 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#0a3d52] uppercase tracking-wider mb-2 font-subheading">Email Address</label>
+                  <input 
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    placeholder="tariq@construction.com"
+                    className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-4 py-3 text-xs sm:text-sm text-[#0f1929] focus:bg-white focus:outline-none focus:border-[#ff6b4a] focus:ring-4 focus:ring-[#ff6b4a]/10 transition-all"
+                  />
+                </div>
+              </div>
               
-              {success ? (
-                <div className="flex flex-col items-center justify-center text-center py-6 relative z-10">
-                  <div className="w-20 h-20 md:w-28 md:h-28 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-10 border border-emerald-500/20 shadow-lg shadow-emerald-500/10 animate-bounce">
-                    <VerifiedUserIcon sx={{ fontSize: { xs: 40, md: 56 } }} />
-                  </div>
-                  <h3 className="text-3xl md:text-5xl font-black text-white mb-6">Message Sent!</h3>
-                  <p className="text-slate-400 font-medium text-lg md:text-xl mb-12 max-w-md px-4 leading-relaxed">Thank you for reaching out. Our experts will get back to you within 24 hours.</p>
-                  <button onClick={() => setSuccess(false)} className="bg-white text-slate-900 px-12 py-5 rounded-2xl font-black text-sm hover:bg-rose-500 hover:text-white transition-all shadow-xl hover:-translate-y-1">
-                    Send Another Message
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block text-center">Full Name</label>
-                      <input 
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 text-center text-base focus:bg-white/10"
-                        placeholder="Mubashir Khan"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block text-center">Email Address</label>
-                      <input 
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 text-center text-base focus:bg-white/10"
-                        placeholder="mubashir@example.com"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block text-center">Subject</label>
-                    <input 
-                      type="text"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleChange}
-                      required
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 text-center text-base focus:bg-white/10"
-                      placeholder="Service Inquiry"
-                    />
-                  </div>
+              <div>
+                <label className="block text-xs font-bold text-[#0a3d52] uppercase tracking-wider mb-2 font-subheading">Project Subject / Product</label>
+                <input 
+                  type="text"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g. Waterstop rubber quote for 2500m joint"
+                  className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-4 py-3 text-xs sm:text-sm text-[#0f1929] focus:bg-white focus:outline-none focus:border-[#ff6b4a] focus:ring-4 focus:ring-[#ff6b4a]/10 transition-all"
+                />
+              </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block text-center">Your Message</label>
-                    <textarea 
-                      name="message"
-                      value={formData.message}
-                      onChange={handleChange}
-                      required
-                      rows={5}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 outline-none focus:border-rose-500/50 transition-all text-white font-medium placeholder:text-slate-700 resize-none text-center text-base focus:bg-white/10"
-                      placeholder="Tell us about your project or needs..."
-                    />
-                  </div>
+              <div>
+                <label className="block text-xs font-bold text-[#0a3d52] uppercase tracking-wider mb-2 font-subheading">Detailed Specifications / Inquiry</label>
+                <textarea 
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
+                  rows={5}
+                  placeholder="Provide project details, estimated quantity, delivery site, and technical requirements..."
+                  className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-4 py-3 text-xs sm:text-sm text-[#0f1929] focus:bg-white focus:outline-none focus:border-[#ff6b4a] focus:ring-4 focus:ring-[#ff6b4a]/10 transition-all resize-none"
+                />
+              </div>
 
-                  <button 
-                    type="submit" 
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-rose-600 to-rose-500 py-6 rounded-2xl text-white font-black text-lg shadow-2xl shadow-rose-600/30 hover:shadow-rose-600/50 hover:-translate-y-1 active:translate-y-0 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
-                  >
-                    {loading ? "Transmitting..." : (
-                      <>Send Your Message <SendIcon /></>
-                    )}
-                  </button>
-                </form>
-              )}
-            </div>
-          </Grid>
-        </Grid>
-      </Container>
-    </Box>
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full btn-3d-accent py-4 rounded-xl text-white font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
+              >
+                {loading ? "Transmitting..." : (
+                  <>Send Direct Message <SendRoundedIcon sx={{ fontSize: 18 }} /></>
+                )}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };

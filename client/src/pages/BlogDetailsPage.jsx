@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Container, Typography, Box, Chip, Avatar, Button } from "@mui/material";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ShareIcon from "@mui/icons-material/Share";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { http } from "../api/http";
-
 import { BlogDetailSkeleton } from "../components/LoaderSkeleton";
 
 export const BlogDetailsPage = () => {
@@ -29,114 +26,95 @@ export const BlogDetailsPage = () => {
   }, [id]);
 
   const getReadingTime = (text) => {
-    const wordsPerMinute = 200;
     const words = text?.split(/\s+/).length || 0;
-    const minutes = Math.ceil(words / wordsPerMinute);
+    const minutes = Math.max(1, Math.ceil(words / 200));
     return `${minutes} min read`;
   };
 
-  if (loading) {
-    return <BlogDetailSkeleton />;
-  }
+  if (loading) return <BlogDetailSkeleton />;
 
   if (!blog) {
     return (
-      <Container maxWidth="md" className="py-20 text-center">
-        <Typography variant="h4" className="font-black text-slate-900 mb-4">Post Not Found</Typography>
-        <Button 
-          variant="contained" 
+      <div className="max-w-3xl mx-auto py-20 text-center px-4">
+        <h2 className="text-2xl font-bold text-[#0a3d52] mb-4">Article Not Found</h2>
+        <button 
           onClick={() => navigate("/blogs")}
-          startIcon={<ArrowBackIcon />}
-          sx={{ bgcolor: 'slate.900', borderRadius: 3, px: 4, py: 1.5, fontWeight: 800 }}
+          className="btn-3d-navy px-6 py-2.5 rounded-xl text-white font-bold text-xs uppercase tracking-wider"
         >
-          Back to Blogs
-        </Button>
-      </Container>
+          Back to Articles
+        </button>
+      </div>
     );
   }
 
   return (
-    <Box className="bg-white min-h-screen relative overflow-x-hidden w-full pb-20">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-rose-50 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none opacity-40"></div>
-      
-      <Container maxWidth="md" className="relative z-10 pt-8 md:pt-16">
-        <button 
-          onClick={() => navigate("/blogs")}
-          className="flex items-center gap-2 text-slate-400 hover:text-rose-600 font-bold text-xs uppercase tracking-widest transition-colors mb-10 group"
-        >
-          <ArrowBackIcon sx={{ fontSize: 18 }} className="transition-transform group-hover:-translate-x-1" />
-          Back to Insights
-        </button>
+    <div className="max-w-4xl mx-auto min-h-screen pb-24 px-4 sm:px-6 lg:px-8 pt-8">
+      {/* Back Button */}
+      <button 
+        onClick={() => navigate("/blogs")}
+        className="flex items-center gap-1.5 text-xs font-bold text-[#0a3d52] hover:text-[#ff6b4a] bg-white border border-[#e0e6ed] px-4 py-2 rounded-xl shadow-sm transition-all mb-8 active:scale-95"
+      >
+        <ArrowBackRoundedIcon sx={{ fontSize: 16 }} /> Back to Articles
+      </button>
 
-        {/* Article Header */}
-        <Box className="mb-12">
-          <div className="flex flex-wrap gap-2 mb-6">
-            {Array.isArray(blog.tags) && blog.tags.map((tag, idx) => (
-              <Chip 
-                key={idx}
-                label={tag}
-                className="bg-rose-50 text-rose-600 font-black text-[10px] uppercase tracking-wider px-2 border border-rose-100 h-7"
-              />
-            ))}
-          </div>
-          
-          <Typography variant="h1" className="text-3xl md:text-5xl lg:text-6xl font-black text-slate-900 mb-8 leading-[1.1] tracking-tight">
-            {blog.title}
-          </Typography>
+      {/* Article Header */}
+      <div className="mb-10">
+        <div className="flex flex-wrap gap-2 mb-4">
+          {(blog.tags || ["Technical Article"]).map((tag, idx) => (
+            <span 
+              key={idx}
+              className="bg-[#ff6b4a]/10 text-[#ff6b4a] font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-lg border border-[#ff6b4a]/20"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+        
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0f1929] mb-6 leading-tight tracking-tight" style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}>
+          {blog.title}
+        </h1>
 
-          <div className="flex flex-wrap items-center justify-between gap-6 py-6 border-y border-slate-100">
-            <div className="flex items-center gap-4">
-              <Avatar sx={{ width: 48, height: 48, bgcolor: 'slate.900', fontSize: 18, fontWeight: 900 }}>M</Avatar>
-              <div>
-                <p className="text-sm font-black text-slate-900 uppercase tracking-wider">Marblex Editor</p>
-                <div className="flex items-center gap-3 text-slate-400 text-[11px] font-bold mt-0.5">
-                  <span className="flex items-center gap-1"><CalendarTodayIcon sx={{ fontSize: 12 }} /> {new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-200"></span>
-                  <span className="flex items-center gap-1"><AccessTimeIcon sx={{ fontSize: 12 }} /> {getReadingTime(blog.content)}</span>
-                </div>
+        <div className="flex items-center justify-between py-4 border-y border-[#e0e6ed]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0a3d52] text-white flex items-center justify-center font-bold text-sm">
+              MX
+            </div>
+            <div>
+              <p className="text-xs font-bold text-[#0a3d52] uppercase tracking-wider">MARBLEX Editorial</p>
+              <div className="flex items-center gap-3 text-[#565e69] text-[11px] font-medium mt-0.5">
+                <span className="flex items-center gap-1"><CalendarTodayIcon sx={{ fontSize: 12 }} /> {new Date(blog.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                <span>•</span>
+                <span className="flex items-center gap-1"><AccessTimeIcon sx={{ fontSize: 12 }} /> {getReadingTime(blog.content)}</span>
               </div>
             </div>
-            
-            <button className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all">
-              <ShareIcon sx={{ fontSize: 18 }} />
-            </button>
           </div>
-        </Box>
+        </div>
+      </div>
 
-        {/* Featured Image */}
-        <div className="rounded-[2.5rem] overflow-hidden mb-12 shadow-2xl shadow-slate-200/50 border border-slate-100">
+      {/* Cover Image */}
+      {blog.coverImage && (
+        <div className="rounded-3xl overflow-hidden mb-10 card-shadow border border-[#e0e6ed] bg-[#f5f7fa]">
           <img 
-            src={blog.coverImage || "https://placehold.co/1200x675/f1f5f9/64748b?text=Article+Image"} 
+            src={blog.coverImage} 
             alt={blog.title}
-            className="w-full h-auto object-cover aspect-video"
+            className="w-full h-auto max-h-[500px] object-cover"
           />
         </div>
+      )}
 
-        {/* Article Content */}
-        <div className="prose prose-slate max-w-none">
-          <div className="text-slate-600 text-lg md:text-xl leading-relaxed font-medium whitespace-pre-wrap">
-            {blog.content}
-          </div>
+      {/* Content */}
+      <div className="bg-white p-8 sm:p-12 rounded-3xl border border-[#e0e6ed] card-shadow">
+        <div className="text-[#0f1929] text-base sm:text-lg leading-relaxed font-normal whitespace-pre-wrap">
+          {blog.content}
         </div>
 
-        {/* Article Footer */}
-        <Box className="mt-16 pt-10 border-t border-slate-100 flex flex-col items-center text-center">
-          <Typography className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] mb-4">End of Article</Typography>
-          <div className="w-12 h-1 bg-rose-600 rounded-full mb-8"></div>
-          
-          <div className="bg-slate-50 p-8 md:p-12 rounded-[3rem] w-full border border-slate-100">
-            <Typography variant="h4" className="font-black text-slate-900 mb-4">Want more insights?</Typography>
-            <p className="text-slate-500 font-medium mb-8">Join 5,000+ professionals getting our monthly chemical engineering digest.</p>
-            <button 
-              onClick={() => navigate("/blogs")}
-              className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black text-sm hover:bg-rose-600 transition-all shadow-xl shadow-slate-900/10"
-            >
-              Back to All Articles
-            </button>
-          </div>
-        </Box>
-      </Container>
-    </Box>
+        <div className="mt-12 pt-6 border-t border-[#e0e6ed] flex justify-between items-center flex-wrap gap-4">
+          <span className="text-xs text-[#565e69]">Published by MARBLEX Construction Chemical & Rubber Industry</span>
+          <Link to="/contact" className="btn-3d-accent px-5 py-2.5 rounded-xl text-white font-bold text-xs uppercase tracking-wider">
+            Consult With Author
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 };

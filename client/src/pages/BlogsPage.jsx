@@ -1,166 +1,106 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Typography, Grid, Box, Chip, Avatar } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { http } from "../api/http";
 import { BlogCardSkeleton } from "../components/LoaderSkeleton";
 
-let globalBlogsCache = null;
-
 export const BlogsPage = () => {
-  const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (globalBlogsCache) {
-      setBlogs(globalBlogsCache);
-      setLoading(false);
-      http.get("/blogs").then((res) => {
-        globalBlogsCache = res.data || [];
-        setBlogs(globalBlogsCache);
-      }).catch(() => {});
-      return;
-    }
-
-    setLoading(true);
-    http.get("/blogs")
-      .then((res) => {
-        globalBlogsCache = res.data || [];
-        setBlogs(globalBlogsCache);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching blogs:", err);
-        setLoading(false);
-      });
+    http
+      .get("/blogs")
+      .then((res) => setBlogs(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setBlogs([]))
+      .finally(() => setLoading(false));
   }, []);
 
-  // Helper to estimate reading time
   const getReadingTime = (text) => {
-    const wordsPerMinute = 200;
     const words = text?.split(/\s+/).length || 0;
-    const minutes = Math.ceil(words / wordsPerMinute);
+    const minutes = Math.max(1, Math.ceil(words / 200));
     return `${minutes} min read`;
   };
 
   return (
-    <Box className="bg-white min-h-screen relative overflow-x-hidden w-full">
-      {/* Decorative background */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-50 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none opacity-50"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2 pointer-events-none opacity-50"></div>
+    <div className="w-full max-w-[1400px] mx-auto min-h-screen pb-24 px-4 sm:px-6 lg:px-8 pt-6">
+      {/* Header */}
+      <div className="text-center mb-14 max-w-2xl mx-auto">
+        <span className="inline-block py-1.5 px-4 rounded-full bg-[#ff6b4a]/10 text-[#ff6b4a] font-bold text-xs tracking-widest uppercase mb-4 border border-[#ff6b4a]/20">
+          MARBLEX Editorial & Engineering
+        </span>
+        <h1 className="text-4xl md:text-6xl font-black text-[#0f1929] mb-4 tracking-tight" style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}>
+          Technical <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff6b4a] to-[#ff8c73]">Articles & Insights</span>
+        </h1>
+        <p className="text-base text-[#565e69] font-normal leading-relaxed">
+          In-depth civil engineering perspectives on concrete waterproofing, elastomeric rubber water stops, and thermal protection.
+        </p>
+      </div>
 
-      <Container maxWidth="lg" className="relative z-10 pt-12 pb-24">
-        {/* Header Section */}
-        <Box className="text-center mb-16">
-          <span className="inline-block py-1.5 px-6 rounded-full bg-slate-900 text-white font-black text-[10px] tracking-[0.3em] uppercase mb-6 shadow-lg shadow-slate-900/20">
-            Insights & News
-          </span>
-          <Typography variant="h1" className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight">
-            Our <span className="text-rose-600">Blog</span>
-          </Typography>
-          <Typography className="text-lg text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
-            Expert perspectives on chemical engineering, construction solutions, and industrial innovations in Pakistan.
-          </Typography>
-        </Box>
-
-        {loading ? (
-          <Grid container spacing={4}>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Grid item xs={12} md={i === 1 ? 12 : 6} lg={i === 1 ? 12 : 4} key={i}>
-                <BlogCardSkeleton />
-              </Grid>
-            ))}
-          </Grid>
-        ) : blogs.length === 0 ? (
-          <div className="text-center py-24 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-100">
-            <Typography className="text-slate-400 font-bold text-xl">No articles published yet.</Typography>
-            <p className="text-slate-400 mt-2">Check back soon for new updates.</p>
-          </div>
-        ) : (
-          <Grid container spacing={4}>
-            {blogs.map((blog, index) => (
-              <Grid item xs={12} md={index === 0 ? 12 : 6} lg={index === 0 ? 12 : 4} key={blog._id}>
-                <div className={`group bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-rose-500/10 hover:border-rose-100 transition-all duration-500 flex flex-col h-full ${index === 0 ? 'md:flex-row' : ''}`}>
-                  
-                  {/* Image Container */}
-                  <div className={`relative overflow-hidden cursor-pointer ${index === 0 ? 'md:w-1/2 h-[300px] md:h-auto' : 'h-[240px]'}`}>
-                    <img 
-                      src={blog.coverImage || "https://placehold.co/800x600/f1f5f9/64748b?text=Article+Image"} 
-                      alt={blog.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute top-6 left-6 flex flex-wrap gap-2">
-                      {Array.isArray(blog.tags) ? blog.tags.slice(0, 2).map((tag, tIdx) => (
-                        <Chip 
-                          key={tIdx}
-                          label={tag}
-                          className="bg-white/90 backdrop-blur-md text-slate-900 font-black text-[10px] uppercase tracking-wider px-2 shadow-sm border-none h-7"
-                        />
-                      )) : (
-                        <Chip label="Article" className="bg-white/90 backdrop-blur-md text-slate-900 font-black text-[10px] uppercase tracking-wider px-2 shadow-sm border-none h-7" />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Content Container */}
-                  <div className={`p-8 md:p-10 flex flex-col flex-1 ${index === 0 ? 'md:w-1/2' : ''}`}>
-                    <div className="flex items-center gap-4 text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-6">
-                      <span className="flex items-center gap-1.5"><CalendarTodayIcon sx={{ fontSize: 14 }} /> {new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                      <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                      <span className="flex items-center gap-1.5"><AccessTimeIcon sx={{ fontSize: 14 }} /> {getReadingTime(blog.content)}</span>
-                    </div>
-
-                    <Typography variant="h2" className={`font-black text-slate-900 mb-4 leading-tight group-hover:text-rose-600 transition-colors cursor-pointer ${index === 0 ? 'text-2xl md:text-4xl' : 'text-xl md:text-2xl line-clamp-2'}`}>
-                      {blog.title}
-                    </Typography>
-
-                    <Typography className={`text-slate-500 font-medium leading-relaxed mb-8 ${index === 0 ? 'text-lg line-clamp-3' : 'text-sm line-clamp-3'}`}>
-                      {blog.content}
-                    </Typography>
-
-                    <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: 'slate.900', fontSize: 12, fontWeight: 900 }}>M</Avatar>
-                        <span className="text-xs font-black text-slate-900 uppercase tracking-wider">Marblex Editor</span>
-                      </div>
-                      
-                      <button 
-                        onClick={() => navigate(`/blogs/${blog._id}`)}
-                        className="flex items-center gap-2 text-rose-600 font-black text-xs uppercase tracking-[0.2em] group/btn"
-                      >
-                        Read More 
-                        <ArrowForwardIcon sx={{ fontSize: 16 }} className="transition-transform group-hover/btn:translate-x-1" />
-                      </button>
-                    </div>
-                  </div>
+      {/* Blog Cards Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <BlogCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : blogs.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-3xl border border-[#e0e6ed] card-shadow">
+          <h3 className="text-lg font-bold text-[#0a3d52]">No technical articles published yet</h3>
+          <p className="text-sm text-[#565e69] mt-1">Check back soon for new research bulletins.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {blogs.map((blog) => (
+            <div 
+              key={blog._id} 
+              onClick={() => navigate(`/blogs/${blog._id}`)}
+              className="group bg-white rounded-3xl border border-[#e0e6ed] card-shadow card-3d overflow-hidden flex flex-col h-full cursor-pointer hover:border-[#ff6b4a]/40 transition-all duration-300"
+            >
+              <div className="h-[220px] overflow-hidden relative bg-[#f5f7fa]">
+                <img 
+                  src={blog.coverImage || "/products/Banner1.jpeg"} 
+                  alt={blog.title}
+                  className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
+                />
+                <div className="absolute top-4 left-4 flex gap-1.5 flex-wrap">
+                  {(blog.tags || ["Article"]).slice(0, 2).map((tag, tIdx) => (
+                    <span key={tIdx} className="bg-[#0a3d52]/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase">
+                      {tag}
+                    </span>
+                  ))}
                 </div>
-              </Grid>
-            ))}
-          </Grid>
-        )}
+              </div>
 
-        {/* Newsletter Section */}
-        <Box className="mt-24 bg-slate-900 rounded-[3rem] p-10 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-slate-900/20">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-          <div className="relative z-10">
-            <Typography variant="h3" className="text-white font-black text-2xl md:text-4xl mb-6">Stay ahead of the curve</Typography>
-            <p className="text-slate-400 font-medium text-lg mb-10 max-w-xl mx-auto">Get monthly updates on industry trends and product releases directly in your inbox.</p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white outline-none focus:border-rose-500 transition-all placeholder:text-slate-600 text-center sm:text-left"
-              />
-              <button className="bg-white text-slate-900 font-black px-8 py-4 rounded-2xl hover:bg-rose-600 hover:text-white transition-all shadow-xl">
-                Subscribe
-              </button>
+              <div className="p-7 flex flex-col flex-1">
+                <div className="flex items-center gap-3 text-[11px] font-semibold text-[#565e69] mb-3">
+                  <span className="flex items-center gap-1"><CalendarTodayIcon sx={{ fontSize: 13 }} /> {new Date(blog.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1"><AccessTimeIcon sx={{ fontSize: 13 }} /> {getReadingTime(blog.content)}</span>
+                </div>
+
+                <h3 className="text-xl font-bold text-[#0f1929] mb-3 line-clamp-2 leading-snug group-hover:text-[#ff6b4a] transition-colors" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {blog.title}
+                </h3>
+
+                <p className="text-sm text-[#565e69] line-clamp-3 leading-relaxed mb-6 flex-1 font-normal">
+                  {blog.content}
+                </p>
+
+                <div className="pt-4 border-t border-[#e0e6ed] flex items-center justify-between mt-auto">
+                  <span className="text-xs font-bold text-[#0a3d52]">MARBLEX Engineering</span>
+                  <span className="text-xs font-bold text-[#ff6b4a] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    Read Article <ArrowForwardIcon sx={{ fontSize: 14 }} />
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        </Box>
-      </Container>
-    </Box>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };

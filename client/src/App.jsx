@@ -2,6 +2,7 @@ import { lazy, Suspense, useMemo } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Box, CircularProgress, Container, CssBaseline, ThemeProvider } from "@mui/material";
 import { AppLayout } from "./components/AppLayout";
+import { BrandSplashPreloader } from "./components/BrandSplashPreloader";
 import { SiteFooter } from "./components/SiteFooter";
 import { useCart } from "./hooks/useCart";
 import { appTheme } from "./theme/theme";
@@ -48,34 +49,32 @@ function App() {
 
   return (
     <div className="page-shell">
+      <BrandSplashPreloader />
       <ThemeProvider theme={appTheme}>
         <CssBaseline />
         <BrowserRouter>
           <AppLayout cartCount={cartCount}>
-            <Container maxWidth={false} sx={{ py: { xs: 2, md: 3 }, px: { xs: 1.5, sm: 2, md: 5 } }} className="page-content">
-              <Suspense fallback={<RouteFallback />}>
-                <Routes>
-                  <Route path="/" element={<ShopPage addToCart={addToCart} />} />
-                  <Route path="/product/:id" element={<ProductDetailPage addToCart={addToCart} />} />
-                  <Route path="/cart" element={<CartPage cart={cart} setCart={setCart} />} />
-                  <Route path="/services" element={<ServicesPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/blogs" element={<BlogsPage />} />
-                  <Route path="/blogs/:id" element={<BlogDetailsPage />} />
-                  <Route path="/catalogs" element={<CatalogsPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/admin" element={<AdminPage />} />
-                  <Route path="/admin/review/:id" element={<AdminReviewDetailPage />} />
-                  <Route path="/dashboard" element={<UserDashboardPage />} />
-                  <Route path="/dashboard/review/:id" element={<UserReviewDetailPage />} />
-                  <Route path="/payment/success" element={<PaymentResultPage success />} />
-                  <Route path="/payment/cancel" element={<PaymentResultPage success={false} />} />
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
-              </Suspense>
-            </Container>
-            <SiteFooter />
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                <Route path="/" element={<ShopPage addToCart={addToCart} />} />
+                <Route path="/product/:id" element={<ProductDetailPage addToCart={addToCart} />} />
+                <Route path="/cart" element={<CartPage cart={cart} setCart={setCart} />} />
+                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/blogs" element={<BlogsPage />} />
+                <Route path="/blogs/:id" element={<BlogDetailsPage />} />
+                <Route path="/catalogs" element={<CatalogsPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/admin/review/:id" element={<AdminReviewDetailPage />} />
+                <Route path="/dashboard" element={<UserDashboardPage />} />
+                <Route path="/dashboard/review/:id" element={<UserReviewDetailPage />} />
+                <Route path="/payment/success" element={<PaymentResultPage success />} />
+                <Route path="/payment/cancel" element={<PaymentResultPage success={false} />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </Suspense>
           </AppLayout>
         </BrowserRouter>
       </ThemeProvider>
@@ -84,3 +83,4 @@ function App() {
 }
 
 export default App;
+

@@ -3,12 +3,14 @@ const app = require("./app");
 const { connectDatabase } = require("./config/db");
 const { port } = require("./config/env");
 const { seedAdmin } = require("./utils/seedAdmin");
+const { seedProducts } = require("./utils/seedProducts");
 const { initSocket } = require("./socket");
 
 const startServer = async () => {
   try {
     await connectDatabase();
     await seedAdmin();
+    await seedProducts();
 
     const server = http.createServer(app);
     initSocket(server);

@@ -4,38 +4,48 @@ export const appTheme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#e31e24", // Marblex Red
-      light: "#ff4d52",
-      dark: "#b3161b",
+      main: "#0a3d52", // MARBLEX Navy Teal
+      light: "#125a78",
+      dark: "#062b3a",
       contrastText: "#ffffff",
     },
     secondary: {
-      main: "#1e293b", // Slate 800
-      light: "#334155",
-      dark: "#0f172a",
+      main: "#ff6b4a", // MARBLEX Red-Orange Accent
+      light: "#ff8c73",
+      dark: "#e65636",
       contrastText: "#ffffff",
     },
     background: {
-      default: "#f8fafc", // Slate 50
+      default: "#f5f7fa", // MARBLEX Light Gray
       paper: "#ffffff",
     },
     text: {
-      primary: "#0f172a", // Slate 900
-      secondary: "#64748b", // Slate 500
+      primary: "#0f1929", // MARBLEX Dark Text
+      secondary: "#565e69", // Medium Gray
+    },
+    success: {
+      main: "#10b981",
+    },
+    warning: {
+      main: "#f59e0b",
+    },
+    error: {
+      main: "#ef4444",
     },
   },
   shape: {
-    borderRadius: 16, // Modern rounded corners
+    borderRadius: 16,
   },
   typography: {
-    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-    h1: { fontWeight: 800, letterSpacing: "-0.025em" },
-    h2: { fontWeight: 800, letterSpacing: "-0.025em" },
-    h3: { fontWeight: 700, letterSpacing: "-0.025em" },
-    h4: { fontWeight: 700, letterSpacing: "-0.025em" },
-    h5: { fontWeight: 700 },
-    h6: { fontWeight: 600 },
+    fontFamily: "'Inter', 'Poppins', sans-serif",
+    h1: { fontFamily: "'Space Grotesk', 'Poppins', sans-serif", fontWeight: 700, letterSpacing: "-0.025em" },
+    h2: { fontFamily: "'Space Grotesk', 'Poppins', sans-serif", fontWeight: 700, letterSpacing: "-0.025em" },
+    h3: { fontFamily: "'Space Grotesk', 'Poppins', sans-serif", fontWeight: 700, letterSpacing: "-0.02em" },
+    h4: { fontFamily: "'Poppins', sans-serif", fontWeight: 600 },
+    h5: { fontFamily: "'Poppins', sans-serif", fontWeight: 600 },
+    h6: { fontFamily: "'Poppins', sans-serif", fontWeight: 600 },
     button: { 
+      fontFamily: "'Poppins', sans-serif",
       textTransform: "none", 
       fontWeight: 600,
       letterSpacing: "0.01em"
@@ -45,58 +55,27 @@ export const appTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 12,
           padding: "8px 20px",
           boxShadow: "none",
           transition: "all 0.2s ease-in-out",
           "&:hover": {
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
             transform: "translateY(-1px)",
           },
         },
-        containedPrimary: {
-          background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-        },
-        containedSecondary: {
-          background: "linear-gradient(135deg, #e11d48 0%, #be123c 100%)",
-        }
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          border: "1px solid #e2e8f0",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          border: "1px solid #e0e6ed",
+          borderRadius: 16,
+          boxShadow: "0 2px 4px rgba(10, 61, 82, 0.06), 0 8px 16px rgba(10, 61, 82, 0.08)",
+          transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
           "&:hover": {
-            transform: "translateY(-4px)",
-            borderColor: "#cbd5e1",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02)",
-          },
-        },
-      },
-    },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: "rgba(255, 255, 255, 0.85)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid #e2e8f0",
-          boxShadow: "none",
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          fontWeight: 500,
-          borderRadius: 8,
-        },
-        filled: {
-          backgroundColor: "#f1f5f9",
-          color: "#334155",
-          "&:hover": {
-            backgroundColor: "#e2e8f0",
+            transform: "translateY(-3px)",
+            borderColor: "#ff8c73",
+            boxShadow: "0 4px 8px rgba(10, 61, 82, 0.08), 0 16px 32px rgba(10, 61, 82, 0.12)",
           },
         },
       },
