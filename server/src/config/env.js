@@ -19,7 +19,11 @@ module.exports = {
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
-  emailUser: process.env.EMAIL_USER || "",
-  emailPass: process.env.EMAIL_PASS || "",
+  // Email provider configuration
+  brevoApiKey: process.env.BREVO_API_KEY || "",
+  senderEmail: process.env.SENDER_EMAIL || process.env.SMTP_USER || process.env.EMAIL_USER || "Marblexpak@gmail.com",
+  smtpUser: process.env.SMTP_USER || process.env.EMAIL_USER || "",
+  smtpPass: process.env.SMTP_PASS || process.env.EMAIL_PASS || "",
 };
+
 

@@ -296,11 +296,25 @@ const updateMyProfile = async (req, res) => {
     return res.status(400).json({ message: "Name is required" });
   }
   const allowedGenders = ["male", "female", "other", "prefer_not_to_say"];
-  if (!allowedGenders.includes(updates.gender)) {
-    return res.status(400).json({ message: "Invalid gender value" });
-  }
   const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select("-passwordHash");
   return res.json(user);
+};
+
+const testEmailDelivery = async (req, res) => {
+  try {
+    const targetEmail = req.body?.email || req.query?.email || "azanaslam907@gmail.com";
+    const testCode = generate6DigitCode();
+    const result = await send2FACodeEmail(targetEmail, testCode, "Administrator", "Email Delivery Verification Test");
+    
+    return res.json({
+      success: result.success !== false,
+      provider: result.provider || (result.simulated ? "Simulated (No credentials)" : "Unknown Provider"),
+      message: `Test email dispatched to ${targetEmail}`,
+      details: result,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 module.exports = {
@@ -312,6 +326,8 @@ module.exports = {
   resetPassword,
   getMyProfile,
   updateMyProfile,
+  testEmailDelivery,
 };
+
 
 
