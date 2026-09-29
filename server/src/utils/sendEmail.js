@@ -75,7 +75,7 @@ const buildEmailTemplate = ({ title, preheader, centerContent }) => {
 <tr><td align="center" class="pad" style="padding:34px 40px 8px;">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
     <td style="padding-right:12px;vertical-align:middle;">
-      <svg width="42" height="36" viewBox="0 0 54 46"><path d="M2 44 L20 8 L38 44Z" fill="none" stroke="#0b2f3c" stroke-width="4" stroke-linejoin="round"/><path d="M18 44 L34 14 L52 44Z" fill="#ff6b47"/></svg>
+      <img src="https://marblex-shop.vercel.app/logo-icon-transparent.png" alt="MARBLEX" width="44" height="38" style="display:block;border:0;outline:none;text-decoration:none;object-fit:contain;vertical-align:middle;" />
     </td>
     <td style="font-size:30px;font-weight:800;letter-spacing:5px;color:#0b2f3c;vertical-align:middle;">MAR<span style="color:#ff6b47;">BLEX</span></td>
   </tr></table>
