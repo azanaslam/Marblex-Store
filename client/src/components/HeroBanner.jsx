@@ -1,15 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import WaterDropOutlinedIcon from "@mui/icons-material/WaterDropOutlined";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 // Bespoke SVG Vector Icon Components
 const SvgWaterproof = () => (
@@ -105,7 +103,6 @@ const showcaseProducts = [
 export const HeroBanner = () => {
   const navigate = useNavigate();
   const [activeSlide, setActiveSlide] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
   
   const sectionRef = useRef(null);
   const liveBadgeRef = useRef(null);
@@ -113,9 +110,6 @@ export const HeroBanner = () => {
   const subtitleRef = useRef(null);
   const actionsRef = useRef(null);
   const metricsRef = useRef(null);
-  const rightCardRef = useRef(null);
-
-  const slideContainerRef = useRef(null);
   const hasAnimatedRef = useRef(false);
 
   const nextSlide = useCallback(() => {
@@ -126,74 +120,33 @@ export const HeroBanner = () => {
     setActiveSlide((prev) => (prev - 1 + showcaseProducts.length) % showcaseProducts.length);
   }, []);
 
-  // Grand Initial Entrance Animation
   const runEntranceAnimation = useCallback(() => {
     if (hasAnimatedRef.current) return;
     hasAnimatedRef.current = true;
 
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+    tl.fromTo(sectionRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9 });
+    tl.fromTo([liveBadgeRef.current, headlineRef.current, subtitleRef.current, actionsRef.current, metricsRef.current], { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.65, stagger: 0.08 }, "-=0.5");
+  }, []);
 
-    if (sectionRef.current) {
-      tl.fromTo(
-        sectionRef.current,
-        { opacity: 0, y: 35, scale: 0.98, filter: "blur(10px)" },
-        { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 1.4 }
-      );
-    }
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return undefined;
 
-    if (liveBadgeRef.current) {
-      tl.fromTo(
-        liveBadgeRef.current,
-        { opacity: 0, y: -16, filter: "blur(4px)" },
-        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9 },
-        "-=0.95"
-      );
-    }
+    const context = gsap.context(() => {
+      gsap.fromTo(section, { backgroundPosition: "50% 0%" }, {
+        backgroundPosition: "50% 100%",
+        ease: "none",
+        scrollTrigger: { trigger: section, start: "top bottom", end: "bottom top", scrub: 1.2 },
+      });
+      gsap.to(".hero-copy", {
+        yPercent: -8,
+        ease: "none",
+        scrollTrigger: { trigger: section, start: "top bottom", end: "bottom top", scrub: 1.2 },
+      });
+    }, section);
 
-    if (headlineRef.current) {
-      tl.fromTo(
-        headlineRef.current,
-        { opacity: 0, y: 30, filter: "blur(8px)" },
-        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.15 },
-        "-=0.7"
-      );
-    }
-
-    if (subtitleRef.current) {
-      tl.fromTo(
-        subtitleRef.current,
-        { opacity: 0, y: 22 },
-        { opacity: 1, y: 0, duration: 1.0 },
-        "-=0.75"
-      );
-    }
-
-    if (actionsRef.current) {
-      tl.fromTo(
-        actionsRef.current.children,
-        { opacity: 0, y: 18, scale: 0.94 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.9, stagger: 0.12 },
-        "-=0.6"
-      );
-    }
-
-    if (metricsRef.current) {
-      tl.fromTo(
-        metricsRef.current.children,
-        { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.9, stagger: 0.12 },
-        "-=0.5"
-      );
-    }
-
-    if (rightCardRef.current) {
-      tl.fromTo(
-        rightCardRef.current,
-        { opacity: 0, x: 35, scale: 0.95, filter: "blur(6px)" },
-        { opacity: 1, x: 0, scale: 1, filter: "blur(0px)", duration: 1.3 },
-        "-=1.05"
-      );
-    }
+    return () => context.revert();
   }, []);
 
   // Listen for intro reveal event from splash screen or trigger after safety delay
@@ -227,280 +180,48 @@ export const HeroBanner = () => {
   const current = showcaseProducts[activeSlide];
 
   return (
-    <section 
+    <section
       ref={sectionRef}
-      className="relative mb-8 sm:mb-12 md:mb-14 rounded-2xl sm:rounded-3xl md:rounded-[2.5rem] bg-gradient-to-br from-[#0a3d52] via-[#0b4860] to-[#082a38] border border-[#0d4e68]/60 text-white overflow-hidden shadow-2xl shadow-[#0a3d52]/25"
+      className="relative isolate mb-8 overflow-hidden rounded-[1.5rem] bg-[#163d3a] text-white shadow-xl shadow-[#163d3a]/15 sm:rounded-[2rem]"
+      style={{ backgroundImage: `linear-gradient(90deg, rgba(13, 39, 37, .96) 0%, rgba(20, 62, 58, .82) 48%, rgba(20, 62, 58, .26) 100%), url(${current.image})`, backgroundSize: "cover", backgroundPosition: "50% 50%" }}
     >
-      
-      {/* Soft Ambient Glows */}
-      <div className="absolute top-0 right-1/4 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-[#ff6b4a]/20 rounded-full blur-[140px] pointer-events-none -translate-y-1/3" />
-      <div className="absolute bottom-0 right-0 w-[300px] sm:w-[450px] h-[300px] sm:h-[450px] bg-[#0ea5e9]/15 rounded-full blur-[130px] pointer-events-none translate-y-1/3" />
-      <div className="absolute top-1/2 left-0 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-[#ff8c73]/15 rounded-full blur-[120px] pointer-events-none -translate-y-1/2" />
-
-      {/* Grid Pattern Overlay */}
-      <div 
-        className="absolute inset-0 opacity-[0.04] pointer-events-none"
-        style={{
-          backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
-          backgroundSize: "36px 36px",
-        }}
-      />
-
-      <div className="relative z-10 p-5 sm:p-8 md:p-10 lg:p-12 xl:p-14 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-center">
-        
-        {/* ==================== LEFT COLUMN ==================== */}
-        <div className="lg:col-span-7 space-y-5 sm:space-y-6">
-          
-          {/* Top Live Badge */}
-          <div 
-            ref={liveBadgeRef}
-            className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] sm:text-xs font-bold text-[#ff8c73] uppercase tracking-wider shadow-sm"
-          >
-            <span className="w-2 h-2 rounded-full bg-[#ff6b4a] animate-pulse shrink-0" />
-            <span>MARBLEX INDUSTRIAL SOLUTIONS</span>
+      <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
+      <div className="relative z-10 grid min-h-[440px] grid-cols-1 items-center px-6 py-12 sm:px-10 sm:py-14 lg:min-h-[500px] lg:grid-cols-12 lg:px-14">
+        <div className="hero-copy lg:col-span-7">
+          <div ref={liveBadgeRef} className="mb-5 inline-flex items-center gap-2 border-b border-white/30 pb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/75 sm:text-xs">
+            <span className="size-1.5 rounded-full bg-[#f2a06f]" />
+            MARBLEX INDUSTRIAL SOLUTIONS
           </div>
-
-          {/* Headline */}
-          <h1 
-            ref={headlineRef}
-            className="text-2xl sm:text-4xl md:text-5xl lg:text-[46px] xl:text-[52px] font-black text-white leading-[1.12] sm:leading-[1.1] tracking-tight"
-            style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
-          >
-            Engineered For <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff6b4a] via-[#ff8c73] to-[#ffb199] drop-shadow-sm">
-              Absolute Durability
-            </span> <br />
-            & Waterproofing.
+          <h1 ref={headlineRef} className="max-w-2xl text-4xl font-semibold leading-[1.06] tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl" style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}>
+            Built to keep water out.
           </h1>
-
-          {/* Subtitle */}
-          <p 
-            ref={subtitleRef}
-            className="text-slate-100 text-xs sm:text-base lg:text-lg max-w-xl leading-relaxed font-normal opacity-95"
-          >
-            ISO-certified elastomeric coatings, heavy-duty vulcanized rubber waterstops, and polymer membranes engineered for civil infrastructure, dams, basements, and modern construction.
+          <p ref={subtitleRef} className="mt-5 max-w-xl text-sm leading-7 text-white/75 sm:text-base">
+            High-performance waterproofing systems for structures that need to last.
           </p>
-
-          {/* Action Buttons */}
-          <div 
-            ref={actionsRef}
-            className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2"
-          >
-            <button 
-              onClick={() => navigate("/services")}
-              className="btn-3d-accent w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl text-white font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ff6b4a]/30 cursor-pointer"
-            >
-              <span>EXPLORE SOLUTIONS</span>
-              <ArrowForwardIcon sx={{ fontSize: 18 }} />
+          <div ref={actionsRef} className="mt-8 flex flex-wrap items-center gap-3">
+            <button onClick={() => navigate("/services")} className="inline-flex items-center gap-2 rounded-full bg-[#f2a06f] px-5 py-3 text-sm font-semibold text-[#163d3a] transition hover:bg-[#ffc19a]">
+              Explore solutions <ArrowForwardIcon sx={{ fontSize: 17 }} />
             </button>
-
-            <button 
-              onClick={() => navigate("/catalogs")}
-              className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white font-bold text-xs sm:text-sm uppercase tracking-wider border border-white/20 hover:border-white/40 backdrop-blur-md flex items-center justify-center gap-2 transition cursor-pointer"
-            >
-              <MenuBookOutlinedIcon sx={{ fontSize: 18, color: "#ff8c73" }} />
-              <span>TECHNICAL SPECS</span>
+            <button onClick={() => navigate("/catalogs")} className="inline-flex items-center gap-2 rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+              Technical specs <MenuBookOutlinedIcon sx={{ fontSize: 17 }} />
             </button>
-
-            <a 
-              href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20need%20technical%20assistance%20and%20quotation."
-              target="_blank"
-              rel="noreferrer"
-              className="w-full sm:w-auto px-5 py-3 sm:py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition cursor-pointer"
-            >
-              <WhatsAppIcon sx={{ fontSize: 18 }} />
-              <span>WHATSAPP QUOTE</span>
-            </a>
           </div>
-
-          {/* Trust Metrics Bar */}
-          <div 
-            ref={metricsRef}
-            className="pt-4 sm:pt-6 border-t border-white/15 grid grid-cols-3 gap-2 sm:gap-4 max-w-lg"
-          >
-            <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-[#ff8c73] shrink-0 shadow-inner">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div>
-                <div className="text-xs sm:text-base font-black text-white leading-tight">15+ Yrs</div>
-                <div className="text-[9px] sm:text-xs text-slate-200">Durability Life</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-sky-300 shrink-0 shadow-inner">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2.69L6.64 8.05C4.29 10.4 4.29 14.2 6.64 16.54C8.99 18.89 12.79 18.89 15.14 16.54C17.49 14.19 17.49 10.39 15.14 8.05L12 2.69Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div>
-                <div className="text-xs sm:text-base font-black text-white leading-tight">100%</div>
-                <div className="text-[9px] sm:text-xs text-slate-200">Hydrostatic Seal</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-emerald-300 shrink-0 shadow-inner">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 21V9L12 3L20 9V21M9 21V12H15V21" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div>
-                <div className="text-xs sm:text-base font-black text-white leading-tight">500+</div>
-                <div className="text-[9px] sm:text-xs text-slate-200">Major Sites</div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* ==================== RIGHT COLUMN (PREMIUM CINEMATIC SHOWCASE) ==================== */}
-        <div 
-          ref={rightCardRef}
-          className="lg:col-span-5"
-        >
-          <div 
-            ref={slideContainerRef}
-            className="bg-[#072430]/85 backdrop-blur-2xl rounded-3xl p-5 sm:p-6 border border-white/20 shadow-2xl shadow-black/40 relative overflow-hidden"
-          >
-            
-            {/* Ambient Background Glow inside Card */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#ff6b4a]/15 rounded-full blur-[80px] pointer-events-none" />
-
-            {/* Card Header & Controls */}
-            <div className="flex items-center justify-between mb-4 relative z-10">
-              <div className="transition-all duration-500 ease-out">
-                <span className="px-3 py-1 rounded-full bg-[#ff6b4a]/20 text-[#ff8c73] text-[11px] font-bold uppercase tracking-wider border border-[#ff6b4a]/30 shadow-xs inline-block">
-                  {current.badge}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-slate-200 bg-white/10 px-2.5 py-1 rounded-full border border-white/15 backdrop-blur-md">
-                  0{activeSlide + 1} <span className="opacity-40">/</span> 0{showcaseProducts.length}
-                </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={prevSlide}
-                    aria-label="Previous Slide"
-                    className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 active:scale-90 text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer"
-                  >
-                    <KeyboardArrowLeftIcon sx={{ fontSize: 17 }} />
-                  </button>
-                  <button
-                    onClick={nextSlide}
-                    aria-label="Next Slide"
-                    className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 active:scale-90 text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer"
-                  >
-                    <KeyboardArrowRightIcon sx={{ fontSize: 17 }} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Cinematic Image Showcase Stage (Silky Smooth Stacked Cross-Fade) */}
-            <div className="relative rounded-2xl overflow-hidden mb-4 border border-white/15 h-64 sm:h-72 bg-[#051a24] shadow-inner group">
-              {showcaseProducts.map((prod, idx) => {
-                const isActive = activeSlide === idx;
-                return (
-                  <div
-                    key={prod.id}
-                    className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-                      isActive
-                        ? "opacity-100 scale-100 z-10 pointer-events-auto"
-                        : "opacity-0 scale-[1.04] z-0 pointer-events-none"
-                    }`}
-                  >
-                    <img 
-                      src={prod.image} 
-                      alt={prod.title}
-                      className={`w-full h-full object-cover object-center transition-transform duration-1000 ease-out ${
-                        isActive ? "scale-100 group-hover:scale-105" : "scale-105"
-                      }`}
-                      onError={(e) => {
-                        e.currentTarget.src = "/products/Banner1.jpeg";
-                      }}
-                    />
-                    
-                    {/* Bottom Dark Gradient Scrim Overlay for crisp text contrast */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#051a24] via-[#051a24]/30 to-transparent" />
-
-                    {/* Code Chip (Top Left) */}
-                    <div className="absolute top-3.5 left-3.5 bg-[#0a3d52]/90 backdrop-blur-md text-white text-[10.5px] font-mono font-extrabold px-3 py-1 rounded-lg shadow-md border border-white/15">
-                      {prod.code}
-                    </div>
-
-                    {/* Tag Chip (Bottom Right) */}
-                    <div className="absolute bottom-3.5 right-3.5 bg-gradient-to-r from-[#ff6b4a] to-[#ff8c73] text-white text-[10.5px] font-bold px-3 py-1 rounded-lg shadow-lg flex items-center gap-1">
-                      <CheckCircleRoundedIcon sx={{ fontSize: 13 }} />
-                      <span>{prod.tag}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Title and Description */}
-            <div className="space-y-1.5 mb-4 relative z-10 min-h-[64px]">
-              <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight font-heading transition-all duration-400">
-                {current.title}
-              </h3>
-              <p className="text-xs text-slate-200 leading-relaxed line-clamp-2 font-normal transition-all duration-400">
-                {current.desc}
-              </p>
-            </div>
-
-            {/* 3 Bottom Feature Cards Grid */}
-            <div className="grid grid-cols-3 gap-2 pt-3.5 border-t border-white/15 relative z-10">
-              {[current.card1, current.card2, current.card3].map((card, idx) => {
-                const IconComponent = card.icon;
-                return (
-                  <div 
-                    key={idx}
-                    className="p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-300 flex flex-col items-start gap-1 backdrop-blur-sm"
-                  >
-                    <IconComponent sx={{ fontSize: 17, color: "#ff8c73" }} />
-                    <span className="text-[10px] font-bold text-white leading-tight uppercase font-heading">
-                      {card.title}
-                    </span>
-                    <span className="text-[8.5px] text-slate-300 leading-tight">
-                      {card.subtitle}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* 4 Responsive Grid Solution Pills (100% Width Fit - Zero Scrollbar) */}
-            <div className="mt-4 pt-3.5 border-t border-white/15 relative z-10">
-              <div className="grid grid-cols-4 gap-1.5 w-full">
-                {showcaseProducts.map((prod, idx) => {
-                  const isActive = activeSlide === idx;
-                  return (
-                    <button
-                      key={prod.id}
-                      onClick={() => setActiveSlide(idx)}
-                      className={`w-full py-2 px-1 rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-300 flex items-center justify-center gap-1 text-center truncate cursor-pointer ${
-                        isActive
-                          ? "bg-gradient-to-r from-[#ff6b4a] to-[#ff8c73] text-white shadow-md shadow-[#ff6b4a]/30 scale-[1.02]"
-                          : "bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white border border-white/10"
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? "bg-white animate-pulse" : "bg-white/40"}`} />
-                      <span className="truncate">{prod.shortName}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
+          <div ref={metricsRef} className="mt-10 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/20 pt-5 text-xs text-white/70 sm:gap-x-10">
+            <span><strong className="mr-1 text-white">15+ yrs</strong> durability</span>
+            <span><strong className="mr-1 text-white">100%</strong> seal</span>
+            <span><strong className="mr-1 text-white">500+</strong> sites</span>
           </div>
         </div>
 
+        <div className="hidden lg:col-span-5 lg:block" aria-hidden="true" />
+      </div>
+
+      <div className="absolute bottom-5 right-6 z-20 flex items-center gap-2 sm:right-10">
+        <span className="text-xs font-medium text-white/70">0{activeSlide + 1} / 0{showcaseProducts.length}</span>
+        <button onClick={prevSlide} aria-label="Previous slide" className="grid size-8 place-items-center rounded-full border border-white/30 text-white transition hover:bg-white/15"><KeyboardArrowLeftIcon sx={{ fontSize: 18 }} /></button>
+        <button onClick={nextSlide} aria-label="Next slide" className="grid size-8 place-items-center rounded-full border border-white/30 text-white transition hover:bg-white/15"><KeyboardArrowRightIcon sx={{ fontSize: 18 }} /></button>
       </div>
     </section>
+          
   );
 };
