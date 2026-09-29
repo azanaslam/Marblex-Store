@@ -43,8 +43,10 @@ const register = async (req, res) => {
     isEmailVerified: false,
   });
 
-  // Send 2FA Verification Code Email for registration
-  await send2FACodeEmail(user.email, twoFactorCode, user.name, "Account Registration");
+  // Send 2FA Verification Code Email for registration (non-blocking)
+  send2FACodeEmail(user.email, twoFactorCode, user.name, "Account Registration").catch((err) =>
+    console.error("[MARBLEX Register] 2FA Email error:", err.message)
+  );
 
   return res.status(201).json({
     requires2FA: true,
@@ -99,8 +101,10 @@ const login = async (req, res) => {
   user.twoFactorExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
   await user.save();
 
-  // Send verification code email
-  await send2FACodeEmail(user.email, twoFactorCode, user.name, "Account Sign-In 2FA");
+  // Send verification code email non-blocking for instant UI response
+  send2FACodeEmail(user.email, twoFactorCode, user.name, "Account Sign-In 2FA").catch((err) =>
+    console.error("[MARBLEX 2FA Login] Email dispatch error:", err.message)
+  );
 
   return res.json({
     requires2FA: true,
@@ -199,7 +203,9 @@ const resend2FA = async (req, res) => {
   user.twoFactorExpires = new Date(Date.now() + 10 * 60 * 1000);
   await user.save();
 
-  await send2FACodeEmail(user.email, twoFactorCode, user.name, "Verification Code Resend");
+  send2FACodeEmail(user.email, twoFactorCode, user.name, "Verification Code Resend").catch((err) =>
+    console.error("[MARBLEX Resend 2FA] Email error:", err.message)
+  );
 
   return res.json({
     success: true,
@@ -223,7 +229,9 @@ const forgotPassword = async (req, res) => {
   user.twoFactorExpires = new Date(Date.now() + 10 * 60 * 1000);
   await user.save();
 
-  await sendPasswordResetEmail(user.email, resetCode, user.name);
+  sendPasswordResetEmail(user.email, resetCode, user.name).catch((err) =>
+    console.error("[MARBLEX Forgot Password] Email error:", err.message)
+  );
 
   return res.json({
     success: true,

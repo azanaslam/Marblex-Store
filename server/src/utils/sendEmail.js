@@ -26,13 +26,14 @@ const getTransporter = async () => {
   }
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    service: "gmail",
     auth: {
       user: emailUser,
       pass: emailPass,
     },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 7000,
     tls: {
       rejectUnauthorized: false,
     },
@@ -40,6 +41,7 @@ const getTransporter = async () => {
 
   return { transporter, emailUser, emailPass };
 };
+
 
 // Reusable Master HTML Email Shell with Hosted Icons (Clean Inbox Preview)
 const buildEmailTemplate = ({ title, preheader, centerContent }) => {
