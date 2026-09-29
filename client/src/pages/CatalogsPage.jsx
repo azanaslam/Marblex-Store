@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 
 const catalogs = [
   {
@@ -51,6 +52,9 @@ export const CatalogsPage = () => {
           Explore complete laboratory certifications, product dimensions, and engineering application brochures.
         </p>
       </div>
+
+      {/* Enterprise Metrics Bar */}
+      <EnterpriseMetricsBar className="mb-10 sm:mb-14" />
 
       {/* Mobile Tab Navigation */}
       <div className="md:hidden sticky top-[68px] z-30 bg-white/95 backdrop-blur-md border-b border-[#e0e6ed] mb-6 px-4 py-3 -mx-4 overflow-x-auto flex items-center gap-2 custom-scrollbar">

@@ -189,7 +189,7 @@ export const AppLayout = ({ cartCount, children }) => {
 
     const safetyTimer = setTimeout(() => {
       runNavEntrance();
-    }, 2800);
+    }, 400);
 
     return () => {
       window.removeEventListener("marblex:intro_reveal", handleIntroReveal);
@@ -223,23 +223,22 @@ export const AppLayout = ({ cartCount, children }) => {
       isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
     }`}>
       
-      {/* 1. Top Brand Announcement & Trust Badges Header (Exact Match with Hero Teal) */}
+      {/* 1. Top Brand Announcement & Trust Badges Header */}
       <div 
         ref={announcementRef}
-        className="bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-2 px-4 md:px-8 text-xs font-semibold z-50 border-b border-white/10 overflow-x-auto scrollbar-none shadow-sm"
+        className="bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1.5 sm:py-2 px-3 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden"
       >
-        <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-6 min-w-max md:min-w-0">
-          
+        {/* Desktop View (md and up) */}
+        <div className="hidden md:flex max-w-[1440px] mx-auto items-center justify-between gap-6">
           {/* Left: Brand Announcement */}
-          <div className="flex items-center gap-2.5 text-slate-100 text-[11px] sm:text-xs shrink-0">
+          <div className="flex items-center gap-2.5 text-slate-100 text-xs shrink-0">
             <span className="text-[#ff8c73] text-sm font-bold">⚡</span>
             <span className="text-white/30 font-normal">|</span>
             <span className="tracking-wide">MARBLEX — Premium Construction Chemical & Industrial Rubber Solutions</span>
           </div>
 
-          {/* Right: 3 Trust Badges (Exact 1:1 Match with Client SS) */}
-          <div className="flex items-center gap-5 sm:gap-7 text-[11px] shrink-0">
-            {/* Badge 1: ISO Certified */}
+          {/* Right: 3 Trust Badges */}
+          <div className="flex items-center gap-6 text-[11px] shrink-0">
             <div className="flex items-center gap-2">
               <ShieldOutlinedIcon sx={{ fontSize: 17, color: "#10b981" }} />
               <div className="flex flex-col text-left leading-tight">
@@ -248,7 +247,6 @@ export const AppLayout = ({ cartCount, children }) => {
               </div>
             </div>
 
-            {/* Badge 2: 15+ Years */}
             <div className="flex items-center gap-2">
               <WorkspacePremiumOutlinedIcon sx={{ fontSize: 17, color: "#10b981" }} />
               <div className="flex flex-col text-left leading-tight">
@@ -257,7 +255,6 @@ export const AppLayout = ({ cartCount, children }) => {
               </div>
             </div>
 
-            {/* Badge 3: Sustainable */}
             <div className="flex items-center gap-2">
               <SpaOutlinedIcon sx={{ fontSize: 17, color: "#10b981" }} />
               <div className="flex flex-col text-left leading-tight">
@@ -266,7 +263,37 @@ export const AppLayout = ({ cartCount, children }) => {
               </div>
             </div>
           </div>
+        </div>
 
+        {/* Mobile View: Continuous Smooth Marquee Ticker (Shows all text & badges seamlessly) */}
+        <div className="md:hidden flex items-center overflow-hidden whitespace-nowrap">
+          <div className="animate-marquee-left flex items-center gap-6 text-[11px]">
+            {[1, 2].map((k) => (
+              <div key={k} className="flex items-center gap-6 shrink-0">
+                <span className="inline-flex items-center gap-1.5 text-slate-100">
+                  <span className="text-[#ff8c73] text-xs font-bold">⚡</span>
+                  <span className="font-bold tracking-wide">MARBLEX</span>
+                  <span className="text-slate-300 font-normal">— Premium Construction Chemical & Industrial Rubber Solutions</span>
+                </span>
+                <span className="text-white/30">•</span>
+                <span className="inline-flex items-center gap-1 text-emerald-400 font-bold">
+                  <ShieldOutlinedIcon sx={{ fontSize: 13 }} />
+                  <span>ISO Certified (Quality You Can Trust)</span>
+                </span>
+                <span className="text-white/30">•</span>
+                <span className="inline-flex items-center gap-1 text-sky-300 font-bold">
+                  <WorkspacePremiumOutlinedIcon sx={{ fontSize: 13 }} />
+                  <span>15+ Years Proven Performance</span>
+                </span>
+                <span className="text-white/30">•</span>
+                <span className="inline-flex items-center gap-1 text-emerald-300 font-bold">
+                  <SpaOutlinedIcon sx={{ fontSize: 13 }} />
+                  <span>Sustainable Eco Formulations</span>
+                </span>
+                <span className="text-white/30">•</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

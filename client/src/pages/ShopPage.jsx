@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { http } from "../api/http";
 import { HeroBanner } from "../components/HeroBanner";
+import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 import { ProductCard } from "../components/ProductCard";
 import { beforeAfterPairs, galleryImages } from "../config/constants";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
@@ -25,6 +26,8 @@ import CalculateOutlinedIcon from "@mui/icons-material/CalculateOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import PrecisionManufacturingOutlinedIcon from "@mui/icons-material/PrecisionManufacturingOutlined";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ZoomInOutlinedIcon from "@mui/icons-material/ZoomInOutlined";
 import { ProductCardSkeleton } from "../components/LoaderSkeleton";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import gsap from "gsap";
@@ -127,6 +130,7 @@ const industrialDivisions = [
     badge: "ASTM D-6083",
     color: "#0a3d52",
     accent: "#ff6b4a",
+    categoryId: "waterproofing",
   },
   {
     title: "Industrial Flooring",
@@ -136,6 +140,7 @@ const industrialDivisions = [
     badge: "Heavy Traffic",
     color: "#0c313d",
     accent: "#38bdf8",
+    categoryId: "elastomeric",
   },
   {
     title: "Rubber Waterstops",
@@ -145,6 +150,7 @@ const industrialDivisions = [
     badge: "Hydrostatic Head",
     color: "#082a38",
     accent: "#10b981",
+    categoryId: "rubber",
   },
   {
     title: "Admixtures & Grouts",
@@ -154,6 +160,7 @@ const industrialDivisions = [
     badge: "High Strength",
     color: "#0f3c4b",
     accent: "#f59e0b",
+    categoryId: "chemicals",
   },
 ];
 
@@ -257,6 +264,8 @@ export const ShopPage = ({ addToCart }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState(() => globalProductsCache || demoProducts);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [calcSurface, setCalcSurface] = useState("roof");
+  const [calcArea, setCalcArea] = useState(1500);
   const [loading, setLoading] = useState(() => !globalProductsCache);
   const scrollRef = useScrollReveal();
   
@@ -268,9 +277,14 @@ export const ShopPage = ({ addToCart }) => {
   const caseStudiesSectionRef = useRef(null);
   const methodologySectionRef = useRef(null);
 
-  // Material Calculator State
-  const [calcArea, setCalcArea] = useState(1500);
-  const [calcSurface, setCalcSurface] = useState("roof");
+  const [previewImage, setPreviewImage] = useState(null);
+
+  const handleSelectDivisionCategory = (catId) => {
+    setSelectedCategory(catId);
+    if (catalogHeaderRef.current) {
+      catalogHeaderRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   const handleOpenProduct = useCallback(
     (item) => {
@@ -294,16 +308,16 @@ export const ShopPage = ({ addToCart }) => {
             // Main container animates from bottom
             gsap.fromTo(
               el,
-              { opacity: 0, y: 70, scale: 0.97 },
-              { opacity: 1, y: 0, scale: 1, duration: 1.15, ease: "power3.out" }
+              { opacity: 0, y: 65, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 1.1, ease: "power3.out" }
             );
 
-            // Left content staggered slide up
+            // Left content slide up
             if (leftEl) {
               gsap.fromTo(
-                leftEl.children,
+                leftEl,
                 { opacity: 0, y: 30 },
-                { opacity: 1, y: 0, duration: 0.9, stagger: 0.1, delay: 0.12, ease: "power3.out" }
+                { opacity: 1, y: 0, duration: 1.0, delay: 0.12, ease: "power3.out" }
               );
             }
 
@@ -311,7 +325,7 @@ export const ShopPage = ({ addToCart }) => {
             if (rightEl) {
               gsap.fromTo(
                 rightEl,
-                { opacity: 0, y: 40, scale: 0.95 },
+                { opacity: 0, y: 35, scale: 0.95 },
                 { opacity: 1, y: 0, scale: 1, duration: 1.05, delay: 0.22, ease: "power3.out" }
               );
             }
@@ -320,7 +334,7 @@ export const ShopPage = ({ addToCart }) => {
           }
         });
       },
-      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
     );
 
     observer.observe(el);
@@ -360,7 +374,7 @@ export const ShopPage = ({ addToCart }) => {
           }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -50px 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px -45px 0px" }
     );
 
     observer.observe(el);
@@ -368,7 +382,7 @@ export const ShopPage = ({ addToCart }) => {
     return () => observer.disconnect();
   }, []);
 
-  // Field Proof & Case Studies Scroll Reveal (Header from TOP, Left from LEFT, Right from RIGHT, with Mobile adaptation)
+  // Field Proof & Case Studies Scroll Reveal (Header from TOP, Card 1 from LEFT, Card 2 from RIGHT on all screens)
   useEffect(() => {
     if (!caseStudiesSectionRef.current) return;
 
@@ -377,157 +391,160 @@ export const ShopPage = ({ addToCart }) => {
     const leftCard = el.querySelector(".case-study-left-anim");
     const rightCard = el.querySelector(".case-study-right-anim");
 
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    const observers = [];
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // Header content animates from TOP
-            if (headerEl) {
+    // Header Observer
+    if (headerEl) {
+      const headerObs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
               gsap.fromTo(
                 headerEl,
                 { opacity: 0, y: -45 },
                 { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
               );
+              headerObs.unobserve(entry.target);
             }
+          });
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -35px 0px" }
+      );
+      headerObs.observe(headerEl);
+      observers.push(headerObs);
+    }
 
-            // Left Card animates from LEFT (or BOTTOM on Mobile)
-            if (leftCard) {
+    // Left Card Observer (Animates from LEFT on mobile & desktop)
+    if (leftCard) {
+      const leftObs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
               gsap.fromTo(
                 leftCard,
                 {
                   opacity: 0,
-                  x: isMobile ? 0 : -80,
-                  y: isMobile ? 50 : 0,
-                  scale: 0.95,
+                  x: -90,
+                  scale: 0.94,
                 },
                 {
                   opacity: 1,
                   x: 0,
-                  y: 0,
                   scale: 1,
-                  duration: 1.15,
-                  delay: 0.1,
+                  duration: 1.1,
                   ease: "power3.out",
                 }
               );
+              leftObs.unobserve(entry.target);
             }
+          });
+        },
+        { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
+      );
+      leftObs.observe(leftCard);
+      observers.push(leftObs);
+    }
 
-            // Right Card animates from RIGHT (or BOTTOM on Mobile with stagger)
-            if (rightCard) {
+    // Right Card Observer (Animates from RIGHT on mobile & desktop)
+    if (rightCard) {
+      const rightObs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
               gsap.fromTo(
                 rightCard,
                 {
                   opacity: 0,
-                  x: isMobile ? 0 : 80,
-                  y: isMobile ? 50 : 0,
-                  scale: 0.95,
+                  x: 90,
+                  scale: 0.94,
                 },
                 {
                   opacity: 1,
                   x: 0,
-                  y: 0,
                   scale: 1,
-                  duration: 1.15,
-                  delay: isMobile ? 0.25 : 0.1,
+                  duration: 1.1,
                   ease: "power3.out",
                 }
               );
+              rightObs.unobserve(entry.target);
             }
+          });
+        },
+        { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
+      );
+      rightObs.observe(rightCard);
+      observers.push(rightObs);
+    }
 
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
-    );
-
-    observer.observe(el);
-
-    return () => observer.disconnect();
+    return () => {
+      observers.forEach((obs) => obs.disconnect());
+    };
   }, []);
 
-  // 4-Stage Certified Engineering Methodology Scroll Reveal (Header from TOP, 2 Left from LEFT, 2 Right from RIGHT, with Mobile adaptation)
+  // 4-Stage Certified Engineering Methodology Scroll Reveal (Header from TOP, Card 1 & 3 from LEFT, Card 2 & 4 from RIGHT)
   useEffect(() => {
     if (!methodologySectionRef.current) return;
 
     const el = methodologySectionRef.current;
     const headerEl = el.querySelector(".methodology-header-anim");
-    const leftCards = el.querySelectorAll(".methodology-card-left");
-    const rightCards = el.querySelectorAll(".methodology-card-right");
+    const cards = el.querySelectorAll(".methodology-card-item");
 
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // Header content animates from TOP
-            if (headerEl) {
+    // Header Observer
+    if (headerEl) {
+      const headerObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
               gsap.fromTo(
                 headerEl,
                 { opacity: 0, y: -45 },
                 { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
               );
+              headerObserver.unobserve(entry.target);
             }
+          });
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+      );
+      headerObserver.observe(headerEl);
+    }
 
-            // Left 2 Cards (01 & 02) animate from LEFT (or BOTTOM on Mobile)
-            if (leftCards.length) {
+    // Individual Card Observers (Animates each card smoothly as it enters viewport on mobile/desktop)
+    const cardObservers = [];
+    cards.forEach((card, idx) => {
+      const isLeft = idx % 2 === 0;
+      const cardObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
               gsap.fromTo(
-                leftCards,
+                card,
                 {
                   opacity: 0,
-                  x: isMobile ? 0 : -75,
-                  y: isMobile ? 50 : 0,
-                  scale: 0.95,
+                  x: isLeft ? -90 : 90,
+                  scale: 0.94,
                 },
                 {
                   opacity: 1,
                   x: 0,
-                  y: 0,
                   scale: 1,
-                  duration: 1.15,
-                  stagger: 0.16,
-                  delay: 0.1,
+                  duration: 1.1,
                   ease: "power3.out",
                 }
               );
+              cardObserver.unobserve(entry.target);
             }
+          });
+        },
+        { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
+      );
+      cardObserver.observe(card);
+      cardObservers.push(cardObserver);
+    });
 
-            // Right 2 Cards (03 & 04) animate from RIGHT (or BOTTOM on Mobile)
-            if (rightCards.length) {
-              gsap.fromTo(
-                rightCards,
-                {
-                  opacity: 0,
-                  x: isMobile ? 0 : 75,
-                  y: isMobile ? 50 : 0,
-                  scale: 0.95,
-                },
-                {
-                  opacity: 1,
-                  x: 0,
-                  y: 0,
-                  scale: 1,
-                  duration: 1.15,
-                  stagger: 0.16,
-                  delay: isMobile ? 0.25 : 0.1,
-                  ease: "power3.out",
-                }
-              );
-            }
-
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
-    );
-
-    observer.observe(el);
-
-    return () => observer.disconnect();
+    return () => {
+      cardObservers.forEach((obs) => obs.disconnect());
+    };
   }, []);
 
   useEffect(() => {
@@ -687,48 +704,13 @@ export const ShopPage = ({ addToCart }) => {
       {/* 1. Hero Section */}
       <HeroBanner />
 
-      {/* 2. Enterprise Trust & Metrics Marquee Strip (Continuous Infinite Scroll Right-to-Left) */}
-      <div className="my-10 sm:my-14 bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] rounded-3xl py-6 sm:py-7 text-white shadow-xl shadow-[#0a3d52]/15 border border-[#1b556e]/50 relative overflow-hidden group select-none">
-        
-        {/* Soft Ambient Glows */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6b4a]/15 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#0ea5e9]/15 rounded-full blur-[90px] pointer-events-none" />
-
-        {/* Left & Right Gradient Fade Masks for Cinema Look */}
-        <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-r from-[#0a3d52] to-transparent z-20 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-l from-[#082a38] to-transparent z-20 pointer-events-none" />
-
-        {/* Continuous Infinite Marquee Track (Right to Left) */}
-        <div className="animate-marquee-left flex items-center">
-          {[...enterpriseMetrics, ...enterpriseMetrics].map((metric, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-6 sm:gap-12 px-6 sm:px-12 shrink-0 border-r border-white/10"
-            >
-              <div className="flex flex-col items-center text-center">
-                <span
-                  className="text-3xl sm:text-4xl md:text-5xl font-black text-white font-heading tracking-tight drop-shadow-sm"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                >
-                  {metric.value}
-                  <span className="text-[#ff6b4a]">{metric.suffix}</span>
-                </span>
-                <span className="text-xs sm:text-sm font-bold text-slate-100 mt-1 uppercase tracking-wider whitespace-nowrap">
-                  {metric.title}
-                </span>
-                <span className="text-[11px] text-slate-300 font-normal mt-0.5 whitespace-nowrap">
-                  {metric.subtitle}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* 2. Enterprise Trust & Metrics Marquee Strip */}
+      <EnterpriseMetricsBar />
 
       {/* 3. Core Industrial Engineering Divisions */}
       <div ref={capabilitiesSectionRef} className="my-14 sm:my-20 overflow-hidden">
         {/* Content Header (Animates from TOP) */}
-        <div className="capabilities-header-anim text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
+        <div className="capabilities-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
           <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/20 shadow-xs">
             <PrecisionManufacturingOutlinedIcon sx={{ fontSize: 16 }} />
             <span>Engineering Disciplines</span>
@@ -751,7 +733,8 @@ export const ShopPage = ({ addToCart }) => {
             return (
               <div
                 key={i}
-                className="capabilities-card-anim group relative bg-white dark:bg-[#0c222e] rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/12 dark:hover:shadow-black/50 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer"
+                onClick={() => handleSelectDivisionCategory(div.categoryId)}
+                className="capabilities-card-anim opacity-0 group relative bg-white dark:bg-[#0c222e] rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/12 dark:hover:shadow-black/50 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer"
               >
                 {/* Top Subtle Sheen Accent Line on Hover */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] dark:via-sky-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -1055,7 +1038,7 @@ export const ShopPage = ({ addToCart }) => {
       {/* 8. Before & After Transformation Section (Redesigned & Upgraded) */}
       <div ref={caseStudiesSectionRef} className="mt-20 sm:mt-28 overflow-hidden">
         {/* Header (Animates from TOP) */}
-        <div className="case-studies-header-anim text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
+        <div className="case-studies-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
           <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/20 shadow-xs">
             <CompareArrowsIcon sx={{ fontSize: 16 }} />
             <span>Field Proof & Case Studies</span>
@@ -1084,7 +1067,7 @@ export const ShopPage = ({ addToCart }) => {
                 key={idx}
                 className={`${
                   isLeft ? "case-study-left-anim" : "case-study-right-anim"
-                } group relative bg-white dark:bg-[#0c222e] p-5 sm:p-7 rounded-3xl border border-slate-200/85 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/12 dark:hover:shadow-black/60 transition-all duration-300 flex flex-col justify-between overflow-hidden hover:-translate-y-1.5 hover:border-[#0a3d52]/35 dark:hover:border-sky-500/35`}
+                } opacity-0 group relative bg-white dark:bg-[#0c222e] p-5 sm:p-7 rounded-3xl border border-slate-200/85 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/15 dark:hover:shadow-black/70 transition-all duration-300 flex flex-col justify-between overflow-hidden hover:-translate-y-1.5 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40`}
               >
                 {/* Top Subtle Hover Accent Line */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] dark:via-sky-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -1097,7 +1080,10 @@ export const ShopPage = ({ addToCart }) => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
                     
                     {/* Before Image */}
-                    <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-inner bg-slate-900 group/img">
+                    <div 
+                      onClick={() => setPreviewImage(pair.before)}
+                      className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-inner bg-slate-900 group/img cursor-pointer"
+                    >
                       <img
                         src={pair.before}
                         alt="Unprotected Substrate"
@@ -1106,12 +1092,18 @@ export const ShopPage = ({ addToCart }) => {
                         className="w-full h-[200px] sm:h-[220px] object-cover group-hover/img:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md text-amber-300 text-[9.5px] font-extrabold px-2.5 py-1 rounded-lg uppercase shadow-md border border-amber-400/25 tracking-wider">
-                        ⚠️ Unprotected Substrate
+                        ⚠️ Before: Untreated
+                      </div>
+                      <div className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                        <ZoomInOutlinedIcon sx={{ fontSize: 16 }} />
                       </div>
                     </div>
 
                     {/* After Image */}
-                    <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/50 dark:border-emerald-400/50 shadow-md bg-slate-900 group/img">
+                    <div 
+                      onClick={() => setPreviewImage(pair.after)}
+                      className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/50 dark:border-emerald-400/50 shadow-md bg-slate-900 group/img cursor-pointer"
+                    >
                       <img
                         src={pair.after}
                         alt="MARBLEX Treated"
@@ -1120,7 +1112,10 @@ export const ShopPage = ({ addToCart }) => {
                         className="w-full h-[200px] sm:h-[220px] object-cover group-hover/img:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 right-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[9.5px] font-extrabold px-2.5 py-1 rounded-lg uppercase shadow-lg shadow-emerald-600/30 flex items-center gap-1 tracking-wider">
-                        <CheckCircleRoundedIcon sx={{ fontSize: 13 }} /> MARBLEX Treated
+                        <CheckCircleRoundedIcon sx={{ fontSize: 13 }} /> After: MARBLEX
+                      </div>
+                      <div className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-emerald-900/60 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                        <ZoomInOutlinedIcon sx={{ fontSize: 16 }} />
                       </div>
                     </div>
 
@@ -1158,6 +1153,22 @@ export const ShopPage = ({ addToCart }) => {
                   </div>
                 </div>
 
+                {/* Footer Action */}
+                <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                  <a
+                    href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20saw%20your%20Case%20Study%20on%20${encodeURIComponent(pair.title)}%20and%20want%20to%20know%20more.`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-bold text-[#0a3d52] dark:text-sky-400 hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>Request Case Study Report</span>
+                    <ArrowForwardRoundedIcon sx={{ fontSize: 14 }} />
+                  </a>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    ASTM Certified
+                  </span>
+                </div>
+
               </div>
             );
           })}
@@ -1167,7 +1178,7 @@ export const ShopPage = ({ addToCart }) => {
       {/* 9. 4-Stage Application Methodology */}
       <div ref={methodologySectionRef} className="mt-20 sm:mt-28 overflow-hidden">
         {/* Header (Animates from TOP) */}
-        <div className="methodology-header-anim text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
+        <div className="methodology-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
           <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/20 shadow-xs">
             <FactCheckOutlinedIcon sx={{ fontSize: 16 }} />
             <span>Standard Operating Procedure</span>
@@ -1183,18 +1194,18 @@ export const ShopPage = ({ addToCart }) => {
           </p>
         </div>
 
-        {/* Cards Grid: 2 Left from Left, 2 Right from Right */}
+        {/* Cards Grid: 1 & 3 from Left, 2 & 4 from Right */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 px-1">
           {engineeringSteps.map((step, idx) => {
-            const isLeft = idx < 2;
             const IconComponent = step.icon;
 
             return (
-              <div
+              <a
                 key={idx}
-                className={`${
-                  isLeft ? "methodology-card-left" : "methodology-card-right"
-                } group relative bg-white dark:bg-[#0c222e] rounded-3xl p-6 sm:p-7 border border-slate-200/85 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/12 dark:hover:shadow-black/60 hover:-translate-y-2 hover:border-[#0a3d52]/35 dark:hover:border-sky-500/35 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer`}
+                href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20am%20interested%20in%20learning%20more%20about%20Stage%20${step.step}%3A%20${encodeURIComponent(step.title)}.`}
+                target="_blank"
+                rel="noreferrer"
+                className="methodology-card-item opacity-0 group relative bg-white dark:bg-[#0c222e] rounded-3xl p-6 sm:p-7 border border-slate-200/85 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/15 dark:hover:shadow-black/70 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer"
               >
                 {/* Top Subtle Hover Sheen Line */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] dark:via-sky-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -1246,7 +1257,7 @@ export const ShopPage = ({ addToCart }) => {
                     ISO Standard
                   </span>
                 </div>
-              </div>
+              </a>
             );
           })}
         </div>
@@ -1263,7 +1274,7 @@ export const ShopPage = ({ addToCart }) => {
               Project Gallery & Deployments
             </h3>
             <p className="text-[#565e69] dark:text-slate-300 font-normal text-xs sm:text-sm mt-1">
-              Critical infrastructure, commercial high-rises, and industrial facilities engineered with MARBLEX.
+              Critical infrastructure, commercial high-rises, and industrial facilities engineered with MARBLEX. Click any photo to preview.
             </p>
           </div>
 
@@ -1275,7 +1286,11 @@ export const ShopPage = ({ addToCart }) => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
           {galleryImages.map((img, idx) => (
-            <div key={idx} className={`relative rounded-3xl overflow-hidden group border border-[#e0e6ed] dark:border-slate-800 shadow-sm scroll-reveal ${idx === 0 || idx === 5 ? 'md:col-span-2 md:row-span-2' : ''}`}>
+            <div 
+              key={idx} 
+              onClick={() => setPreviewImage(img)}
+              className={`relative rounded-3xl overflow-hidden group border border-[#e0e6ed] dark:border-slate-800 shadow-sm cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${idx === 0 || idx === 5 ? 'md:col-span-2 md:row-span-2' : ''}`}
+            >
               <img 
                 src={img} 
                 alt={`Showcase ${idx}`} 
@@ -1284,13 +1299,50 @@ export const ShopPage = ({ addToCart }) => {
                 className="w-full h-full object-cover min-h-[190px] transition-transform duration-700 group-hover:scale-108" 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a3d52]/90 via-[#0a3d52]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5 text-white">
-                <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#ff8c73]">Site Verification</span>
-                <span className="font-extrabold text-sm sm:text-base font-heading">MARBLEX Industrial Project #{idx + 101}</span>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#ff8c73] block">Site Verification</span>
+                    <span className="font-extrabold text-sm sm:text-base font-heading">MARBLEX Industrial Project #{idx + 101}</span>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+                    <ZoomInOutlinedIcon sx={{ fontSize: 18 }} />
+                  </div>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Lightbox Modal for Gallery Images */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-fadeIn"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div 
+            className="relative max-w-4xl w-full max-h-[90vh] bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-white/20 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-950/80 border-b border-white/10 text-white">
+              <span className="font-bold text-sm tracking-wide">MARBLEX Project Inspection & Proof</span>
+              <button 
+                onClick={() => setPreviewImage(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-white"
+              >
+                <CloseRoundedIcon sx={{ fontSize: 20 }} />
+              </button>
+            </div>
+            <div className="p-2 sm:p-4 flex items-center justify-center bg-black/40 overflow-auto">
+              <img 
+                src={previewImage} 
+                alt="Enlarged Project Preview" 
+                className="max-h-[75vh] w-auto object-contain rounded-2xl shadow-lg"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 11. Contractor & Engineer Testimonials */}
       <div className="mt-20 sm:mt-28">

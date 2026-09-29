@@ -11,6 +11,42 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import gsap from "gsap";
 
+// Bespoke SVG Vector Icon Components
+const SvgWaterproof = () => (
+  <svg className="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2.69L6.64 8.05C4.29 10.4 4.29 14.2 6.64 16.54C8.99 18.89 12.79 18.89 15.14 16.54C17.49 14.19 17.49 10.39 15.14 8.05L12 2.69Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const SvgDurability = () => (
+  <svg className="w-4 h-4 text-[#ff8c73]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const SvgChemical = () => (
+  <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 3H15M10 3V8.5L5.2 17.4C4.4 18.9 5.5 20.7 7.2 20.7H16.8C18.5 20.7 19.6 18.9 18.8 17.4L14 8.5V3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="10" cy="16" r="1" fill="currentColor"/>
+    <circle cx="14" cy="15" r="0.8" fill="currentColor"/>
+  </svg>
+);
+
+const SvgExpansion = () => (
+  <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 8V4H8M16 4H20V8M20 16V20H16M8 20H4V16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9 9L15 15M15 9L9 15" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+  </svg>
+);
+
+const SvgCleanroom = () => (
+  <svg className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="1.75"/>
+    <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+  </svg>
+);
+
 const showcaseProducts = [
   {
     id: 1,
@@ -20,10 +56,10 @@ const showcaseProducts = [
     title: "APP Bituminous Membrane System",
     desc: "Polymer-modified reinforced bituminous sheet engineered for extreme puncture resistance and high hydrostatic water head containment.",
     tag: "High Tensile",
-    image: "/products/Banner3.jpeg",
-    card1: { icon: WaterDropOutlinedIcon, title: "100% WATERPROOF", subtitle: "ASTM D-412 Certified" },
-    card2: { icon: ShieldOutlinedIcon, title: "EXTREME DURABILITY", subtitle: "Puncture & Tear Proof" },
-    card3: { icon: ScienceOutlinedIcon, title: "CHEMICAL RESISTANT", subtitle: "Acid & Alkali Barrier" },
+    image: "https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=1200&q=80",
+    card1: { icon: SvgWaterproof, title: "100% WATERPROOF", subtitle: "ASTM D-412 Certified" },
+    card2: { icon: SvgDurability, title: "EXTREME DURABILITY", subtitle: "Puncture & Tear Proof" },
+    card3: { icon: SvgChemical, title: "CHEMICAL RESISTANT", subtitle: "Acid & Alkali Barrier" },
   },
   {
     id: 2,
@@ -33,10 +69,10 @@ const showcaseProducts = [
     title: "Heavy-Duty Expansion Waterstops",
     desc: "Engineered vulcanized rubber waterstop profiles designed for structural expansion & construction joints in dams, canals, and basements.",
     tag: "100m Head Seal",
-    image: "/products/Banner2.jpeg",
-    card1: { icon: ShieldOutlinedIcon, title: "HIGH-PRESSURE SEAL", subtitle: "Up to 5 Bar Resistance" },
-    card2: { icon: WaterDropOutlinedIcon, title: "450% ELONGATION", subtitle: "Dynamic Expansion" },
-    card3: { icon: ScienceOutlinedIcon, title: "AGEING RESISTANT", subtitle: "50+ Year Lifetime" },
+    image: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1200&q=80",
+    card1: { icon: SvgDurability, title: "HIGH-PRESSURE SEAL", subtitle: "Up to 5 Bar Resistance" },
+    card2: { icon: SvgExpansion, title: "450% ELONGATION", subtitle: "Dynamic Expansion" },
+    card3: { icon: SvgChemical, title: "AGEING RESISTANT", subtitle: "50+ Year Lifetime" },
   },
   {
     id: 3,
@@ -46,10 +82,10 @@ const showcaseProducts = [
     title: "Elastomeric Liquid Waterproof Coating",
     desc: "High-grade liquid polymer membrane providing 100% monolithic joint-free barrier against water ingress with 600% crack-bridging elasticity.",
     tag: "Seamless Shield",
-    image: "/products/Banner1.jpeg",
-    card1: { icon: WaterDropOutlinedIcon, title: "100% SEAMLESS", subtitle: "Zero Joint Ingress" },
-    card2: { icon: ShieldOutlinedIcon, title: "600% ELASTICITY", subtitle: "Crack-Bridging Tech" },
-    card3: { icon: ScienceOutlinedIcon, title: "UV & WEATHER PROOF", subtitle: "Tropical Formula" },
+    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80",
+    card1: { icon: SvgWaterproof, title: "100% SEAMLESS", subtitle: "Zero Joint Ingress" },
+    card2: { icon: SvgExpansion, title: "600% ELASTICITY", subtitle: "Crack-Bridging Tech" },
+    card3: { icon: SvgChemical, title: "UV & WEATHER PROOF", subtitle: "Tropical Formula" },
   },
   {
     id: 4,
@@ -59,10 +95,10 @@ const showcaseProducts = [
     title: "High-Build Industrial Epoxy Floor",
     desc: "Seamless, chemical, and heavy forklift abrasion-resistant high-build epoxy coatings for pharmaceutical and manufacturing facilities.",
     tag: "Heavy Duty",
-    image: "/products/Banner4.jpeg",
-    card1: { icon: ScienceOutlinedIcon, title: "SOLVENT RESISTANT", subtitle: "Resists Acids & Oils" },
-    card2: { icon: ShieldOutlinedIcon, title: "HEAVY LOAD RATED", subtitle: "Forklift & Impact Tough" },
-    card3: { icon: WaterDropOutlinedIcon, title: "CLEANROOM GRADE", subtitle: "Seamless Hygiene" },
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80",
+    card1: { icon: SvgChemical, title: "SOLVENT RESISTANT", subtitle: "Resists Acids & Oils" },
+    card2: { icon: SvgDurability, title: "HEAVY LOAD RATED", subtitle: "Forklift & Impact Tough" },
+    card3: { icon: SvgCleanroom, title: "CLEANROOM GRADE", subtitle: "Seamless Hygiene" },
   },
 ];
 
@@ -171,7 +207,7 @@ export const HeroBanner = () => {
     // Safety fallback (in case user reloads or navigates directly)
     const safetyTimer = setTimeout(() => {
       runEntranceAnimation();
-    }, 2800);
+    }, 400);
 
     return () => {
       window.removeEventListener("marblex:intro_reveal", handleIntroReveal);
@@ -283,8 +319,11 @@ export const HeroBanner = () => {
             className="pt-4 sm:pt-6 border-t border-white/15 grid grid-cols-3 gap-2 sm:gap-4 max-w-lg"
           >
             <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-[#ff8c73] shrink-0">
-                <ShieldOutlinedIcon sx={{ fontSize: 18 }} />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-[#ff8c73] shrink-0 shadow-inner">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
               <div>
                 <div className="text-xs sm:text-base font-black text-white leading-tight">15+ Yrs</div>
@@ -293,8 +332,10 @@ export const HeroBanner = () => {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-sky-300 shrink-0">
-                <WaterDropOutlinedIcon sx={{ fontSize: 18 }} />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-sky-300 shrink-0 shadow-inner">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2.69L6.64 8.05C4.29 10.4 4.29 14.2 6.64 16.54C8.99 18.89 12.79 18.89 15.14 16.54C17.49 14.19 17.49 10.39 15.14 8.05L12 2.69Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
               <div>
                 <div className="text-xs sm:text-base font-black text-white leading-tight">100%</div>
@@ -303,8 +344,10 @@ export const HeroBanner = () => {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-emerald-300 shrink-0">
-                <ScienceOutlinedIcon sx={{ fontSize: 18 }} />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-emerald-300 shrink-0 shadow-inner">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 21V9L12 3L20 9V21M9 21V12H15V21" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
               <div>
                 <div className="text-xs sm:text-base font-black text-white leading-tight">500+</div>

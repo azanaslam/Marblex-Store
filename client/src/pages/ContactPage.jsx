@@ -6,6 +6,7 @@ import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { http } from "../api/http";
+import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 
 export const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -50,6 +51,9 @@ export const ContactPage = () => {
           Request technical datasheets, site consultations, or customized quotations for large-scale construction projects.
         </p>
       </div>
+
+      {/* Enterprise Metrics Bar */}
+      <EnterpriseMetricsBar className="mb-14 sm:mb-16" />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left 5 Cols: Contact Channels */}

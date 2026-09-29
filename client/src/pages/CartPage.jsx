@@ -607,17 +607,27 @@ export const CartPage = ({ cart = [], setCart }) => {
 
           {/* Trust Footnotes */}
           <div className="px-4 sm:px-6 pb-4 sm:pb-5 pt-2 flex items-center justify-center flex-wrap gap-2.5 sm:gap-4 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-[#1f3d4a]/60">
-            <span className="flex items-center gap-1">
-              <LockOutlinedIcon sx={{ fontSize: 14, color: "#10b981" }} />
+            <span className="flex items-center gap-1.5 font-medium">
+              <svg className="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <path d="M7 11V7C7 4.23858 9.23858 2 12 2C14.7614 2 17 4.23858 17 7V11" stroke="currentColor" strokeWidth="2"/>
+              </svg>
               <span>Secure checkout</span>
             </span>
-            <span className="flex items-center gap-1">
-              <CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14, color: "#10b981" }} />
+            <span className="flex items-center gap-1.5 font-medium">
+              <svg className="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <span>Quality assured</span>
             </span>
-            <span className="flex items-center gap-1">
-              <HeadsetMicOutlinedIcon sx={{ fontSize: 14, color: "#10b981" }} />
-              <span>Team follow-up</span>
+            <span className="flex items-center gap-1.5 font-medium">
+              <svg className="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 18V12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12V18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M21 17C21 18.6569 19.6569 20 18 20H17V15H18C19.6569 15 21 15.8954 21 17Z" fill="currentColor" stroke="currentColor" strokeWidth="2"/>
+                <path d="M3 17C3 15.8954 4.34315 15 6 15H7V20H6C4.34315 20 3 18.6569 3 17Z" fill="currentColor" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              <span>Direct engineer support</span>
             </span>
           </div>
 

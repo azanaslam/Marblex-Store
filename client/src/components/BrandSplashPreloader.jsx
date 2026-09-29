@@ -18,155 +18,103 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   const blexLetters = ["B", "L", "E", "X"];
 
   const handleFinish = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    // Broadcast event so Navbar, Hero Banner & Landing Page initiate their smooth entrance concurrently with curtain dissolve
+    // Broadcast event so Navbar, Hero Banner & Landing Page initiate their entrance immediately
     window.dispatchEvent(new CustomEvent("marblex:intro_reveal"));
     onComplete?.();
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setVisible(false);
-      },
-    });
+    if (!containerRef.current) {
+      setVisible(false);
+      return;
+    }
 
-    tl.to(logoWrapperRef.current, {
-      scale: 1.05,
-      opacity: 0,
-      filter: "blur(10px)",
-      duration: 0.5,
-      ease: "power2.inOut",
-    })
-    .to(
-      curtainRef.current,
-      {
-        opacity: 0,
-        scale: 1.02,
-        filter: "blur(12px)",
-        duration: 0.85,
-        ease: "power2.inOut",
-      },
-      "-=0.35"
-    );
+    try {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          setVisible(false);
+        },
+      });
+
+      if (logoWrapperRef.current) {
+        tl.to(logoWrapperRef.current, {
+          scale: 1.05,
+          opacity: 0,
+          filter: "blur(10px)",
+          duration: 0.35,
+          ease: "power2.inOut",
+        });
+      }
+
+      if (curtainRef.current) {
+        tl.to(
+          curtainRef.current,
+          {
+            opacity: 0,
+            duration: 0.45,
+            ease: "power2.inOut",
+          },
+          "-=0.2"
+        );
+      }
+    } catch {
+      setVisible(false);
+    }
   }, [onComplete]);
 
   useEffect(() => {
-    // Safety fallback: guaranteed auto-dismiss
+    // Safety fallback: auto-dismiss quickly so page is never blocked
     const safetyTimer = setTimeout(() => {
       handleFinish();
-    }, 2800);
+    }, 1200);
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        onComplete: () => {
-          gsap.delayedCall(0.4, handleFinish);
-        },
-      });
+      try {
+        const tl = gsap.timeline({
+          onComplete: () => {
+            gsap.delayedCall(0.2, handleFinish);
+          },
+        });
 
-      // --- 1. Initial State ---
-      gsap.set(logoWrapperRef.current, { scale: 0.7, opacity: 0, y: 25, rotationX: 10 });
-      gsap.set(glowRingRef.current, { scale: 0.5, opacity: 0 });
-      gsap.set(shineSweepRef.current, { xPercent: -150 });
-      gsap.set([...marLettersRef.current, ...blexLettersRef.current], {
-        opacity: 0,
-        y: 24,
-        filter: "blur(6px)",
-      });
-      gsap.set(accentLineRef.current, { scaleX: 0, transformOrigin: "center center" });
-      gsap.set(subtitleRef.current, { opacity: 0, y: 10 });
-      gsap.set(badgeRef.current, { opacity: 0, scale: 0.85 });
+        const activeMarLetters = marLettersRef.current.filter(Boolean);
+        const activeBlexLetters = blexLettersRef.current.filter(Boolean);
+        const allLetters = [...activeMarLetters, ...activeBlexLetters];
 
-      // --- 2. Smooth Motion Sequence ---
-      
-      // Ambient glow
-      tl.to(glowRingRef.current, {
-        scale: 1.3,
-        opacity: 0.7,
-        duration: 0.75,
-        ease: "power2.out",
-      })
-      // Logo 3D Floating Rise
-      .to(
-        logoWrapperRef.current,
-        {
-          scale: 1,
-          opacity: 1,
-          y: 0,
-          rotationX: 0,
-          duration: 0.7,
-          ease: "power3.out",
-        },
-        "-=0.5"
-      )
-      // Shimmer sweep across emblem
-      .to(
-        shineSweepRef.current,
-        {
-          xPercent: 200,
-          duration: 0.65,
-          ease: "power2.inOut",
-        },
-        "-=0.2"
-      )
-      // Staggered MAR Letters Drop (Navy Teal)
-      .to(
-        marLettersRef.current,
-        {
-          opacity: 1,
-          y: 0,
-          filter: "blur(0px)",
-          duration: 0.45,
-          stagger: 0.04,
-          ease: "power3.out",
-        },
-        "-=0.3"
-      )
-      // Staggered BLEX Letters Drop (Red-Orange)
-      .to(
-        blexLettersRef.current,
-        {
-          opacity: 1,
-          y: 0,
-          filter: "blur(0px)",
-          duration: 0.45,
-          stagger: 0.04,
-          ease: "power3.out",
-        },
-        "-=0.25"
-      )
-      // Accent Divider Line Expansion
-      .to(
-        accentLineRef.current,
-        {
-          scaleX: 1,
-          duration: 0.45,
-          ease: "power2.out",
-        },
-        "-=0.2"
-      )
-      // Subtitle Reveal
-      .to(
-        subtitleRef.current,
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.45,
-          ease: "power2.out",
-        },
-        "-=0.25"
-      )
-      // Badge Reveal
-      .to(
-        badgeRef.current,
-        {
-          opacity: 1,
-          scale: 1,
-          duration: 0.4,
-          ease: "back.out(1.4)",
-        },
-        "-=0.2"
-      );
+        // --- 1. Initial State ---
+        if (logoWrapperRef.current) gsap.set(logoWrapperRef.current, { scale: 0.7, opacity: 0, y: 20 });
+        if (glowRingRef.current) gsap.set(glowRingRef.current, { scale: 0.5, opacity: 0 });
+        if (shineSweepRef.current) gsap.set(shineSweepRef.current, { xPercent: -150 });
+        if (allLetters.length) gsap.set(allLetters, { opacity: 0, y: 20, filter: "blur(4px)" });
+        if (accentLineRef.current) gsap.set(accentLineRef.current, { scaleX: 0, transformOrigin: "center center" });
+        if (subtitleRef.current) gsap.set(subtitleRef.current, { opacity: 0, y: 8 });
+        if (badgeRef.current) gsap.set(badgeRef.current, { opacity: 0, scale: 0.85 });
 
+        // --- 2. Smooth Motion Sequence ---
+        if (glowRingRef.current) {
+          tl.to(glowRingRef.current, { scale: 1.2, opacity: 0.7, duration: 0.45, ease: "power2.out" });
+        }
+        if (logoWrapperRef.current) {
+          tl.to(logoWrapperRef.current, { scale: 1, opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, "-=0.3");
+        }
+        if (shineSweepRef.current) {
+          tl.to(shineSweepRef.current, { xPercent: 200, duration: 0.45, ease: "power2.inOut" }, "-=0.15");
+        }
+        if (activeMarLetters.length) {
+          tl.to(activeMarLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, stagger: 0.03, ease: "power3.out" }, "-=0.2");
+        }
+        if (activeBlexLetters.length) {
+          tl.to(activeBlexLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, stagger: 0.03, ease: "power3.out" }, "-=0.2");
+        }
+        if (accentLineRef.current) {
+          tl.to(accentLineRef.current, { scaleX: 1, duration: 0.35, ease: "power2.out" }, "-=0.15");
+        }
+        if (subtitleRef.current) {
+          tl.to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, "-=0.15");
+        }
+        if (badgeRef.current) {
+          tl.to(badgeRef.current, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.4)" }, "-=0.15");
+        }
+      } catch {
+        handleFinish();
+      }
     }, containerRef);
 
     return () => {

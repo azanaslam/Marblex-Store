@@ -5,6 +5,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { http } from "../api/http";
 import { BlogCardSkeleton } from "../components/LoaderSkeleton";
+import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 
 export const BlogsPage = () => {
   const [blogs, setBlogs] = useState([]);
@@ -39,6 +40,9 @@ export const BlogsPage = () => {
           In-depth civil engineering perspectives on concrete waterproofing, elastomeric rubber water stops, and thermal protection.
         </p>
       </div>
+
+      {/* Enterprise Metrics Bar */}
+      <EnterpriseMetricsBar className="mb-14 sm:mb-16" />
 
       {/* Blog Cards Grid */}
       {loading ? (

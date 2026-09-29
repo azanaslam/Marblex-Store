@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 
 const services = [
   {
@@ -53,6 +54,9 @@ export const ServicesPage = () => {
           Engineered construction chemicals, elastomeric rubber water stops, and thermal barrier systems customized for civil infrastructure and commercial projects.
         </p>
       </div>
+
+      {/* Enterprise Metrics Bar */}
+      <EnterpriseMetricsBar className="mb-14 sm:mb-16" />
 
       {/* Services Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
