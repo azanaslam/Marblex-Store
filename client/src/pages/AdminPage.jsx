@@ -537,8 +537,8 @@ export const AdminPage = () => {
   );
 
   return (
-    <div className="relative min-h-screen w-full bg-[#f5f7fa] text-[#0f1929] font-sans selection:bg-[#ff6b4a] selection:text-white pb-16">
-      <AmbientMesh3D />
+    <div className="admin-redesign relative min-h-screen w-full bg-[#f7f7f5] text-[#17201d] font-sans selection:bg-[#17201d] selection:text-white pb-16">
+      {/* The dashboard uses a quiet operational surface rather than decorative 3D effects. */}
 
       {/* Top MARBLEX Executive Bar */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/95 border-b border-[#e0e6ed] shadow-sm">

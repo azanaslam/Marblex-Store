@@ -100,3 +100,61 @@ textarea {
   padding: 0.8rem;
   margin-bottom: 1rem;
 }
+
+/* Admin workspace: restrained, content-first visual system. */
+.admin-redesign {
+  --admin-ink: #17201d;
+  --admin-muted: #68736d;
+  --admin-line: #e3e7e2;
+  --admin-surface: #ffffff;
+  --admin-soft: #f1f4f0;
+  background: #f7f7f5 !important;
+  color: var(--admin-ink) !important;
+}
+
+.admin-redesign header {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: var(--admin-line) !important;
+  box-shadow: 0 1px 0 rgba(23, 32, 29, 0.03) !important;
+}
+
+.admin-redesign main { padding-top: 2rem; }
+.admin-redesign aside > div,
+.admin-redesign .rounded-2xl.bg-white,
+.admin-redesign .rounded-3xl.bg-white,
+.admin-redesign .rounded-xl.bg-white {
+  background: var(--admin-surface) !important;
+  border-color: var(--admin-line) !important;
+  box-shadow: 0 8px 24px rgba(23, 32, 29, 0.04) !important;
+}
+
+.admin-redesign aside > div { padding: 0.75rem !important; }
+.admin-redesign aside button {
+  border-radius: 0.7rem !important;
+  color: var(--admin-muted) !important;
+  font-weight: 600 !important;
+}
+.admin-redesign aside button:hover { background: var(--admin-soft) !important; color: var(--admin-ink) !important; }
+.admin-redesign aside button[class*="btn-3d-accent"],
+.admin-redesign aside button.bg-\[\#0a3d52\] {
+  background: var(--admin-ink) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+.admin-redesign aside button[class*="btn-3d-accent"] span:last-child,
+.admin-redesign aside button.bg-\[\#0a3d52\] span:last-child { color: inherit !important; }
+
+.admin-redesign [class*="shadow-"],
+.admin-redesign [class*="btn-3d-"] { box-shadow: none !important; }
+.admin-redesign [class*="rounded-2xl"],
+.admin-redesign [class*="rounded-3xl"] { border-radius: 1rem !important; }
+.admin-redesign .text-\[\#ff6b4a\] { color: #b9573e !important; }
+.admin-redesign .bg-\[\#ff6b4a\] { background: #b9573e !important; }
+.admin-redesign .bg-gradient-to-r { background: #eef2ed !important; }
+.admin-redesign .font-heading { letter-spacing: -0.025em; }
+
+@media (max-width: 767px) {
+  .admin-redesign main { padding: 1rem !important; }
+  .admin-redesign header .max-w-\[1600px\] { padding-inline: 1rem !important; }
+  .admin-redesign .grid { gap: 0.75rem; }
+}
