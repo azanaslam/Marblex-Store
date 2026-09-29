@@ -18,7 +18,12 @@ const getTransporter = async () => {
   const rawUser = config?.value?.user || process.env.EMAIL_USER || "Marblexpak@gmail.com";
   const rawPass = config?.value?.pass || process.env.EMAIL_PASS;
 
-  const emailUser = String(rawUser).trim();
+  let emailUser = String(rawUser).trim();
+  // Fix typo if .com.com is present in DB config or env
+  if (emailUser.toLowerCase().endsWith(".com.com")) {
+    emailUser = emailUser.slice(0, -4);
+  }
+
   const emailPass = rawPass ? String(rawPass).replace(/\s+/g, "").trim() : "";
 
   if (!emailPass) {
@@ -26,14 +31,17 @@ const getTransporter = async () => {
   }
 
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    family: 4, // CRITICAL: Force IPv4 to prevent ENETUNREACH on Render/Cloud platforms
     auth: {
       user: emailUser,
       pass: emailPass,
     },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 7000,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     tls: {
       rejectUnauthorized: false,
     },
