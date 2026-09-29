@@ -1,16 +1,15 @@
 import { lazy, Suspense, useMemo } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { Box, CircularProgress, Container, CssBaseline, ThemeProvider } from "@mui/material";
+import { Box, CircularProgress, CssBaseline, ThemeProvider } from "@mui/material";
 import { AppLayout } from "./components/AppLayout";
 import { BrandSplashPreloader } from "./components/BrandSplashPreloader";
-import { SiteFooter } from "./components/SiteFooter";
+import { ShopPage } from "./pages/ShopPage";
 import { useCart } from "./hooks/useCart";
 import { appTheme } from "./theme/theme";
 
 const named = (importer, exportName) =>
   lazy(() => importer().then((module) => ({ default: module[exportName] })));
 
-const ShopPage = named(() => import("./pages/ShopPage"), "ShopPage");
 const CartPage = named(() => import("./pages/CartPage"), "CartPage");
 const BlogsPage = named(() => import("./pages/BlogsPage"), "BlogsPage");
 const AdminPage = named(() => import("./pages/AdminPage"), "AdminPage");

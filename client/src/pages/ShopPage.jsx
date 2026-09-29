@@ -163,21 +163,29 @@ const engineeringSteps = [
     step: "01",
     title: "Substrate Diagnostic",
     desc: "Core moisture scanning, tensile surface profiling, and structural crack mapping before any chemical compounding.",
+    badge: "Surface Profiling",
+    icon: FactCheckOutlinedIcon,
   },
   {
     step: "02",
     title: "Deep Primer Penetration",
     desc: "Application of low-viscosity epoxy or acrylic primer to consolidate porous concrete and ensure 2.5+ MPa adhesion.",
+    badge: "2.5+ MPa Adhesion",
+    icon: LayersOutlinedIcon,
   },
   {
     step: "03",
     title: "Multilayer Formulation",
     desc: "Deployment of seamless elastomeric liquid membranes, vulcanized waterstops, or high-build polyurea coatings.",
+    badge: "Seamless Elastomeric",
+    icon: ShieldOutlinedIcon,
   },
   {
     step: "04",
     title: "Hydrostatic Quality Sign-Off",
     desc: "72-hour continuous water flooding test, thermal imaging audit, and official 10-Year MARBLEX warranty issuance.",
+    badge: "10-Yr Certified Warranty",
+    icon: WorkspacePremiumOutlinedIcon,
   },
 ];
 
@@ -206,6 +214,45 @@ const contractorTestimonials = [
   },
 ];
 
+const enterpriseMetrics = [
+  {
+    value: "15",
+    suffix: "+",
+    title: "Years Industrial Mastery",
+    subtitle: "Formulating Since 2011",
+  },
+  {
+    value: "500",
+    suffix: "+",
+    title: "Mega Projects Sealed",
+    subtitle: "Dams, High-Rises & Plants",
+  },
+  {
+    value: "100",
+    suffix: "%",
+    title: "ISO-9001 Certified",
+    subtitle: "ASTM Tested Formulations",
+  },
+  {
+    value: "10",
+    suffix: " Yrs",
+    title: "Warranty Guarantee",
+    subtitle: "Zero Moisture Permeation",
+  },
+  {
+    value: "50",
+    suffix: "+",
+    title: "Engineered Products",
+    subtitle: "Membranes, Epoxy & Sealants",
+  },
+  {
+    value: "100",
+    suffix: "%",
+    title: "Hydrostatic Head Proof",
+    subtitle: "Extreme Chemical Resistance",
+  },
+];
+
 export const ShopPage = ({ addToCart }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState(() => globalProductsCache || demoProducts);
@@ -216,6 +263,10 @@ export const ShopPage = ({ addToCart }) => {
   const catalogHeaderRef = useRef(null);
   const filtersRef = useRef(null);
   const productsGridRef = useRef(null);
+  const capabilitiesSectionRef = useRef(null);
+  const calculatorSectionRef = useRef(null);
+  const caseStudiesSectionRef = useRef(null);
+  const methodologySectionRef = useRef(null);
 
   // Material Calculator State
   const [calcArea, setCalcArea] = useState(1500);
@@ -227,6 +278,257 @@ export const ShopPage = ({ addToCart }) => {
     },
     [navigate]
   );
+
+  // Material Calculator Scroll Reveal (Animates whole section & children smoothly from BOTTOM to TOP)
+  useEffect(() => {
+    if (!calculatorSectionRef.current) return;
+
+    const el = calculatorSectionRef.current;
+    const leftEl = el.querySelector(".calc-left-anim");
+    const rightEl = el.querySelector(".calc-card-anim");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Main container animates from bottom
+            gsap.fromTo(
+              el,
+              { opacity: 0, y: 70, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 1.15, ease: "power3.out" }
+            );
+
+            // Left content staggered slide up
+            if (leftEl) {
+              gsap.fromTo(
+                leftEl.children,
+                { opacity: 0, y: 30 },
+                { opacity: 1, y: 0, duration: 0.9, stagger: 0.1, delay: 0.12, ease: "power3.out" }
+              );
+            }
+
+            // Right live calculation card entrance
+            if (rightEl) {
+              gsap.fromTo(
+                rightEl,
+                { opacity: 0, y: 40, scale: 0.95 },
+                { opacity: 1, y: 0, scale: 1, duration: 1.05, delay: 0.22, ease: "power3.out" }
+              );
+            }
+
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Specialized Capabilities Scroll Reveal Animation (Content from Top, Cards from Bottom)
+  useEffect(() => {
+    if (!capabilitiesSectionRef.current) return;
+
+    const el = capabilitiesSectionRef.current;
+    const headerEl = el.querySelector(".capabilities-header-anim");
+    const cards = el.querySelectorAll(".capabilities-card-anim");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Header content animates from TOP
+            if (headerEl) {
+              gsap.fromTo(
+                headerEl,
+                { opacity: 0, y: -45 },
+                { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
+              );
+            }
+            // Cards animate from BOTTOM with staggered sequence
+            if (cards.length) {
+              gsap.fromTo(
+                cards,
+                { opacity: 0, y: 65, scale: 0.95 },
+                { opacity: 1, y: 0, scale: 1, duration: 1.15, stagger: 0.15, ease: "power3.out" }
+              );
+            }
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -50px 0px" }
+    );
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Field Proof & Case Studies Scroll Reveal (Header from TOP, Left from LEFT, Right from RIGHT, with Mobile adaptation)
+  useEffect(() => {
+    if (!caseStudiesSectionRef.current) return;
+
+    const el = caseStudiesSectionRef.current;
+    const headerEl = el.querySelector(".case-studies-header-anim");
+    const leftCard = el.querySelector(".case-study-left-anim");
+    const rightCard = el.querySelector(".case-study-right-anim");
+
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Header content animates from TOP
+            if (headerEl) {
+              gsap.fromTo(
+                headerEl,
+                { opacity: 0, y: -45 },
+                { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
+              );
+            }
+
+            // Left Card animates from LEFT (or BOTTOM on Mobile)
+            if (leftCard) {
+              gsap.fromTo(
+                leftCard,
+                {
+                  opacity: 0,
+                  x: isMobile ? 0 : -80,
+                  y: isMobile ? 50 : 0,
+                  scale: 0.95,
+                },
+                {
+                  opacity: 1,
+                  x: 0,
+                  y: 0,
+                  scale: 1,
+                  duration: 1.15,
+                  delay: 0.1,
+                  ease: "power3.out",
+                }
+              );
+            }
+
+            // Right Card animates from RIGHT (or BOTTOM on Mobile with stagger)
+            if (rightCard) {
+              gsap.fromTo(
+                rightCard,
+                {
+                  opacity: 0,
+                  x: isMobile ? 0 : 80,
+                  y: isMobile ? 50 : 0,
+                  scale: 0.95,
+                },
+                {
+                  opacity: 1,
+                  x: 0,
+                  y: 0,
+                  scale: 1,
+                  duration: 1.15,
+                  delay: isMobile ? 0.25 : 0.1,
+                  ease: "power3.out",
+                }
+              );
+            }
+
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // 4-Stage Certified Engineering Methodology Scroll Reveal (Header from TOP, 2 Left from LEFT, 2 Right from RIGHT, with Mobile adaptation)
+  useEffect(() => {
+    if (!methodologySectionRef.current) return;
+
+    const el = methodologySectionRef.current;
+    const headerEl = el.querySelector(".methodology-header-anim");
+    const leftCards = el.querySelectorAll(".methodology-card-left");
+    const rightCards = el.querySelectorAll(".methodology-card-right");
+
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Header content animates from TOP
+            if (headerEl) {
+              gsap.fromTo(
+                headerEl,
+                { opacity: 0, y: -45 },
+                { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
+              );
+            }
+
+            // Left 2 Cards (01 & 02) animate from LEFT (or BOTTOM on Mobile)
+            if (leftCards.length) {
+              gsap.fromTo(
+                leftCards,
+                {
+                  opacity: 0,
+                  x: isMobile ? 0 : -75,
+                  y: isMobile ? 50 : 0,
+                  scale: 0.95,
+                },
+                {
+                  opacity: 1,
+                  x: 0,
+                  y: 0,
+                  scale: 1,
+                  duration: 1.15,
+                  stagger: 0.16,
+                  delay: 0.1,
+                  ease: "power3.out",
+                }
+              );
+            }
+
+            // Right 2 Cards (03 & 04) animate from RIGHT (or BOTTOM on Mobile)
+            if (rightCards.length) {
+              gsap.fromTo(
+                rightCards,
+                {
+                  opacity: 0,
+                  x: isMobile ? 0 : 75,
+                  y: isMobile ? 50 : 0,
+                  scale: 0.95,
+                },
+                {
+                  opacity: 1,
+                  x: 0,
+                  y: 0,
+                  scale: 1,
+                  duration: 1.15,
+                  stagger: 0.16,
+                  delay: isMobile ? 0.25 : 0.1,
+                  ease: "power3.out",
+                }
+              );
+            }
+
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -324,8 +626,8 @@ export const ShopPage = ({ addToCart }) => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.6,
-            ease: "power2.out",
+            duration: 0.9,
+            ease: "power3.out",
             scrollTrigger: {
               trigger: catalogHeaderRef.current,
               start: "top 85%",
@@ -342,9 +644,9 @@ export const ShopPage = ({ addToCart }) => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.5,
-            delay: 0.1,
-            ease: "power2.out",
+            duration: 0.85,
+            delay: 0.12,
+            ease: "power3.out",
             scrollTrigger: {
               trigger: filtersRef.current,
               start: "top 88%",
@@ -362,8 +664,8 @@ export const ShopPage = ({ addToCart }) => {
             opacity: 1,
             y: 0,
             scale: 1,
-            duration: 0.55,
-            stagger: 0.06,
+            duration: 0.9,
+            stagger: 0.1,
             ease: "power3.out",
             clearProps: "transform",
             scrollTrigger: {
@@ -385,109 +687,111 @@ export const ShopPage = ({ addToCart }) => {
       {/* 1. Hero Section */}
       <HeroBanner />
 
-      {/* 2. Enterprise Trust & Metrics Marquee Strip */}
-      <div className="my-10 sm:my-14 bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-[#0a3d52]/15 border border-[#1b556e]/50 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6b4a]/15 rounded-full blur-[100px] pointer-events-none" />
+      {/* 2. Enterprise Trust & Metrics Marquee Strip (Continuous Infinite Scroll Right-to-Left) */}
+      <div className="my-10 sm:my-14 bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] rounded-3xl py-6 sm:py-7 text-white shadow-xl shadow-[#0a3d52]/15 border border-[#1b556e]/50 relative overflow-hidden group select-none">
         
-        <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 divide-y md:divide-y-0 md:divide-x divide-white/10 text-center">
-          
-          <div className="pt-4 md:pt-0 flex flex-col items-center">
-            <span className="text-3xl sm:text-5xl font-black text-white font-heading tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              15<span className="text-[#ff6b4a]">+</span>
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-slate-200 mt-1 uppercase tracking-wider">
-              Years Industrial Mastery
-            </span>
-            <span className="text-[11px] text-slate-300 font-normal mt-0.5">
-              Formulating Since 2011
-            </span>
-          </div>
+        {/* Soft Ambient Glows */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6b4a]/15 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#0ea5e9]/15 rounded-full blur-[90px] pointer-events-none" />
 
-          <div className="pt-4 md:pt-0 flex flex-col items-center md:pl-6">
-            <span className="text-3xl sm:text-5xl font-black text-white font-heading tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              500<span className="text-[#ff6b4a]">+</span>
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-slate-200 mt-1 uppercase tracking-wider">
-              Mega Projects Sealed
-            </span>
-            <span className="text-[11px] text-slate-300 font-normal mt-0.5">
-              Dams, High-Rises & Plants
-            </span>
-          </div>
+        {/* Left & Right Gradient Fade Masks for Cinema Look */}
+        <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-r from-[#0a3d52] to-transparent z-20 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-l from-[#082a38] to-transparent z-20 pointer-events-none" />
 
-          <div className="pt-4 md:pt-0 flex flex-col items-center md:pl-6">
-            <span className="text-3xl sm:text-5xl font-black text-white font-heading tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              100<span className="text-[#ff6b4a]">%</span>
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-slate-200 mt-1 uppercase tracking-wider">
-              ISO-9001 Certified
-            </span>
-            <span className="text-[11px] text-slate-300 font-normal mt-0.5">
-              ASTM Grade Tested Formulations
-            </span>
-          </div>
-
-          <div className="pt-4 md:pt-0 flex flex-col items-center md:pl-6">
-            <span className="text-3xl sm:text-5xl font-black text-white font-heading tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              10<span className="text-[#ff6b4a]"> Yrs</span>
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-slate-200 mt-1 uppercase tracking-wider">
-              Warranty Guarantee
-            </span>
-            <span className="text-[11px] text-slate-300 font-normal mt-0.5">
-              Zero Moisture Permeation
-            </span>
-          </div>
-
+        {/* Continuous Infinite Marquee Track (Right to Left) */}
+        <div className="animate-marquee-left flex items-center">
+          {[...enterpriseMetrics, ...enterpriseMetrics].map((metric, idx) => (
+            <div
+              key={idx}
+              className="flex items-center gap-6 sm:gap-12 px-6 sm:px-12 shrink-0 border-r border-white/10"
+            >
+              <div className="flex flex-col items-center text-center">
+                <span
+                  className="text-3xl sm:text-4xl md:text-5xl font-black text-white font-heading tracking-tight drop-shadow-sm"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                >
+                  {metric.value}
+                  <span className="text-[#ff6b4a]">{metric.suffix}</span>
+                </span>
+                <span className="text-xs sm:text-sm font-bold text-slate-100 mt-1 uppercase tracking-wider whitespace-nowrap">
+                  {metric.title}
+                </span>
+                <span className="text-[11px] text-slate-300 font-normal mt-0.5 whitespace-nowrap">
+                  {metric.subtitle}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* 3. Core Industrial Engineering Divisions */}
-      <div className="my-14 sm:my-20">
-        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
-          <div className="inline-flex items-center gap-2 bg-[#ff6b4a]/10 text-[#ff6b4a] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3 border border-[#ff6b4a]/20">
-            <PrecisionManufacturingOutlinedIcon sx={{ fontSize: 16 }} /> Engineering Disciplines
+      <div ref={capabilitiesSectionRef} className="my-14 sm:my-20 overflow-hidden">
+        {/* Content Header (Animates from TOP) */}
+        <div className="capabilities-header-anim text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
+          <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/20 shadow-xs">
+            <PrecisionManufacturingOutlinedIcon sx={{ fontSize: 16 }} />
+            <span>Engineering Disciplines</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-[#0a3d52] dark:text-white font-heading tracking-tight">
+          <h2 
+            className="text-2xl sm:text-4xl lg:text-[38px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+          >
             Specialized Chemical & Rubber Capabilities
           </h2>
-          <p className="text-[#565e69] dark:text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-3 leading-relaxed font-normal max-w-2xl mx-auto">
             Tailored industrial chemical compounds engineered to withstand severe thermal expansion, structural hydrostatic load, and corrosive atmospheric conditions.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Cards Grid (Animates from BOTTOM with Stagger) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 px-1">
           {industrialDivisions.map((div, i) => {
             const IconComponent = div.icon;
             return (
               <div
                 key={i}
-                className="group relative bg-white dark:bg-[#0c222e] rounded-3xl p-6 border border-[#e0e6ed] dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
+                className="capabilities-card-anim group relative bg-white dark:bg-[#0c222e] rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/12 dark:hover:shadow-black/50 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer"
               >
-                <div>
+                {/* Top Subtle Sheen Accent Line on Hover */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] dark:via-sky-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                {/* Ambient Card Background Tint on Hover */}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0a3d52]/5 dark:from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                <div className="relative z-10">
+                  {/* Card Header: Icon & Badge */}
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-12 h-12 rounded-2xl bg-[#0a3d52]/5 dark:bg-white/10 flex items-center justify-center text-[#0a3d52] dark:text-[#38bdf8] group-hover:bg-[#ff6b4a] group-hover:text-white transition-colors duration-300">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-[#0a3d52] dark:text-sky-300 flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-[#0a3d52] group-hover:to-[#0d4e68] dark:group-hover:from-sky-600 dark:group-hover:to-sky-500 group-hover:text-white group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[#0a3d52]/25 dark:group-hover:shadow-sky-500/25 transition-all duration-300">
                       <IconComponent sx={{ fontSize: 24 }} />
                     </div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 group-hover:border-[#0a3d52]/30 dark:group-hover:border-sky-500/30 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 transition-colors">
                       {div.badge}
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-black text-[#0a3d52] dark:text-white font-heading mb-1 group-hover:text-[#ff6b4a] transition-colors">
+                  {/* Title & Subtitle */}
+                  <h3 
+                    className="text-lg font-bold text-[#0a3d52] dark:text-white mb-1 group-hover:text-[#0a3d52] dark:group-hover:text-sky-400 transition-colors duration-200 tracking-tight"
+                    style={{ fontFamily: "'Poppins', sans-serif" }}
+                  >
                     {div.title}
                   </h3>
-                  <p className="text-xs font-bold text-[#ff6b4a] mb-2.5">
+                  
+                  <p className="text-xs font-semibold text-[#0d4e68] dark:text-sky-300/90 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 mb-2.5 transition-colors">
                     {div.subtitle}
                   </p>
-                  <p className="text-xs text-[#565e69] dark:text-slate-300 leading-relaxed font-normal">
+                  
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
                     {div.desc}
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-[#0a3d52] dark:text-[#38bdf8] group-hover:text-[#ff6b4a] transition-colors">
+                {/* Footer Action */}
+                <div className="relative z-10 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-[#0a3d52] dark:group-hover:text-sky-400 transition-colors duration-200">
                   <span>Explore Formulation</span>
-                  <ArrowForwardRoundedIcon sx={{ fontSize: 16 }} className="group-hover:translate-x-1 transition-transform" />
+                  <ArrowForwardRoundedIcon sx={{ fontSize: 16 }} className="group-hover:translate-x-1.5 transition-transform duration-200" />
                 </div>
               </div>
             );
@@ -590,47 +894,72 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* 7. Interactive Material Coverage & Quantity Estimator */}
-      <div className="mt-20 sm:mt-28 bg-gradient-to-br from-[#0c2a38] via-[#09222e] to-[#061820] rounded-3xl p-6 sm:p-10 lg:p-12 text-white border border-[#1b4d63] shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#ff6b4a]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div 
+        ref={calculatorSectionRef}
+        className="mt-20 sm:mt-28 bg-gradient-to-br from-[#0a3d52] via-[#0c475e] to-[#072836] dark:from-[#091f2a] dark:via-[#071922] dark:to-[#041017] rounded-3xl p-6 sm:p-10 lg:p-12 text-white border border-[#1b556e]/50 dark:border-slate-800/90 shadow-2xl shadow-[#0a3d52]/15 dark:shadow-black/60 relative overflow-hidden transition-all duration-300"
+      >
+        {/* Ambient Radial Highlights */}
+        <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-sky-400/15 dark:bg-sky-500/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-[#ff6b4a]/10 dark:bg-[#ff6b4a]/5 rounded-full blur-[100px] pointer-events-none" />
         
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        {/* Subtle Background Blueprint Grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.035] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* Left Calculator Inputs */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 bg-[#ff6b4a]/20 text-[#ff8c73] px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-[#ff6b4a]/30">
-              <CalculateOutlinedIcon sx={{ fontSize: 16 }} /> Project Quantity Estimator
+          <div className="calc-left-anim lg:col-span-7 space-y-5 sm:space-y-6">
+            <div className="inline-flex items-center gap-2 bg-white/10 dark:bg-sky-400/10 text-sky-200 dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/15 dark:border-sky-400/20 shadow-xs backdrop-blur-md">
+              <CalculateOutlinedIcon sx={{ fontSize: 16 }} />
+              <span>Project Quantity Estimator</span>
             </div>
             
-            <h3 className="text-2xl sm:text-4xl font-black text-white font-heading tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <h3 
+              className="text-2xl sm:text-3xl lg:text-[36px] font-extrabold text-white tracking-tight leading-tight"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
+            >
               Calculate Chemical Coverage For Your Project
             </h3>
             
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+            <p className="text-xs sm:text-sm text-slate-200/90 dark:text-slate-300 leading-relaxed font-normal max-w-xl">
               Select your structural application type and enter the surface area in square feet to instantly compute material requirement and estimated drum packaging.
             </p>
 
             {/* Inputs Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
-                  Surface Application Type
+                <label className="text-xs font-bold text-slate-200 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <LayersOutlinedIcon sx={{ fontSize: 15 }} className="text-sky-300" />
+                  <span>Surface Application Type</span>
                 </label>
-                <select
-                  value={calcSurface}
-                  onChange={(e) => setCalcSurface(e.target.value)}
-                  className="w-full bg-[#113545] border border-[#1b556e] rounded-xl px-4 py-3 text-xs sm:text-sm text-white font-semibold outline-none focus:border-[#ff6b4a] transition"
-                >
-                  <option value="roof">Concrete Roof / Terrace Waterproofing</option>
-                  <option value="basement">Basement & Sub-Structure Retaining Wall</option>
-                  <option value="flooring">Industrial Epoxy Heavy-Traffic Floor</option>
-                  <option value="tank">Water Reservoir & Swimming Pool</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={calcSurface}
+                    onChange={(e) => setCalcSurface(e.target.value)}
+                    className="w-full bg-[#072431]/85 dark:bg-[#05161f] border border-white/20 dark:border-slate-700/80 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white font-medium outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-400/15 transition-all shadow-inner cursor-pointer appearance-none"
+                  >
+                    <option value="roof" className="bg-[#0c2a38] text-white">Concrete Roof / Terrace Waterproofing</option>
+                    <option value="basement" className="bg-[#0c2a38] text-white">Basement & Sub-Structure Retaining Wall</option>
+                    <option value="flooring" className="bg-[#0c2a38] text-white">Industrial Epoxy Heavy-Traffic Floor</option>
+                    <option value="tank" className="bg-[#0c2a38] text-white">Water Reservoir & Swimming Pool</option>
+                  </select>
+                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300">
+                    ▼
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
-                  Total Project Area (Sq. Ft)
+                <label className="text-xs font-bold text-slate-200 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <PrecisionManufacturingOutlinedIcon sx={{ fontSize: 15 }} className="text-sky-300" />
+                  <span>Total Project Area (Sq. Ft)</span>
                 </label>
                 <input
                   type="number"
@@ -638,41 +967,74 @@ export const ShopPage = ({ addToCart }) => {
                   step={50}
                   value={calcArea}
                   onChange={(e) => setCalcArea(e.target.value)}
-                  placeholder="e.g. 2500"
-                  className="w-full bg-[#113545] border border-[#1b556e] rounded-xl px-4 py-3 text-xs sm:text-sm text-white font-semibold outline-none focus:border-[#ff6b4a] transition"
+                  placeholder="e.g. 1500"
+                  className="w-full bg-[#072431]/85 dark:bg-[#05161f] border border-white/20 dark:border-slate-700/80 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white font-medium outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-400/15 transition-all shadow-inner"
                 />
               </div>
 
             </div>
+
+            {/* Quick Presets Chips */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mr-1">Quick Size:</span>
+              {[500, 1000, 1500, 2500, 5000].map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => setCalcArea(size)}
+                  className={`text-xs px-3 py-1 rounded-lg border font-semibold transition-all duration-200 cursor-pointer ${
+                    Number(calcArea) === size
+                      ? "bg-sky-400 text-[#072431] border-sky-400 font-bold shadow-md shadow-sky-400/20 scale-105"
+                      : "bg-white/10 dark:bg-slate-800/60 text-slate-200 border-white/15 dark:border-slate-700/60 hover:bg-white/20 hover:text-white"
+                  }`}
+                >
+                  {size.toLocaleString()} sq.ft
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Right Live Computation Card */}
-          <div className="lg:col-span-5 bg-white dark:bg-[#0e2735] text-slate-900 dark:text-white rounded-2xl p-6 sm:p-8 border border-white/10 shadow-xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#ff6b4a]">
-                Estimated Specification
-              </span>
-              <span className="text-xs font-extrabold text-[#0a3d52] dark:text-[#38bdf8]">
+          <div className="calc-card-anim lg:col-span-5 bg-white dark:bg-[#0c222f] text-slate-900 dark:text-white rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-700/80 shadow-2xl shadow-black/25 space-y-4.5 transition-all duration-300 relative overflow-hidden">
+            {/* Top Subtle Sheen Border */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-400 via-emerald-400 to-[#0a3d52]" />
+
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3.5">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#0a3d52] dark:text-sky-400">
+                  Estimated Specification
+                </span>
+              </div>
+              <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-md border border-emerald-200/80 dark:border-emerald-800/40">
                 Dual-Coat Standard
               </span>
             </div>
 
             <div className="space-y-3 text-xs sm:text-sm font-semibold">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-600 dark:text-slate-300">System Formula:</span>
-                <span className="font-bold text-[#0a3d52] dark:text-white text-right">{calculatedEstimate.title}</span>
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/40">
+                <span className="text-slate-600 dark:text-slate-400 font-normal">System Formula:</span>
+                <span className="font-bold text-[#0a3d52] dark:text-slate-100 text-right">{calculatedEstimate.title}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-600 dark:text-slate-300">Total Chemical Volume:</span>
-                <span className="font-extrabold text-[#ff6b4a] text-base">{calculatedEstimate.chemicalKg.toLocaleString()} Kg / Liters</span>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-sky-50/60 dark:bg-sky-950/30 border border-sky-100/80 dark:border-sky-800/30">
+                <span className="text-slate-700 dark:text-slate-300 font-semibold">Total Chemical Volume:</span>
+                <span 
+                  className="font-extrabold text-[#0a3d52] dark:text-sky-400 text-lg sm:text-xl"
+                  style={{ fontFamily: "'Poppins', sans-serif" }}
+                >
+                  {calculatedEstimate.chemicalKg.toLocaleString()} Kg / Liters
+                </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-600 dark:text-slate-300">Substrate Primer:</span>
+
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/40">
+                <span className="text-slate-600 dark:text-slate-400 font-normal">Substrate Primer:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">{calculatedEstimate.primerLiters.toLocaleString()} Liters</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-600 dark:text-slate-300">Standard Packaging:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">~{calculatedEstimate.drumsCount} Industrial Drums (20Kg)</span>
+
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-100/80 dark:border-emerald-800/30">
+                <span className="text-slate-700 dark:text-slate-300 font-semibold">Standard Packaging:</span>
+                <span className="font-extrabold text-emerald-700 dark:text-emerald-400">~{calculatedEstimate.drumsCount} Industrial Drums (20Kg)</span>
               </div>
             </div>
 
@@ -680,7 +1042,7 @@ export const ShopPage = ({ addToCart }) => {
               href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20calculated%20my%20project%20area%20as%20${calcArea}%20sq.ft%20for%20${calcSurface}%20application.%20Please%20provide%20official%20quotation.`}
               target="_blank"
               rel="noreferrer"
-              className="w-full py-3.5 px-4 bg-[#ff6b4a] hover:bg-[#e05333] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[#ff6b4a]/25 transition-all duration-200"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 hover:shadow-xl hover:shadow-emerald-600/35 active:scale-[0.98] transition-all duration-200 cursor-pointer text-center"
             >
               <WhatsAppIcon sx={{ fontSize: 18 }} />
               <span>Request Official Quotation On WhatsApp</span>
@@ -691,97 +1053,202 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* 8. Before & After Transformation Section (Redesigned & Upgraded) */}
-      <div className="mt-20 sm:mt-28 scroll-reveal">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-[#ff6b4a]/10 text-[#ff6b4a] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3 border border-[#ff6b4a]/20">
-            <CompareArrowsIcon sx={{ fontSize: 16 }} /> Field Proof & Case Studies
+      <div ref={caseStudiesSectionRef} className="mt-20 sm:mt-28 overflow-hidden">
+        {/* Header (Animates from TOP) */}
+        <div className="case-studies-header-anim text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
+          <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/20 shadow-xs">
+            <CompareArrowsIcon sx={{ fontSize: 16 }} />
+            <span>Field Proof & Case Studies</span>
           </div>
-          <h3 className="text-2xl sm:text-4xl font-black text-[#0a3d52] dark:text-white mb-3 font-heading">
+          <h3 
+            className="text-2xl sm:text-4xl lg:text-[38px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+          >
             Proven Industrial Results
           </h3>
-          <p className="text-[#565e69] dark:text-slate-300 font-normal text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-300 font-normal text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed mt-3">
             Witness how MARBLEX advanced elastomeric coatings and chemical formulations protect concrete infrastructure from severe water ingress and structural degradation.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-          {beforeAfterPairs.map((pair, idx) => (
-            <div key={idx} className="group scroll-reveal bg-white dark:bg-[#0c222e] p-5 sm:p-7 rounded-3xl border border-[#e0e6ed] dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
-              
-              <div className="flex flex-col sm:flex-row gap-3.5 mb-5">
-                {/* Before Image */}
-                <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner">
-                  <img src={pair.before} alt="Before" loading="lazy" decoding="async" className="w-full h-[220px] sm:h-[250px] object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-3 left-3 bg-[#0a3d52]/90 backdrop-blur-md text-white text-[9.5px] font-extrabold px-3 py-1 rounded-lg uppercase shadow-sm">
-                    ⚠️ Unprotected Substrate
+        {/* Comparison Cards Grid (Left Card from Left, Right Card from Right) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 px-1">
+          {beforeAfterPairs.map((pair, idx) => {
+            const isLeft = idx === 0;
+            const featureTags = isLeft
+              ? ["100% Waterstop Barrier", "UV Reflective Shield", "Severe Load Proof"]
+              : ["Termite & Bug Matrix", "Hydrostatic Retaining", "Deep Substrate Cure"];
+
+            return (
+              <div
+                key={idx}
+                className={`${
+                  isLeft ? "case-study-left-anim" : "case-study-right-anim"
+                } group relative bg-white dark:bg-[#0c222e] p-5 sm:p-7 rounded-3xl border border-slate-200/85 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/12 dark:hover:shadow-black/60 transition-all duration-300 flex flex-col justify-between overflow-hidden hover:-translate-y-1.5 hover:border-[#0a3d52]/35 dark:hover:border-sky-500/35`}
+              >
+                {/* Top Subtle Hover Accent Line */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] dark:via-sky-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                {/* Ambient Subtle Card Tint on Hover */}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0a3d52]/5 dark:from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                <div className="relative z-10">
+                  {/* Images Comparison Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
+                    
+                    {/* Before Image */}
+                    <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-inner bg-slate-900 group/img">
+                      <img
+                        src={pair.before}
+                        alt="Unprotected Substrate"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-[200px] sm:h-[220px] object-cover group-hover/img:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md text-amber-300 text-[9.5px] font-extrabold px-2.5 py-1 rounded-lg uppercase shadow-md border border-amber-400/25 tracking-wider">
+                        ⚠️ Unprotected Substrate
+                      </div>
+                    </div>
+
+                    {/* After Image */}
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/50 dark:border-emerald-400/50 shadow-md bg-slate-900 group/img">
+                      <img
+                        src={pair.after}
+                        alt="MARBLEX Treated"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-[200px] sm:h-[220px] object-cover group-hover/img:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 right-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[9.5px] font-extrabold px-2.5 py-1 rounded-lg uppercase shadow-lg shadow-emerald-600/30 flex items-center gap-1 tracking-wider">
+                        <CheckCircleRoundedIcon sx={{ fontSize: 13 }} /> MARBLEX Treated
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Title & Badge */}
+                  <div className="space-y-2 px-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 
+                        className="text-lg sm:text-xl font-bold text-[#0a3d52] dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors tracking-tight"
+                        style={{ fontFamily: "'Poppins', sans-serif" }}
+                      >
+                        {pair.title}
+                      </h4>
+                      <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 dark:border-emerald-800/40 whitespace-nowrap">
+                        +300% Lifespan
+                      </span>
+                    </div>
+
+                    <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-[13px] leading-relaxed font-normal">
+                      {pair.description}
+                    </p>
+
+                    {/* Feature Chips */}
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {featureTags.map((tag, tagIdx) => (
+                        <span
+                          key={tagIdx}
+                          className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-700/60"
+                        >
+                          ✓ {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* After Image */}
-                <div className="flex-1 relative rounded-2xl overflow-hidden border-2 border-[#ff6b4a]/40 shadow-md">
-                  <img src={pair.after} alt="After" loading="lazy" decoding="async" className="w-full h-[220px] sm:h-[250px] object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-3 right-3 bg-gradient-to-r from-[#ff6b4a] to-[#ff8c73] text-white text-[9.5px] font-extrabold px-3 py-1 rounded-lg uppercase shadow-md flex items-center gap-1">
-                    <CheckCircleRoundedIcon sx={{ fontSize: 13 }} /> MARBLEX Treated
-                  </div>
-                </div>
               </div>
-
-              <div className="space-y-2 px-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-lg font-extrabold text-[#0a3d52] dark:text-white group-hover:text-[#ff6b4a] transition-colors font-heading">
-                    {pair.title}
-                  </h4>
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                    +300% Lifespan
-                  </span>
-                </div>
-                <p className="text-[#565e69] dark:text-slate-300 text-xs sm:text-[13px] leading-relaxed font-normal">
-                  {pair.description}
-                </p>
-              </div>
-
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       {/* 9. 4-Stage Application Methodology */}
-      <div className="mt-20 sm:mt-28 bg-white dark:bg-[#0c222e] rounded-3xl p-6 sm:p-10 lg:p-12 border border-[#e0e6ed] dark:border-slate-800 shadow-sm">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 bg-[#ff6b4a]/10 text-[#ff6b4a] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3 border border-[#ff6b4a]/20">
-            <FactCheckOutlinedIcon sx={{ fontSize: 16 }} /> Standard Operating Procedure
+      <div ref={methodologySectionRef} className="mt-20 sm:mt-28 overflow-hidden">
+        {/* Header (Animates from TOP) */}
+        <div className="methodology-header-anim text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
+          <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/20 shadow-xs">
+            <FactCheckOutlinedIcon sx={{ fontSize: 16 }} />
+            <span>Standard Operating Procedure</span>
           </div>
-          <h3 className="text-2xl sm:text-4xl font-black text-[#0a3d52] dark:text-white font-heading tracking-tight">
+          <h3 
+            className="text-2xl sm:text-4xl lg:text-[38px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+          >
             4-Stage Certified Engineering Methodology
           </h3>
-          <p className="text-[#565e69] dark:text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-3 leading-relaxed font-normal max-w-2xl mx-auto">
             Every MARBLEX site application adheres to rigorous laboratory testing, moisture content thresholds, and dual-layer quality audit protocols.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-          {engineeringSteps.map((step, idx) => (
-            <div
-              key={idx}
-              className="bg-slate-50 dark:bg-[#0e2735] p-6 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 relative flex flex-col justify-between hover:border-[#ff6b4a] transition-colors"
-            >
-              <div>
-                <span className="text-4xl font-black text-[#0a3d52]/20 dark:text-white/10 font-heading block mb-3">
-                  {step.step}
-                </span>
-                <h4 className="text-base font-extrabold text-[#0a3d52] dark:text-white font-heading mb-2">
-                  {step.title}
-                </h4>
-                <p className="text-xs text-[#565e69] dark:text-slate-300 leading-relaxed font-normal">
-                  {step.desc}
-                </p>
-              </div>
+        {/* Cards Grid: 2 Left from Left, 2 Right from Right */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 px-1">
+          {engineeringSteps.map((step, idx) => {
+            const isLeft = idx < 2;
+            const IconComponent = step.icon;
 
-              <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center gap-1.5 text-[11px] font-bold text-[#ff6b4a]">
-                <CheckCircleRoundedIcon sx={{ fontSize: 14 }} /> Quality Verified
+            return (
+              <div
+                key={idx}
+                className={`${
+                  isLeft ? "methodology-card-left" : "methodology-card-right"
+                } group relative bg-white dark:bg-[#0c222e] rounded-3xl p-6 sm:p-7 border border-slate-200/85 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/12 dark:hover:shadow-black/60 hover:-translate-y-2 hover:border-[#0a3d52]/35 dark:hover:border-sky-500/35 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer`}
+              >
+                {/* Top Subtle Hover Sheen Line */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] dark:via-sky-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                {/* Ambient Card Background Tint on Hover */}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0a3d52]/5 dark:from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                <div className="relative z-10">
+                  {/* Step Header: Big Number & Icon */}
+                  <div className="flex items-center justify-between mb-5">
+                    <span 
+                      className="text-4xl font-black text-[#0a3d52]/20 dark:text-sky-400/20 group-hover:text-[#0a3d52] dark:group-hover:text-sky-400 transition-colors duration-300 tracking-tight"
+                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                    >
+                      {step.step}
+                    </span>
+
+                    <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-[#0a3d52] dark:text-sky-300 flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-[#0a3d52] group-hover:to-[#0d4e68] dark:group-hover:from-sky-600 dark:group-hover:to-sky-500 group-hover:text-white group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[#0a3d52]/25 dark:group-hover:shadow-sky-500/25 transition-all duration-300">
+                      <IconComponent sx={{ fontSize: 22 }} />
+                    </div>
+                  </div>
+
+                  {/* Step Badge */}
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-md bg-sky-50 dark:bg-sky-950/40 text-[#0a3d52] dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40 inline-block mb-3">
+                    {step.badge}
+                  </span>
+
+                  {/* Step Title */}
+                  <h4 
+                    className="text-base sm:text-lg font-bold text-[#0a3d52] dark:text-white mb-2 group-hover:text-[#0a3d52] dark:group-hover:text-sky-400 transition-colors duration-200 tracking-tight"
+                    style={{ fontFamily: "'Poppins', sans-serif" }}
+                  >
+                    {step.title}
+                  </h4>
+
+                  {/* Step Description */}
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                    {step.desc}
+                  </p>
+                </div>
+
+                {/* Card Footer: Verified Badge */}
+                <div className="relative z-10 mt-6 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                    <CheckCircleRoundedIcon sx={{ fontSize: 14 }} />
+                    <span>Quality Verified</span>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    ISO Standard
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

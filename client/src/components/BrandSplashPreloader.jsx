@@ -19,18 +19,22 @@ export const BrandSplashPreloader = ({ onComplete }) => {
 
   const handleFinish = useCallback(() => {
     if (!containerRef.current) return;
+    
+    // Broadcast event so Navbar, Hero Banner & Landing Page initiate their smooth entrance concurrently with curtain dissolve
+    window.dispatchEvent(new CustomEvent("marblex:intro_reveal"));
+    onComplete?.();
+
     const tl = gsap.timeline({
       onComplete: () => {
         setVisible(false);
-        onComplete?.();
       },
     });
 
     tl.to(logoWrapperRef.current, {
-      scale: 1.06,
+      scale: 1.05,
       opacity: 0,
-      filter: "blur(6px)",
-      duration: 0.4,
+      filter: "blur(10px)",
+      duration: 0.5,
       ease: "power2.inOut",
     })
     .to(
@@ -38,24 +42,24 @@ export const BrandSplashPreloader = ({ onComplete }) => {
       {
         opacity: 0,
         scale: 1.02,
-        duration: 0.5,
+        filter: "blur(12px)",
+        duration: 0.85,
         ease: "power2.inOut",
       },
-      "-=0.2"
+      "-=0.35"
     );
   }, [onComplete]);
 
   useEffect(() => {
-    // Safety fallback: guaranteed auto-dismiss after 2 seconds
+    // Safety fallback: guaranteed auto-dismiss
     const safetyTimer = setTimeout(() => {
-      setVisible(false);
-      onComplete?.();
-    }, 2200);
+      handleFinish();
+    }, 2800);
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         onComplete: () => {
-          gsap.delayedCall(0.5, handleFinish);
+          gsap.delayedCall(0.4, handleFinish);
         },
       });
 
@@ -187,7 +191,7 @@ export const BrandSplashPreloader = ({ onComplete }) => {
         {/* Soft Radial Gradient Glow */}
         <div 
           ref={glowRingRef}
-          className="absolute w-[320px] sm:w-[500px] h-[320px] sm:h-[500px] rounded-full pointer-events-none"
+          className="absolute w-[320px] sm:w-[500px] h-[320px] sm:h-[500px] rounded-full pointer-events-none opacity-0"
           style={{
             background: "radial-gradient(circle, rgba(255,107,74,0.12) 0%, rgba(10,61,82,0.08) 50%, transparent 70%)",
             filter: "blur(45px)",
@@ -209,9 +213,10 @@ export const BrandSplashPreloader = ({ onComplete }) => {
           {/* Logo Emblem Card */}
           <div
             ref={logoWrapperRef}
-            className="relative mb-5 sm:mb-6 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white border border-[#e0e6ed] shadow-2xl shadow-[#0a3d52]/10 flex items-center justify-center overflow-hidden"
+            className="relative mb-5 sm:mb-6 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white border border-[#e0e6ed] shadow-2xl shadow-[#0a3d52]/10 flex items-center justify-center overflow-hidden opacity-0"
             style={{
               boxShadow: "0 20px 45px -15px rgba(10, 61, 82, 0.15), 0 0 0 1px rgba(224, 230, 237, 0.8)",
+              transform: "scale(0.7) translateY(25px)",
             }}
           >
             {/* Shimmer Light Sweep */}
@@ -235,7 +240,7 @@ export const BrandSplashPreloader = ({ onComplete }) => {
                 <span
                   key={`mar-${i}`}
                   ref={(el) => (marLettersRef.current[i] = el)}
-                  className="inline-block text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-[#0a3d52]"
+                  className="inline-block text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-[#0a3d52] opacity-0"
                   style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
                 >
                   {char}
@@ -249,7 +254,7 @@ export const BrandSplashPreloader = ({ onComplete }) => {
                 <span
                   key={`blex-${i}`}
                   ref={(el) => (blexLettersRef.current[i] = el)}
-                  className="inline-block text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-[#ff6b4a]"
+                  className="inline-block text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-[#ff6b4a] opacity-0"
                   style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
                 >
                   {char}
@@ -263,13 +268,14 @@ export const BrandSplashPreloader = ({ onComplete }) => {
             <div
               ref={accentLineRef}
               className="h-full bg-gradient-to-r from-[#0a3d52] via-[#ff6b4a] to-[#ff8c73] rounded-full"
+              style={{ transform: "scaleX(0)", transformOrigin: "center center" }}
             />
           </div>
 
           {/* Subtitle - Fully Responsive */}
           <p
             ref={subtitleRef}
-            className="text-[9px] sm:text-[11px] md:text-xs font-bold text-[#565e69] uppercase tracking-[0.14em] sm:tracking-[0.22em] mb-3.5 sm:mb-4 font-subheading max-w-[290px] sm:max-w-none leading-relaxed"
+            className="text-[9px] sm:text-[11px] md:text-xs font-bold text-[#565e69] uppercase tracking-[0.14em] sm:tracking-[0.22em] mb-3.5 sm:mb-4 font-subheading max-w-[290px] sm:max-w-none leading-relaxed opacity-0"
           >
             Construction Chemical & Rubber Industry
           </p>
@@ -277,7 +283,7 @@ export const BrandSplashPreloader = ({ onComplete }) => {
           {/* Engineered Badge */}
           <div
             ref={badgeRef}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-white border border-[#e0e6ed] text-[9px] sm:text-[10px] font-bold text-[#0a3d52] uppercase tracking-wider sm:tracking-widest shadow-sm"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-white border border-[#e0e6ed] text-[9px] sm:text-[10px] font-bold text-[#0a3d52] uppercase tracking-wider sm:tracking-widest shadow-sm opacity-0"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-ping" />
             <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] -ml-2.5 sm:-ml-3.5" />

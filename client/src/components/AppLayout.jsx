@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { Badge, Container } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -13,6 +13,7 @@ import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import WorkspacePremiumOutlinedIcon from "@mui/icons-material/WorkspacePremiumOutlined";
 import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
 import { SiteFooter } from "./SiteFooter";
@@ -32,6 +33,13 @@ export const AppLayout = ({ cartCount, children }) => {
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem("marblex_theme") || "light";
   });
+
+  const announcementRef = useRef(null);
+  const headerRef = useRef(null);
+  const logoRef = useRef(null);
+  const navPillsRef = useRef(null);
+  const actionsRef = useRef(null);
+  const hasNavAnimatedRef = useRef(false);
 
   let tokenPayload = null;
   const isHomePage = location.pathname === "/";
@@ -120,6 +128,75 @@ export const AppLayout = ({ cartCount, children }) => {
     return () => clearInterval(id);
   }, [location.pathname, authUserFromStorage, token]);
 
+  const runNavEntrance = useCallback(() => {
+    if (hasNavAnimatedRef.current) return;
+    hasNavAnimatedRef.current = true;
+
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+    if (announcementRef.current) {
+      tl.fromTo(
+        announcementRef.current,
+        { y: -30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.7 }
+      );
+    }
+
+    if (headerRef.current) {
+      tl.fromTo(
+        headerRef.current,
+        { y: -30, opacity: 0, filter: "blur(8px)" },
+        { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.9 },
+        "-=0.45"
+      );
+    }
+
+    if (logoRef.current) {
+      tl.fromTo(
+        logoRef.current,
+        { opacity: 0, scale: 0.9, x: -15 },
+        { opacity: 1, scale: 1, x: 0, duration: 0.7 },
+        "-=0.6"
+      );
+    }
+
+    if (navPillsRef.current) {
+      tl.fromTo(
+        navPillsRef.current.children,
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.04 },
+        "-=0.5"
+      );
+    }
+
+    if (actionsRef.current) {
+      tl.fromTo(
+        actionsRef.current.children,
+        { opacity: 0, scale: 0.92, y: -8 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.6, stagger: 0.06 },
+        "-=0.45"
+      );
+    }
+  }, []);
+
+  // Synchronize navbar entrance with splash reveal or safety timeout
+  useEffect(() => {
+    const handleIntroReveal = () => {
+      runNavEntrance();
+    };
+
+    window.addEventListener("marblex:intro_reveal", handleIntroReveal);
+
+    const safetyTimer = setTimeout(() => {
+      runNavEntrance();
+    }, 2800);
+
+    return () => {
+      window.removeEventListener("marblex:intro_reveal", handleIntroReveal);
+      clearTimeout(safetyTimer);
+    };
+  }, [runNavEntrance]);
+
   const navLinks = [
     { label: "Home", path: "/" },
     { label: "About Us", path: "/about" },
@@ -147,7 +224,10 @@ export const AppLayout = ({ cartCount, children }) => {
     }`}>
       
       {/* 1. Top Brand Announcement & Trust Badges Header (Exact Match with Hero Teal) */}
-      <div className="bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-2 px-4 md:px-8 text-xs font-semibold z-50 border-b border-white/10 overflow-x-auto scrollbar-none shadow-sm">
+      <div 
+        ref={announcementRef}
+        className="bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-2 px-4 md:px-8 text-xs font-semibold z-50 border-b border-white/10 overflow-x-auto scrollbar-none shadow-sm"
+      >
         <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-6 min-w-max md:min-w-0">
           
           {/* Left: Brand Announcement */}
@@ -192,6 +272,7 @@ export const AppLayout = ({ cartCount, children }) => {
 
       {/* 2. Sleek Compact Main Navbar */}
       <header
+        ref={headerRef}
         className={`sticky top-0 z-40 transition-all duration-200 ease-in-out w-full border-b ${
           isDark
             ? scrolled || isMenuOpen
@@ -206,7 +287,7 @@ export const AppLayout = ({ cartCount, children }) => {
           <div className="flex items-center justify-between">
 
             {/* MARBLEX Logo (Left) */}
-            <div className="flex items-center gap-2">
+            <div ref={logoRef} className="flex items-center gap-2">
               {!isHomePage && (
                 <button
                   onClick={() => navigate(-1)}
@@ -244,9 +325,12 @@ export const AppLayout = ({ cartCount, children }) => {
             </div>
 
             {/* Main Navigation - Desktop (Center Capsule Pill Bar) */}
-            <nav className={`hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-full border ${
-              isDark ? "bg-[#0e2735] border-slate-700/80" : "bg-[#f1f5f9] border-slate-200/80"
-            }`}>
+            <nav 
+              ref={navPillsRef}
+              className={`hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-full border ${
+                isDark ? "bg-[#0e2735] border-slate-700/80" : "bg-[#f1f5f9] border-slate-200/80"
+              }`}
+            >
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.path;
                 return (
@@ -274,7 +358,7 @@ export const AppLayout = ({ cartCount, children }) => {
             </nav>
 
             {/* Action Buttons (Right) */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div ref={actionsRef} className="flex items-center gap-2 sm:gap-3">
               
               {/* Theme Toggle Button (Icon Only - ☀️ / 🌙) */}
               <button
