@@ -7,6 +7,7 @@ import MailOutlineOutlinedIcon from "@mui/icons-material/MailOutlineOutlined";
 import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { http } from "../api/http";
+import { AboutHeroBanner } from "../components/AboutHeroBanner";
 import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 import gsap from "gsap";
 
@@ -20,34 +21,26 @@ export const AboutPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [activeHeroTab, setActiveHeroTab] = useState(0);
+  const [openFaq, setOpenFaq] = useState(0);
   const containerRef = useRef(null);
 
-  const heroPreviews = [
+  const engineeringFaqs = [
     {
-      title: "Automated Polymer Compounding Plant",
-      category: "Industrial Manufacturing",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80",
-      fallback: "/products/Banner3.jpeg",
-      stat: "ISO 9001:2015 Certified",
-      badge: "High-Capacity Reactor",
+      q: "What international standards do MARBLEX chemical and rubber solutions comply with?",
+      a: "All MARBLEX formulations strictly comply with accredited ASTM D412 (tensile elongation dynamics), ASTM C836 (high-solids liquid elastomeric membranes), DIN 18541 (elastomeric expansion waterstop profiles), and BS 8102 (Code of Practice for protection of below-ground structures against water)."
     },
     {
-      title: "Accredited ASTM D412 Testing Lab",
-      category: "R&D & Quality Control",
-      image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1200&q=80",
-      fallback: "/products/Banner1.jpeg",
-      stat: "5 Bar Pressure Rig",
-      badge: "Lab Validated",
+      q: "Can MARBLEX formulate custom chemical compounds for project-specific site conditions?",
+      a: "Yes. Our Lahore compounding facility features specialized chemical synthesis reactors that allow our engineers to tailor viscosity, pot life, shore hardness, and chemical resistance profiles for aggressive soils, extreme temperature deflection, or high saline groundwater."
     },
     {
-      title: "Civil Infrastructure & Dam Sealing",
-      category: "Site Engineering",
-      image: "https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=1200&q=80",
-      fallback: "/products/Banner4.jpeg",
-      stat: "100% Hydrostatic Seal",
-      badge: "Mega Projects",
+      q: "How can contractors request on-site substrate testing and technical supervision?",
+      a: "Contractors, consultants, and project engineers can request on-site inspection directly via our WhatsApp Engineering Hotline (+92 348 1116611) or online inquiry form. We provide moisture scanning, pull-off tensile testing, and joint profiling."
     },
+    {
+      q: "What warranty coverage is provided on MARBLEX commercial and mega civil installations?",
+      a: "MARBLEX issues standard 10-Year certified structural performance warranties for full-system applications under certified application guidelines with accredited QC hydrostatic sign-off."
+    }
   ];
 
   useEffect(() => {
@@ -178,368 +171,246 @@ export const AboutPage = () => {
   return (
     <div ref={containerRef} className="w-full space-y-12 sm:space-y-16 pb-12">
       
-      {/* ==================== 1. Hero Section (Balanced 2-Column with Visual Showcase) ==================== */}
-      <section className="anim-reveal relative rounded-3xl sm:rounded-[2.5rem] bg-gradient-to-br from-[#0a3d52] via-[#0b4860] to-[#082a38] border border-[#0d4e68]/50 text-white overflow-hidden shadow-2xl p-6 sm:p-10 lg:p-12">
-        
-        {/* Ambient Glows */}
-        <div className="absolute top-0 right-1/4 w-[450px] h-[450px] bg-[#ff6b4a]/20 rounded-full blur-[130px] pointer-events-none -translate-y-1/3" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#0ea5e9]/15 rounded-full blur-[120px] pointer-events-none translate-y-1/3" />
-
-        {/* Subtle Engineering Grid Overlay */}
-        <div 
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
-          style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-          }}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
-          
-          {/* Left Column: Brand Story & CTAs */}
-          <div className="lg:col-span-7 space-y-5">
-            
-            {/* Top Pill Tag */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold text-[#ff8c73] uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-[#ff6b4a] animate-pulse" />
-              <span>ESTABLISHED 2010 • MARBLEX PAKISTAN</span>
-            </div>
-
-            {/* Main Headline */}
-            <h1 
-              className="text-2xl sm:text-4xl lg:text-[42px] font-black text-white leading-[1.15] tracking-tight"
-              style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
-            >
-              Engineering Durability & <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff6b4a] via-[#ff8c73] to-[#ffb199]">
-                Chemical Excellence
-              </span> <br />
-              For Civil Infrastructure.
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-slate-100 text-xs sm:text-base leading-relaxed font-normal opacity-95 max-w-xl">
-              MARBLEX is an industry-leading manufacturer and supplier of advanced construction chemicals, polymer waterproofing membranes, and heavy-duty vulcanized rubber solutions engineered for extreme environmental resilience and hydrostatic load containment.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <button
-                onClick={() => navigate("/catalogs")}
-                className="btn-3d-accent px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl text-white font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[#ff6b4a]/30 cursor-pointer"
-              >
-                <span>Explore Technical Catalog</span>
-                <ArrowForwardIcon sx={{ fontSize: 16 }} />
-              </button>
-
-              <a
-                href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20would%20like%20to%20consult%20regarding%20a%20construction%20chemical%20project."
-                target="_blank"
-                rel="noreferrer"
-                className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white font-bold text-xs sm:text-sm uppercase tracking-wider border border-white/20 backdrop-blur-md flex items-center gap-2 transition cursor-pointer"
-              >
-                <WhatsAppIcon sx={{ fontSize: 18, color: "#10b981" }} />
-                <span>Direct Engineering WhatsApp</span>
-              </a>
-            </div>
-
-            {/* Trust Badges Row */}
-            <div className="pt-3 border-t border-white/15 grid grid-cols-3 gap-2 sm:gap-4 max-w-lg">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-[#ff8c73] shrink-0">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.75"/>
-                  </svg>
-                </div>
-                <div className="text-[11px] sm:text-xs text-slate-200 leading-tight">
-                  <b className="text-white block font-bold">15+ Years</b> Experience
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-sky-300 shrink-0">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2.69L6.64 8.05C4.29 10.4 4.29 14.2 6.64 16.54C8.99 18.89 12.79 18.89 15.14 16.54C17.49 14.19 17.49 10.39 15.14 8.05L12 2.69Z" stroke="currentColor" strokeWidth="1.75"/>
-                  </svg>
-                </div>
-                <div className="text-[11px] sm:text-xs text-slate-200 leading-tight">
-                  <b className="text-white block font-bold">500+ Sites</b> Completed
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-emerald-300 shrink-0">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.75"/>
-                    <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <div className="text-[11px] sm:text-xs text-slate-200 leading-tight">
-                  <b className="text-white block font-bold">ISO 9001</b> Certified
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right Column: High-End Cinematic Showcase Card */}
-          <div className="lg:col-span-5 relative">
-            
-            <div className="relative rounded-3xl overflow-hidden border border-white/25 bg-[#051a24] shadow-2xl group">
-              
-              {/* Main Image Stage */}
-              <div className="relative h-64 sm:h-80 w-full overflow-hidden">
-                <img
-                  src={heroPreviews[activeHeroTab].image}
-                  alt={heroPreviews[activeHeroTab].title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
-                  onError={(e) => { e.currentTarget.src = "/products/Banner1.jpeg"; }}
-                />
-                
-                {/* Gradient Overlays */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#051a24] via-transparent to-black/30" />
-                
-                {/* Top Category Badge */}
-                <div className="absolute top-3.5 left-3.5 bg-[#0a3d52]/90 backdrop-blur-md text-white text-[10.5px] font-mono font-extrabold px-3 py-1 rounded-lg shadow-md border border-white/15">
-                  {heroPreviews[activeHeroTab].category}
-                </div>
-
-                {/* Top Right Live ISO Seal */}
-                <div className="absolute top-3.5 right-3.5 bg-emerald-600/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-md border border-emerald-400/30">
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span>Lab Tested</span>
-                </div>
-
-                {/* Bottom Stat Chip */}
-                <div className="absolute bottom-3.5 right-3.5 bg-[#ff6b4a] text-white text-[11px] font-black px-3 py-1 rounded-lg shadow-lg">
-                  {heroPreviews[activeHeroTab].stat}
-                </div>
-              </div>
-
-              {/* Card Footer Details */}
-              <div className="p-4 bg-[#072430] border-t border-white/15 space-y-2">
-                <div className="text-xs font-mono text-slate-300 uppercase tracking-wider">
-                  Featured Industrial Solution:
-                </div>
-                <h4 className="text-sm sm:text-base font-extrabold text-white leading-snug">
-                  {heroPreviews[activeHeroTab].title}
-                </h4>
-
-                {/* 3 Interactive Solution Tabs */}
-                <div className="grid grid-cols-3 gap-1.5 pt-2">
-                  {heroPreviews.map((item, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveHeroTab(idx)}
-                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer truncate ${
-                        activeHeroTab === idx
-                          ? "bg-[#ff6b4a] text-white shadow-xs"
-                          : "bg-white/10 text-slate-300 hover:bg-white/20"
-                      }`}
-                    >
-                      {item.category.split(" ")[0]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Floating Glassmorphic Verification Card (Bottom Left Offset) */}
-            <div className="hidden sm:flex items-center gap-3 absolute -bottom-5 -left-5 bg-white/95 dark:bg-[#0c222e]/95 backdrop-blur-md p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl shadow-black/20 text-slate-900 dark:text-white z-20">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="text-left">
-                <div className="text-xs font-black leading-tight">ASTM & BS 8102 Certified</div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400">10-Year Structural Guarantee</div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
+      {/* ==================== 1. Dedicated About Us Hero Banner ==================== */}
+      <AboutHeroBanner />
 
       {/* ==================== 2. Enterprise Trust Marquee Strip ==================== */}
       <EnterpriseMetricsBar className="my-8 sm:my-12" />
 
       {/* ==================== 3. Company Heritage & Structural Chemistry ==================== */}
-      <section className="anim-reveal grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center bg-white dark:bg-[#0e2735] p-6 sm:p-10 lg:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs">
+      <section className="anim-reveal relative overflow-hidden bg-white dark:bg-[#0c222e] p-6 sm:p-10 lg:p-12 rounded-[28px] sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_25px_-5px_rgba(10,61,82,0.07)] dark:shadow-2xl dark:shadow-black/50 transition-all duration-300">
         
-        {/* Left Column: Story Content */}
-        <div className="lg:col-span-7 space-y-5">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0a3d52]/10 dark:bg-white/10 text-[#0a3d52] dark:text-[#38bdf8] text-xs font-bold uppercase tracking-wider">
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" stroke="currentColor" strokeWidth="1.75"/>
-            </svg>
-            <span>THE MARBLEX HERITAGE</span>
+        {/* Ambient Subtle Glow Accents */}
+        <div className="absolute top-0 right-1/3 w-[500px] h-[500px] bg-sky-400/[0.04] dark:bg-sky-500/[0.06] rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#ff6b4a]/[0.03] dark:bg-[#ff6b4a]/[0.05] rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
+          
+          {/* Left Column: Story Content & 4 Interactive Value Cards */}
+          <div className="lg:col-span-7 space-y-6">
+            
+            {/* Pill Tag */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a3d52]/10 dark:bg-sky-400/10 border border-[#0a3d52]/15 dark:border-sky-400/20 text-[#0a3d52] dark:text-sky-300 text-xs font-bold uppercase tracking-wider shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-[#ff6b4a] animate-pulse" />
+              <span>THE MARBLEX HERITAGE • 15+ YEARS MASTERY</span>
+            </div>
+
+            {/* Main Headline */}
+            <h2 
+              className="text-2xl sm:text-3xl lg:text-[38px] font-black text-slate-900 dark:text-white leading-[1.18] tracking-tight"
+              style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
+            >
+              Built on Rigorous Chemistry &{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff6b4a] via-[#ff8c73] to-[#0a3d52] dark:to-sky-300">
+                Structural Integrity.
+              </span>
+            </h2>
+
+            {/* Paragraphs */}
+            <div className="space-y-3 text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
+              <p>
+                Founded with a clear engineering vision, <strong className="text-slate-900 dark:text-white font-bold">MARBLEX — Chemical & Rubber</strong> has grown into Pakistan’s premier manufacturer and trusted supplier of specialized construction solutions. We eliminate critical structural risks: concrete water seepage, chemical abrasion, foundation degradation, and dynamic joint expansion.
+              </p>
+              <p>
+                From commercial high-rise basements in Lahore, Islamabad, and Karachi to national hydel dams and sterile pharmaceutical cleanroom flooring, MARBLEX formulations are backed by accredited ASTM testing, rigorous ISO compliance, and certified on-site technical support.
+              </p>
+            </div>
+
+            {/* 4 Advanced Interactive Feature Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+              
+              {/* Card 1 */}
+              <div className="group p-3.5 rounded-2xl bg-slate-50/90 dark:bg-[#0e2a38]/80 border border-slate-200/80 dark:border-slate-700/80 hover:border-[#ff6b4a]/40 dark:hover:border-sky-400/40 transition-all duration-300 hover:shadow-md flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Certified ISO 9001:2015</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-normal">Automated batch compounding & QA</div>
+                </div>
+              </div>
+
+              {/* Card 2 */}
+              <div className="group p-3.5 rounded-2xl bg-slate-50/90 dark:bg-[#0e2a38]/80 border border-slate-200/80 dark:border-slate-700/80 hover:border-[#ff6b4a]/40 dark:hover:border-sky-400/40 transition-all duration-300 hover:shadow-md flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Monolithic Hydro-Armor</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-normal">Seamless joint-free foundation barrier</div>
+                </div>
+              </div>
+
+              {/* Card 3 */}
+              <div className="group p-3.5 rounded-2xl bg-slate-50/90 dark:bg-[#0e2a38]/80 border border-slate-200/80 dark:border-slate-700/80 hover:border-[#ff6b4a]/40 dark:hover:border-sky-400/40 transition-all duration-300 hover:shadow-md flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#ff6b4a]/10 text-[#ff6b4a] flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 3H15M10 3V8.5L5.2 17.4C4.4 18.9 5.5 20.7 7.2 20.7H16.8C18.5 20.7 19.6 18.9 18.8 17.4L14 8.5V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">ASTM D412 Standard</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-normal">600% elongation & crack bridging</div>
+                </div>
+              </div>
+
+              {/* Card 4 */}
+              <div className="group p-3.5 rounded-2xl bg-slate-50/90 dark:bg-[#0e2a38]/80 border border-slate-200/80 dark:border-slate-700/80 hover:border-[#ff6b4a]/40 dark:hover:border-sky-400/40 transition-all duration-300 hover:shadow-md flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Nationwide Direct Logistics</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-normal">On-site technical application support</div>
+                </div>
+              </div>
+
+            </div>
+
           </div>
 
-          <h2 
-            className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white leading-tight tracking-tight"
-            style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
-          >
-            Built on Rigorous Chemistry & Structural Integrity.
-          </h2>
-
-          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-            Founded with a clear engineering objective, <strong>MARBLEX — Chemical & Rubber</strong> has grown into Pakistan’s premier manufacturer and trusted supplier of specialized construction solutions. We solve critical structural challenges: water seepage, chemical abrasion, concrete deterioration, and joint expansion.
-          </p>
-
-          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-            From high-rise commercial basements in Lahore, Islamabad, and Karachi to national dam projects and industrial flooring for pharmaceutical plants, MARBLEX formulations are backed by extensive laboratory testing, certified compliance, and on-site application support.
-          </p>
-
-          {/* Quick Value Highlights with Custom SVGs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center shrink-0">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <span>Certified ISO 9001:2015 Quality</span>
-            </div>
-
-            <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center shrink-0">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <span>Monolithic Joint-Free Seals</span>
-            </div>
-
-            <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center shrink-0">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <span>ASTM D412 Standard Verification</span>
-            </div>
-
-            <div className="flex items-center gap-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center shrink-0">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <span>Nationwide Technical Logistics</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: 3-Image Specimen Engineering Mosaic */}
-        <div className="lg:col-span-5 space-y-3.5">
-          {/* Main Top Showcase Image */}
-          <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm h-48 sm:h-52 bg-slate-100 dark:bg-slate-800 group relative">
-            <img 
-              src="https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=1000&q=80" 
-              alt="MARBLEX Civil Concrete Deck Waterproofing" 
-              className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-              onError={(e) => { e.currentTarget.src = "/products/Banner3.jpeg"; }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 opacity-90" />
-            <div className="absolute top-3 left-3 bg-[#ff6b4a] text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
-              Primary Civil Site
-            </div>
-            <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between text-white">
-              <span className="text-xs font-bold">Bituminous Deck & Foundation Sealing</span>
-              <span className="text-[10.5px] font-mono opacity-80">Phase I</span>
-            </div>
-          </div>
-
-          {/* Dual Bottom Side-by-Side Images (Image 2 & Image 3) */}
-          <div className="grid grid-cols-2 gap-3.5">
-            {/* Image 2: Precision Compounding Lab */}
-            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm aspect-[4/3] bg-slate-100 dark:bg-slate-800 group relative">
+          {/* Right Column: High-End Interactive Engineering Specimen Gallery */}
+          <div className="lg:col-span-5 space-y-4 relative">
+            
+            {/* Main Showcase Specimen Card */}
+            <div className="rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-700/80 shadow-lg bg-slate-900 group relative h-56 sm:h-60">
               <img 
-                src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80" 
-                alt="MARBLEX Chemical Compounding Lab" 
-                className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-                onError={(e) => { e.currentTarget.src = "/products/Banner1.jpeg"; }}
+                src="/hero/desktop_waterproofing.jpg" 
+                alt="MARBLEX Civil Concrete Deck Waterproofing" 
+                className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-700"
+                onError={(e) => { e.currentTarget.src = "/products/Banner3.jpeg"; }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-85" />
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white">
-                <div className="text-[11px] font-bold leading-tight">Polymer Lab</div>
-                <div className="text-[9.5px] text-slate-300 font-normal">ISO Compounding</div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 opacity-90 transition-opacity duration-300" />
+              
+              {/* Top Badges */}
+              <div className="absolute top-3.5 left-3.5 flex items-center gap-2">
+                <span className="bg-[#ff6b4a] text-white text-[10px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                  <span>Primary Civil Site</span>
+                </span>
+              </div>
+
+              <div className="absolute top-3.5 right-3.5 bg-black/60 backdrop-blur-md text-white border border-white/20 text-[10px] font-mono px-2 py-0.5 rounded-md">
+                Phase I Construction
+              </div>
+
+              {/* Bottom Caption */}
+              <div className="absolute bottom-3.5 left-4 right-4 text-white">
+                <div className="text-[13px] sm:text-sm font-bold leading-tight">Bituminous Deck & Sub-Structure Sealing</div>
+                <div className="text-[10.5px] text-slate-300 font-normal mt-0.5 flex items-center gap-2">
+                  <span>Monolithic Barrier</span>
+                  <span>•</span>
+                  <span>ASTM D-6083 Compliance</span>
+                </div>
               </div>
             </div>
 
-            {/* Image 3: Dam & Heavy Infrastructure Joint */}
-            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm aspect-[4/3] bg-slate-100 dark:bg-slate-800 group relative">
-              <img 
-                src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=800&q=80" 
-                alt="MARBLEX Dam Expansion Waterstops" 
-                className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-                onError={(e) => { e.currentTarget.src = "/products/Banner2.jpeg"; }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-85" />
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white">
-                <div className="text-[11px] font-bold leading-tight">Hydro Barrier</div>
-                <div className="text-[9.5px] text-slate-300 font-normal">5 Bar Head Seal</div>
+            {/* Dual Bottom Specimen Cards */}
+            <div className="grid grid-cols-2 gap-3.5">
+              
+              {/* Image 2: Precision Compounding Lab */}
+              <div className="rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-700/80 shadow-md bg-slate-900 group relative aspect-[4/3]">
+                <img 
+                  src="/hero/desktop_chemical.jpg" 
+                  alt="MARBLEX Chemical Compounding Lab" 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  onError={(e) => { e.currentTarget.src = "/products/Banner1.jpeg"; }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent opacity-90" />
+                <div className="absolute bottom-2.5 left-3 right-3 text-white">
+                  <div className="text-xs font-bold leading-tight">Polymer Lab</div>
+                  <div className="text-[10px] text-slate-300 font-normal mt-0.5">ISO 9001 Compounding</div>
+                </div>
               </div>
+
+              {/* Image 3: Dam & Heavy Infrastructure Joint */}
+              <div className="rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-700/80 shadow-md bg-slate-900 group relative aspect-[4/3]">
+                <img 
+                  src="/hero/desktop_waterstop.jpg" 
+                  alt="MARBLEX Dam Expansion Waterstops" 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  onError={(e) => { e.currentTarget.src = "/products/Banner2.jpeg"; }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent opacity-90" />
+                <div className="absolute bottom-2.5 left-3 right-3 text-white">
+                  <div className="text-xs font-bold leading-tight">Hydro Barrier</div>
+                  <div className="text-[10px] text-slate-300 font-normal mt-0.5">5 Bar Head Sealing</div>
+                </div>
+              </div>
+
             </div>
+
           </div>
+
         </div>
       </section>
 
       {/* ==================== 4. Strategic Milestones & Evolution Timeline ==================== */}
-      <section className="anim-reveal space-y-8">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#ff6b4a]">
-            STRATEGIC EVOLUTION
-          </span>
+      <section className="anim-reveal space-y-8 sm:space-y-10">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto space-y-3 px-2">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ff6b4a]/10 text-[#ff6b4a] text-xs font-bold uppercase tracking-wider border border-[#ff6b4a]/20 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-[#ff6b4a] animate-pulse" />
+            <span>STRATEGIC EVOLUTION & HERITAGE</span>
+          </div>
           <h2 
-            className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight"
+            className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight"
             style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
           >
             The MARBLEX Engineering Journey
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Over a decade of scientific compounding, international standard compliance, and nation-building projects.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal max-w-xl mx-auto leading-relaxed">
+            Over a decade of scientific compounding, international standard compliance, and nation-building mega civil infrastructure projects.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Timeline Grid (4 Connected Milestone Cards) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
           {milestones.map((m, idx) => (
             <div
               key={idx}
-              className="bg-white dark:bg-[#0e2735] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-lg hover:border-[#ff6b4a]/30 transition-all flex flex-col justify-between space-y-4 group relative overflow-hidden"
+              className="group relative bg-white dark:bg-[#0c222e] p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(10,61,82,0.05)] hover:shadow-xl hover:border-[#ff6b4a]/40 dark:hover:border-sky-400/40 transition-all duration-300 flex flex-col justify-between space-y-5 overflow-hidden hover:-translate-y-1"
             >
+              {/* Top Milestone Badge & Phase */}
               <div className="flex items-center justify-between">
                 <span 
-                  className="text-2xl sm:text-3xl font-black text-[#ff6b4a]"
+                  className="text-3xl sm:text-4xl font-black text-[#0a3d52] dark:text-sky-300 group-hover:text-[#ff6b4a] transition-colors"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
                   {m.year}
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#081822] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 uppercase tracking-widest">
                   Phase 0{idx + 1}
                 </span>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
+              {/* Title & Description */}
+              <div className="space-y-2.5 flex-grow">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base leading-snug group-hover:text-[#ff6b4a] transition-colors">
                   {m.title}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                <p className="text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
                   {m.desc}
                 </p>
               </div>
 
-              <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-[#0a3d52] to-[#ff6b4a] group-hover:w-full transition-all duration-500" 
-                  style={{ width: `${(idx + 1) * 25}%` }}
-                />
+              {/* Milestone Progress Indicator Bar */}
+              <div className="pt-2">
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#0a3d52] via-[#ff6b4a] to-emerald-400 group-hover:w-full transition-all duration-700" 
+                    style={{ width: `${(idx + 1) * 25}%` }}
+                  />
+                </div>
               </div>
             </div>
           ))}
@@ -547,38 +418,59 @@ export const AboutPage = () => {
       </section>
 
       {/* ==================== 5. Core Engineering Capabilities (4 Pillars Grid) ==================== */}
-      <section className="anim-reveal space-y-8">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#ff6b4a]">
-            OUR CORE COMPETENCIES
-          </span>
+      <section className="anim-reveal space-y-8 sm:space-y-10">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto space-y-3 px-2">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 text-xs font-bold uppercase tracking-wider border border-[#0a3d52]/15 dark:border-sky-400/20 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+            <span>CORE COMPETENCIES & FORMULATIONS</span>
+          </div>
           <h2 
-            className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight"
+            className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight"
             style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
           >
             Engineering Pillars of MARBLEX
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Comprehensive solutions tailored for architects, civil engineers, structural consultants, and industrial contractors.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal max-w-xl mx-auto leading-relaxed">
+            Comprehensive high-performance solutions tailored for civil engineers, structural consultants, and industrial contractors.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* 4 Pillars Matrix */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
           {pillars.map((p, idx) => (
             <div 
               key={idx}
-              className="bg-white dark:bg-[#0e2735] p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-lg hover:border-[#ff6b4a]/30 transition-all flex flex-col justify-between space-y-4 group"
+              className="group relative bg-white dark:bg-[#0c222e] p-6 sm:p-7 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_-4px_rgba(10,61,82,0.06)] hover:shadow-2xl hover:border-[#ff6b4a]/40 dark:hover:border-sky-400/40 transition-all duration-300 flex flex-col justify-between space-y-5 overflow-hidden hover:-translate-y-1.5 cursor-pointer"
             >
-              <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center border border-slate-100 dark:border-slate-700 group-hover:scale-110 transition-transform shadow-inner">
-                {p.icon}
+              {/* Top Accent Line */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#ff6b4a] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+              {/* Icon & Discipline Number */}
+              <div className="flex items-center justify-between">
+                <div className="w-13 h-13 rounded-2xl bg-slate-50 dark:bg-[#081822] flex items-center justify-center border border-slate-200/80 dark:border-slate-700/60 group-hover:scale-110 group-hover:border-[#ff6b4a]/40 transition-all shadow-inner">
+                  {p.icon}
+                </div>
+                <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500">
+                  0{idx + 1}
+                </span>
               </div>
-              <div className="space-y-2">
-                <h3 className="font-bold text-slate-900 dark:text-white text-base">
+
+              {/* Title & Description */}
+              <div className="space-y-2.5 flex-grow">
+                <h3 className="font-bold text-slate-900 dark:text-white text-base leading-snug group-hover:text-[#ff6b4a] transition-colors">
                   {p.title}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                <p className="text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
                   {p.desc}
                 </p>
+              </div>
+
+              {/* Verified Standard Pill */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] font-bold text-[#0a3d52] dark:text-sky-300">
+                <span>ASTM & ISO Verified</span>
+                <ArrowForwardIcon sx={{ fontSize: 14 }} className="group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           ))}
@@ -586,11 +478,14 @@ export const AboutPage = () => {
       </section>
 
       {/* ==================== 6. Advanced Testing & QC Laboratory ==================== */}
-      <section className="anim-reveal bg-gradient-to-br from-[#0a3d52]/5 via-white to-slate-50 dark:from-[#0c222e] dark:via-[#091b24] dark:to-[#0c222e] p-6 sm:p-10 lg:p-12 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-6">
+      <section className="anim-reveal bg-gradient-to-br from-[#0a3d52]/5 via-white to-slate-50 dark:from-[#091b24] dark:via-[#0c222e] dark:to-[#08161e] p-6 sm:p-10 lg:p-12 rounded-[28px] sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-lg space-y-8">
+        
+        {/* Header with Direct TDS CTA */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 border-b border-slate-200/80 dark:border-slate-800/80 pb-6">
           <div>
-            <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
-              <span>ACCREDITED TESTING METRICS</span>
+            <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-2.5 shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>ACCREDITED TESTING METRICS • ASTM & BS STANDARDS</span>
             </div>
             <h2 
               className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0f1929] dark:text-white tracking-tight"
@@ -598,8 +493,8 @@ export const AboutPage = () => {
             >
               State-of-the-Art Formulation Testing
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mt-1">
-              Every batch produced at MARBLEX undergoes rigorous laboratory validation to ensure zero-failure structural waterproofing in demanding geotechnical environments.
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl mt-1.5 font-normal leading-relaxed">
+              Every chemical compound produced at MARBLEX undergoes rigorous laboratory validation to ensure zero-failure structural waterproofing in severe geotechnical environments.
             </p>
           </div>
 
@@ -607,32 +502,33 @@ export const AboutPage = () => {
             href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20please%20send%20the%20complete%20Technical%20Data%20Sheet%20(TDS)%20and%20lab%20certification%20reports."
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 bg-[#0a3d52] hover:bg-[#082e3e] text-white px-5 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-sm transition-all shrink-0 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 bg-[#ff6b4a] hover:bg-[#ff5530] text-white px-6 py-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#ff6b4a]/20 transition-all shrink-0 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
           >
             <span>Request Lab Certification Reports</span>
             <ArrowForwardIcon sx={{ fontSize: 16 }} />
           </a>
         </div>
 
+        {/* 4 Laboratory Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {testingFacilities.map((t, idx) => (
             <div 
               key={idx}
-              className="p-5 rounded-2xl bg-white dark:bg-[#0e2735] border border-slate-200/90 dark:border-slate-700 shadow-2xs space-y-2.5"
+              className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#071922] border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-3 hover:border-sky-400/40 transition-all group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold text-[#ff6b4a] uppercase tracking-wider bg-[#ff6b4a]/10 px-2 py-0.5 rounded-md">
+                <span className="text-[10px] font-black text-[#ff6b4a] uppercase tracking-wider bg-[#ff6b4a]/10 px-2.5 py-1 rounded-md border border-[#ff6b4a]/20">
                   {t.tag}
                 </span>
-                <span className="text-xs font-bold text-slate-400">0{idx + 1}</span>
+                <span className="text-xs font-mono font-bold text-slate-400">0{idx + 1}</span>
               </div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
                 {t.title}
               </h3>
-              <div className="text-xs font-extrabold text-[#0a3d52] dark:text-sky-400">
+              <div className="text-sm font-black text-[#0a3d52] dark:text-sky-300 font-mono">
                 {t.metric}
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+              <p className="text-[11.5px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
                 {t.desc}
               </p>
             </div>
@@ -641,61 +537,68 @@ export const AboutPage = () => {
       </section>
 
       {/* ==================== 7. Contact & Technical Project Consultation Form ==================== */}
-      <section className="anim-reveal bg-white dark:bg-[#0e2735] p-6 sm:p-10 lg:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs">
+      <section className="anim-reveal bg-white dark:bg-[#0c222e] p-6 sm:p-10 lg:p-12 rounded-[28px] sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
-          {/* Left Column: Office & Direct Info */}
+          {/* Left Column: Office & Direct Engineering Hotline */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="space-y-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#ff6b4a]">
-                TECHNICAL CONSULTATION
-              </span>
+            <div className="space-y-2.5">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#ff6b4a]">
+                <span className="w-2 h-2 rounded-full bg-[#ff6b4a] animate-pulse" />
+                <span>DIRECT TECHNICAL CONSULTATION</span>
+              </div>
               <h2 
-                className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight"
+                className="text-2xl sm:text-3xl lg:text-[34px] font-black text-slate-900 dark:text-white tracking-tight leading-tight"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
               >
                 Discuss Your Construction Specifications
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                Connect directly with our chemical engineers and technical product specialists for material datasheets, site testing, and tailored quotations.
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                Connect directly with our chemical formulation engineers for material data sheets (TDS), site testing, and customized supply quotes.
               </p>
             </div>
 
-            <div className="space-y-4 pt-2">
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-[#0a3d52] dark:text-[#38bdf8]">
+            {/* Direct Channel Cards */}
+            <div className="space-y-3.5 pt-1">
+              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-[#081822] border border-slate-200/80 dark:border-slate-800">
+                <div className="w-10 h-10 rounded-xl bg-[#0a3d52]/10 dark:bg-sky-400/10 border border-[#0a3d52]/20 dark:border-sky-400/20 flex items-center justify-center shrink-0 text-[#0a3d52] dark:text-sky-300">
                   <LocationOnOutlinedIcon sx={{ fontSize: 20 }} />
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Headquarters</div>
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">40-Ferozpur Road, Lahore, Pakistan</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Manufacturing & HQ</div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">40-Ferozpur Road, Lahore, Pakistan</div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-[#ff6b4a]">
+              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-[#081822] border border-slate-200/80 dark:border-slate-800">
+                <div className="w-10 h-10 rounded-xl bg-[#ff6b4a]/10 border border-[#ff6b4a]/20 flex items-center justify-center shrink-0 text-[#ff6b4a]">
                   <MailOutlineOutlinedIcon sx={{ fontSize: 20 }} />
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Direct Sales & Support</div>
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Marblexpak@gmail.com</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Direct Engineering Support</div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">Marblexpak@gmail.com</div>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-[#10b981]">
-                  <LocalPhoneOutlinedIcon sx={{ fontSize: 20 }} />
+              <a 
+                href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20would%20like%20to%20consult%20regarding%20a%20project."
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 hover:bg-emerald-100/80 transition-colors cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <WhatsAppIcon sx={{ fontSize: 20 }} />
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Engineering Hotline</div>
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">+92 348 1116611</div>
+                  <div className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Fast Engineering Hotline</div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-0.5">+92 348 1116611 (WhatsApp Instant)</div>
                 </div>
-              </div>
+              </a>
             </div>
           </div>
 
-          {/* Right Column: Inquiry Form */}
-          <div className="lg:col-span-7 bg-slate-50 dark:bg-slate-800/60 p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-700">
+          {/* Right Column: Interactive Inquiry Form */}
+          <div className="lg:col-span-7 bg-slate-50/90 dark:bg-[#081822] p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
             {success ? (
               <div className="text-center py-8 space-y-4">
                 <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800">
@@ -705,20 +608,20 @@ export const AboutPage = () => {
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">Technical Inquiry Received</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                  Thank you for contacting MARBLEX. Our technical engineering team will review your specifications and get in touch promptly.
+                  Thank you for contacting MARBLEX. Our chemical engineering team will review your specifications and get in touch promptly.
                 </p>
                 <button
                   onClick={() => setSuccess(false)}
-                  className="px-6 py-2.5 rounded-xl bg-[#0a3d52] text-white font-bold text-xs uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-[#0a3d52] hover:bg-[#0d4e68] text-white font-bold text-xs uppercase tracking-wider cursor-pointer shadow-sm transition"
                 >
                   Submit Another Inquiry
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4.5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Your Full Name</label>
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Your Full Name</label>
                     <input
                       type="text"
                       name="name"
@@ -726,12 +629,12 @@ export const AboutPage = () => {
                       onChange={handleChange}
                       required
                       placeholder="e.g. Engr. Ahmad Hassan"
-                      className="w-full bg-white dark:bg-[#0e2735] border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a]"
+                      className="w-full bg-white dark:bg-[#0c222e] border border-slate-300/90 dark:border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a] shadow-xs"
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Email Address</label>
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Email Address</label>
                     <input
                       type="email"
                       name="email"
@@ -739,25 +642,25 @@ export const AboutPage = () => {
                       onChange={handleChange}
                       required
                       placeholder="e.g. ahmad@construction.com"
-                      className="w-full bg-white dark:bg-[#0e2735] border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a]"
+                      className="w-full bg-white dark:bg-[#0c222e] border border-slate-300/90 dark:border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a] shadow-xs"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Phone / WhatsApp Number</label>
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Phone / WhatsApp Number</label>
                   <input
                     type="text"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="e.g. 0348-1116611"
-                    className="w-full bg-white dark:bg-[#0e2735] border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a]"
+                    className="w-full bg-white dark:bg-[#0c222e] border border-slate-300/90 dark:border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a] shadow-xs"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Project Requirements / Specifications</label>
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Project Requirements / Specifications</label>
                   <textarea
                     name="message"
                     value={formData.message}
@@ -765,14 +668,14 @@ export const AboutPage = () => {
                     required
                     rows={4}
                     placeholder="Provide details about your project, chemical specs, or required rubber profiles..."
-                    className="w-full bg-white dark:bg-[#0e2735] border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a] resize-none"
+                    className="w-full bg-white dark:bg-[#0c222e] border border-slate-300/90 dark:border-slate-700 rounded-xl px-4 py-3 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#ff6b4a] resize-none shadow-xs"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full btn-3d-accent py-3.5 rounded-xl text-white font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-md disabled:opacity-50 cursor-pointer"
+                  className="w-full py-4 rounded-xl bg-[#ff6b4a] hover:bg-[#ff5530] text-white font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ff6b4a]/25 disabled:opacity-50 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99]"
                 >
                   {loading ? "Processing..." : (
                     <>
@@ -785,6 +688,59 @@ export const AboutPage = () => {
             )}
           </div>
 
+        </div>
+      </section>
+
+      {/* ==================== 8. Contractor & Engineering FAQ Accordion ==================== */}
+      <section className="anim-reveal space-y-6 sm:space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-2.5 px-2">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 text-xs font-bold uppercase tracking-wider border border-[#0a3d52]/15 dark:border-sky-400/20 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>CONTRACTOR & CONSULTANT INQUIRIES</span>
+          </div>
+          <h2 
+            className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight"
+            style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
+          >
+            Frequently Asked Engineering Questions
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal max-w-xl mx-auto leading-relaxed">
+            Essential specifications, ASTM standards, laboratory audits, and warranty terms for MARBLEX formulations.
+          </p>
+        </div>
+
+        <div className="max-w-4xl mx-auto space-y-3 px-1">
+          {engineeringFaqs.map((faq, idx) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div 
+                key={idx}
+                className="bg-white dark:bg-[#0c222e] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden transition-all duration-300"
+              >
+                <button
+                  onClick={() => setOpenFaq(isOpen ? -1 : idx)}
+                  className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-[#0e2735] transition-colors"
+                >
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug">
+                    {faq.q}
+                  </span>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 ${
+                    isOpen ? "rotate-180 bg-[#ff6b4a] text-white" : "bg-slate-100 dark:bg-[#081822] text-slate-500 dark:text-slate-400"
+                  }`}>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </button>
+                
+                {isOpen && (
+                  <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-[12.5px] text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 

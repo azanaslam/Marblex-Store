@@ -1,227 +1,303 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
-import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Bespoke SVG Vector Icon Components
-const SvgWaterproof = () => (
-  <svg className="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2.69L6.64 8.05C4.29 10.4 4.29 14.2 6.64 16.54C8.99 18.89 12.79 18.89 15.14 16.54C17.49 14.19 17.49 10.39 15.14 8.05L12 2.69Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const SvgDurability = () => (
-  <svg className="w-4 h-4 text-[#ff8c73]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L4 6V12C4 17.5 7.4 22.1 12 23.5C16.6 22.1 20 17.5 20 12V6L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M9 12L11 14L15 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const SvgChemical = () => (
-  <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M9 3H15M10 3V8.5L5.2 17.4C4.4 18.9 5.5 20.7 7.2 20.7H16.8C18.5 20.7 19.6 18.9 18.8 17.4L14 8.5V3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="10" cy="16" r="1" fill="currentColor"/>
-    <circle cx="14" cy="15" r="0.8" fill="currentColor"/>
-  </svg>
-);
-
-const SvgExpansion = () => (
-  <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 8V4H8M16 4H20V8M20 16V20H16M8 20H4V16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M9 9L15 15M15 9L9 15" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
-  </svg>
-);
-
-const SvgCleanroom = () => (
-  <svg className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="1.75"/>
-    <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
-  </svg>
-);
-
-const showcaseProducts = [
+// Optimized High-Resolution Civil & Chemical Infrastructure Images (Desktop & Mobile)
+const SLIDES = [
   {
-    id: 1,
-    shortName: "Membrane",
-    badge: "ENGINEERED POLYMER",
-    code: "WATERPROOFING MEMBRANE",
-    title: "APP Bituminous Membrane System",
-    desc: "Polymer-modified reinforced bituminous sheet engineered for extreme puncture resistance and high hydrostatic water head containment.",
-    tag: "High Tensile",
-    image: "https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=1200&q=80",
-    card1: { icon: SvgWaterproof, title: "100% WATERPROOF", subtitle: "ASTM D-412 Certified" },
-    card2: { icon: SvgDurability, title: "EXTREME DURABILITY", subtitle: "Puncture & Tear Proof" },
-    card3: { icon: SvgChemical, title: "CHEMICAL RESISTANT", subtitle: "Acid & Alkali Barrier" },
+    desktopImage: "/hero/desktop_waterproofing.jpg",
+    mobileImage: "/hero/mobile_waterproofing.jpg",
+    fallback: "linear-gradient(135deg, #0f3a52, #1d5f7a 60%, #2b7a8c)",
+    eyebrow: "Chemical & Rubber Division",
+    line1: "Built to last,",
+    line2: "sealed to stay dry.",
+    sub: "High-performance waterstops, polymer membranes and industrial coatings for dams, basements and modern construction.",
+    mobilePos: "bg-center",
+    desktopPos: "bg-[center_20%]",
   },
   {
-    id: 2,
-    shortName: "Rubber Joint",
-    badge: "RUBBER INDUSTRIAL DIVISION",
-    code: "VULCANIZED RUBBER",
-    title: "Heavy-Duty Expansion Waterstops",
-    desc: "Engineered vulcanized rubber waterstop profiles designed for structural expansion & construction joints in dams, canals, and basements.",
-    tag: "100m Head Seal",
-    image: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1200&q=80",
-    card1: { icon: SvgDurability, title: "HIGH-PRESSURE SEAL", subtitle: "Up to 5 Bar Resistance" },
-    card2: { icon: SvgExpansion, title: "450% ELONGATION", subtitle: "Dynamic Expansion" },
-    card3: { icon: SvgChemical, title: "AGEING RESISTANT", subtitle: "50+ Year Lifetime" },
+    desktopImage: "/hero/desktop_chemical.jpg",
+    mobileImage: "/hero/mobile_chemical.jpg",
+    fallback: "linear-gradient(135deg, #09202a, #133847 60%, #1f4f63)",
+    eyebrow: "Advanced Chemical Compounding",
+    line1: "Engineered polymers,",
+    line2: "precision formulated.",
+    sub: "State-of-the-art chemical reactors synthesizing advanced elastomeric polymers and ASTM-certified concrete waterproofing compounds.",
+    mobilePos: "bg-center",
+    desktopPos: "bg-center",
   },
   {
-    id: 3,
-    shortName: "Elastomeric",
-    badge: "MONOLITHIC BARRIER",
-    code: "LIQUID ELASTOMERIC",
-    title: "Elastomeric Liquid Waterproof Coating",
-    desc: "High-grade liquid polymer membrane providing 100% monolithic joint-free barrier against water ingress with 600% crack-bridging elasticity.",
-    tag: "Seamless Shield",
-    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80",
-    card1: { icon: SvgWaterproof, title: "100% SEAMLESS", subtitle: "Zero Joint Ingress" },
-    card2: { icon: SvgExpansion, title: "600% ELASTICITY", subtitle: "Crack-Bridging Tech" },
-    card3: { icon: SvgChemical, title: "UV & WEATHER PROOF", subtitle: "Tropical Formula" },
+    desktopImage: "/hero/desktop_waterstop.jpg",
+    mobileImage: "/hero/mobile_waterstop.jpg",
+    fallback: "linear-gradient(135deg, #1a2f3a, #2c4a58 60%, #5a6f78)",
+    eyebrow: "Vulcanized Joint Technology",
+    line1: "High-pressure seals,",
+    line2: "zero water ingress.",
+    sub: "Heavy-duty vulcanized rubber waterstop profiles engineered for dynamic expansion joints and 100m hydrostatic head containment.",
+    mobilePos: "bg-center",
+    desktopPos: "bg-[center_30%]",
   },
   {
-    id: 4,
-    shortName: "Epoxy Floor",
-    badge: "FLOOR PROTECTION",
-    code: "EPOXY FLOOR SYSTEM",
-    title: "High-Build Industrial Epoxy Floor",
-    desc: "Seamless, chemical, and heavy forklift abrasion-resistant high-build epoxy coatings for pharmaceutical and manufacturing facilities.",
-    tag: "Heavy Duty",
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80",
-    card1: { icon: SvgChemical, title: "SOLVENT RESISTANT", subtitle: "Resists Acids & Oils" },
-    card2: { icon: SvgDurability, title: "HEAVY LOAD RATED", subtitle: "Forklift & Impact Tough" },
-    card3: { icon: SvgCleanroom, title: "CLEANROOM GRADE", subtitle: "Seamless Hygiene" },
+    desktopImage: "/hero/desktop_flooring.jpg",
+    mobileImage: "/hero/mobile_flooring.jpg",
+    fallback: "linear-gradient(135deg, #12303f, #215a63 60%, #7a8f86)",
+    eyebrow: "Industrial Flooring & Epoxy",
+    line1: "Chemical resistant,",
+    line2: "heavy-load rated.",
+    sub: "High-build seamless industrial epoxy floor coatings engineered for pharmaceutical cleanrooms and heavy forklift durability.",
+    mobilePos: "bg-center",
+    desktopPos: "bg-center",
+  },
+];
+
+const CATEGORIES = [
+  {
+    title: "Waterstops",
+    desc: "Vulcanized rubber profiles for expansion and construction joints in civil dams & basements.",
+    categoryFilter: "Rubber Waterstops",
+    icon: (
+      <svg className="w-6 h-6 text-[#ff6b4a]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 8V4H8M16 4H20V8M20 16V20H16M8 20H4V16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M9 9L15 15M15 9L9 15" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    title: "Membranes",
+    desc: "Polymer waterproofing sheets and bituminous barriers for roofs, basements and containment tanks.",
+    categoryFilter: "Bituminous Membranes",
+    icon: (
+      <svg className="w-6 h-6 text-sky-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+        <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+        <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    title: "Coatings & Floors",
+    desc: "Elastomeric liquid barriers and high-build chemical-resistant epoxy systems for heavy-duty surfaces.",
+    categoryFilter: "Industrial Epoxy",
+    icon: (
+      <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 3H15M10 3V8.5L5.2 17.4C4.4 18.9 5.5 20.7 7.2 20.7H16.8C18.5 20.7 19.6 18.9 18.8 17.4L14 8.5V3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="10" cy="16" r="1.2" fill="currentColor" />
+        <circle cx="14" cy="15" r="1" fill="currentColor" />
+      </svg>
+    ),
   },
 ];
 
 export const HeroBanner = () => {
   const navigate = useNavigate();
   const [activeSlide, setActiveSlide] = useState(0);
-  
-  const sectionRef = useRef(null);
-  const liveBadgeRef = useRef(null);
-  const headlineRef = useRef(null);
-  const subtitleRef = useRef(null);
-  const actionsRef = useRef(null);
-  const metricsRef = useRef(null);
-  const hasAnimatedRef = useRef(false);
 
-  const nextSlide = useCallback(() => {
-    setActiveSlide((prev) => (prev + 1) % showcaseProducts.length);
-  }, []);
+  const heroRef = useRef(null);
+  const bgWrapRef = useRef(null);
+  const innerRef = useRef(null);
+  const dotsRef = useRef(null);
+  const currentSlideRef = useRef(0);
+  const isTransitioningRef = useRef(false);
 
-  const prevSlide = useCallback(() => {
-    setActiveSlide((prev) => (prev - 1 + showcaseProducts.length) % showcaseProducts.length);
-  }, []);
+  const goToSlide = useCallback((index) => {
+    if (!bgWrapRef.current || !dotsRef.current) return;
+    const bgElements = bgWrapRef.current.children;
+    const barElements = dotsRef.current.querySelectorAll(".dot-bar");
 
-  const runEntranceAnimation = useCallback(() => {
-    if (hasAnimatedRef.current) return;
-    hasAnimatedRef.current = true;
+    const prevIndex = currentSlideRef.current;
+    currentSlideRef.current = index;
+    setActiveSlide(index);
 
-    const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
-    tl.fromTo(sectionRef.current, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.9 });
-    tl.fromTo([liveBadgeRef.current, headlineRef.current, subtitleRef.current, actionsRef.current, metricsRef.current], { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.65, stagger: 0.08 }, "-=0.5");
+    if (prevIndex !== index && bgElements[prevIndex]) {
+      gsap.to(bgElements[prevIndex], { opacity: 0, duration: 1.2, ease: "power2.inOut" });
+      if (barElements[prevIndex]) {
+        gsap.killTweensOf(barElements[prevIndex]);
+        gsap.to(barElements[prevIndex], { scaleX: 0, duration: 0.3 });
+      }
+    }
+
+    if (bgElements[index]) {
+      gsap.fromTo(
+        bgElements[index],
+        { opacity: 0, scale: 1 },
+        { opacity: 1, scale: 1, duration: 1.2, ease: "power2.out" }
+      );
+    }
+
+    if (barElements[index]) {
+      gsap.killTweensOf(barElements[index]);
+      gsap.fromTo(
+        barElements[index],
+        { scaleX: 0 },
+        {
+          scaleX: 1,
+          duration: 6,
+          ease: "none",
+          onComplete: () => {
+            const nextIdx = (currentSlideRef.current + 1) % SLIDES.length;
+            goToSlide(nextIdx);
+          },
+        }
+      );
+    }
   }, []);
 
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return undefined;
+    const hero = heroRef.current;
+    if (!hero) return;
 
-    const context = gsap.context(() => {
-      gsap.fromTo(section, { backgroundPosition: "50% 0%" }, {
-        backgroundPosition: "50% 100%",
-        ease: "none",
-        scrollTrigger: { trigger: section, start: "top bottom", end: "bottom top", scrub: 1.2 },
-      });
-      gsap.to(".hero-copy", {
-        yPercent: -8,
-        ease: "none",
-        scrollTrigger: { trigger: section, start: "top bottom", end: "bottom top", scrub: 1.2 },
-      });
-    }, section);
+    // Entrance Animation
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
 
-    return () => context.revert();
-  }, []);
+      tl.from(".hero-card", {
+        clipPath: "inset(0 0 100% 0 round 28px)",
+        duration: 1.1,
+        ease: "power4.inOut",
+      })
+        .from(".hero-eyebrow", { y: 14, opacity: 0, duration: 0.6 }, "-=0.4")
+        .from(".hero-title .line-mask span", { yPercent: 110, duration: 0.9, stagger: 0.12 }, "-=0.5")
+        .from(".hero-sub, .hero-cta, .hero-dots", { y: 20, opacity: 0, duration: 0.7, stagger: 0.1 }, "-=0.5")
+        .add(() => {
+          goToSlide(0);
+        }, "-=0.3");
 
-  // Listen for intro reveal event from splash screen or trigger after safety delay
-  useEffect(() => {
-    const handleIntroReveal = () => {
-      runEntranceAnimation();
-    };
+      // Scroll Scrub Parallax
+      const st = { trigger: hero, start: "top top", end: "bottom top", scrub: true };
+      gsap.to(".hero-bgwrap", { yPercent: 4, ease: "none", scrollTrigger: st });
+      gsap.to(".hero-inner", { y: -30, opacity: 0, ease: "none", scrollTrigger: { ...st, end: "bottom 40%" } });
+      gsap.to(".hero-card", { scale: 0.99, ease: "none", scrollTrigger: st });
+    }, hero);
 
-    window.addEventListener("marblex:intro_reveal", handleIntroReveal);
+    return () => ctx.revert();
+  }, [goToSlide]);
 
-    // Safety fallback (in case user reloads or navigates directly)
-    const safetyTimer = setTimeout(() => {
-      runEntranceAnimation();
-    }, 400);
+  const handleScrollToProducts = () => {
+    const el = document.getElementById("products-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      navigate("/shop");
+    }
+  };
 
-    return () => {
-      window.removeEventListener("marblex:intro_reveal", handleIntroReveal);
-      clearTimeout(safetyTimer);
-    };
-  }, [runEntranceAnimation]);
+  const handleWhatsAppQuote = () => {
+    const current = SLIDES[activeSlide];
+    const text = encodeURIComponent(
+      `Hello MARBLEX, I would like to request an instant quotation and technical data regarding ${current.line1} ${current.line2} (${current.eyebrow}).`
+    );
+    window.open(`https://wa.me/923481116611?text=${text}`, "_blank");
+  };
 
-  // Continuous Smooth Auto-Slide Interval (5s)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      nextSlide();
-    }, 5000);
-
-    return () => clearInterval(timer);
-  }, [nextSlide]);
-
-  const current = showcaseProducts[activeSlide];
+  const current = SLIDES[activeSlide];
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative isolate mb-8 overflow-hidden rounded-[1.5rem] bg-[#163d3a] text-white shadow-xl shadow-[#163d3a]/15 sm:rounded-[2rem]"
-      style={{ backgroundImage: `linear-gradient(90deg, rgba(13, 39, 37, .96) 0%, rgba(20, 62, 58, .82) 48%, rgba(20, 62, 58, .26) 100%), url(${current.image})`, backgroundSize: "cover", backgroundPosition: "50% 50%" }}
-    >
-      <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
-      <div className="relative z-10 grid min-h-[440px] grid-cols-1 items-center px-6 py-12 sm:px-10 sm:py-14 lg:min-h-[500px] lg:grid-cols-12 lg:px-14">
-        <div className="hero-copy lg:col-span-7">
-          <div ref={liveBadgeRef} className="mb-5 inline-flex items-center gap-2 border-b border-white/30 pb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/75 sm:text-xs">
-            <span className="size-1.5 rounded-full bg-[#f2a06f]" />
-            MARBLEX INDUSTRIAL SOLUTIONS
-          </div>
-          <h1 ref={headlineRef} className="max-w-2xl text-4xl font-semibold leading-[1.06] tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl" style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}>
-            Built to keep water out.
-          </h1>
-          <p ref={subtitleRef} className="mt-5 max-w-xl text-sm leading-7 text-white/75 sm:text-base">
-            High-performance waterproofing systems for structures that need to last.
-          </p>
-          <div ref={actionsRef} className="mt-8 flex flex-wrap items-center gap-3">
-            <button onClick={() => navigate("/services")} className="inline-flex items-center gap-2 rounded-full bg-[#f2a06f] px-5 py-3 text-sm font-semibold text-[#163d3a] transition hover:bg-[#ffc19a]">
-              Explore solutions <ArrowForwardIcon sx={{ fontSize: 17 }} />
-            </button>
-            <button onClick={() => navigate("/catalogs")} className="inline-flex items-center gap-2 rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
-              Technical specs <MenuBookOutlinedIcon sx={{ fontSize: 17 }} />
-            </button>
-          </div>
-          <div ref={metricsRef} className="mt-10 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/20 pt-5 text-xs text-white/70 sm:gap-x-10">
-            <span><strong className="mr-1 text-white">15+ yrs</strong> durability</span>
-            <span><strong className="mr-1 text-white">100%</strong> seal</span>
-            <span><strong className="mr-1 text-white">500+</strong> sites</span>
-          </div>
+    <div ref={heroRef} className="w-full">
+
+      {/* ==================== Cinema Hero Card ==================== */}
+      <section className="hero-card relative w-full h-[clamp(460px,72vh,660px)] rounded-[24px] sm:rounded-[28px] overflow-hidden text-white shadow-2xl isolation-isolate select-none">
+
+        {/* Background Wrap with Multiple Slides (Desktop & Mobile Responsive) */}
+        <div ref={bgWrapRef} className="hero-bgwrap absolute inset-0 -z-20 overflow-hidden">
+          {SLIDES.map((slide, idx) => (
+            <div
+              key={idx}
+              className="absolute inset-0 transition-opacity opacity-0"
+            >
+              {/* Mobile Hero Background (Screens < 640px) */}
+              <div
+                className={`block sm:hidden absolute inset-0 bg-cover ${slide.mobilePos || "bg-center"}`}
+                style={{
+                  backgroundImage: `url("${slide.mobileImage}"), ${slide.fallback}`,
+                }}
+              />
+              {/* Desktop Hero Background (Screens >= 640px) */}
+              <div
+                className={`hidden sm:block absolute inset-0 bg-cover ${slide.desktopPos || "bg-center"}`}
+                style={{
+                  backgroundImage: `url("${slide.desktopImage}"), ${slide.fallback}`,
+                }}
+              />
+            </div>
+          ))}
         </div>
 
-        <div className="hidden lg:col-span-5 lg:block" aria-hidden="true" />
-      </div>
+        {/* Ambient Dark Gradient Scrim Overlay */}
+        <div
+          className="absolute inset-0 -z-10 pointer-events-none bg-gradient-to-t from-[#081822]/95 via-[#081822]/60 to-black/20 sm:bg-[linear-gradient(90deg,rgba(8,24,34,0.85)_0%,rgba(8,24,34,0.45)_50%,rgba(8,24,34,0.15)_100%)]"
+        />
 
-      <div className="absolute bottom-5 right-6 z-20 flex items-center gap-2 sm:right-10">
-        <span className="text-xs font-medium text-white/70">0{activeSlide + 1} / 0{showcaseProducts.length}</span>
-        <button onClick={prevSlide} aria-label="Previous slide" className="grid size-8 place-items-center rounded-full border border-white/30 text-white transition hover:bg-white/15"><KeyboardArrowLeftIcon sx={{ fontSize: 18 }} /></button>
-        <button onClick={nextSlide} aria-label="Next slide" className="grid size-8 place-items-center rounded-full border border-white/30 text-white transition hover:bg-white/15"><KeyboardArrowRightIcon sx={{ fontSize: 18 }} /></button>
-      </div>
-    </section>
-          
+        {/* Inner Content on Left */}
+        <div ref={innerRef} className="hero-inner absolute left-6 sm:left-12 lg:left-16 bottom-10 sm:bottom-14 right-6 max-w-[580px] z-10 space-y-4 sm:space-y-5">
+
+          {/* Eyebrow */}
+          <div className="hero-eyebrow inline-flex items-center gap-2 text-[11px] sm:text-xs font-bold tracking-[0.14em] uppercase text-[#ff8c73] drop-shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-[#ff6b4a] animate-pulse" />
+            <span>{current.eyebrow}</span>
+          </div>
+
+          {/* Headline with Masked Line Animations */}
+          <h1
+            className="hero-title text-[28px] sm:text-5xl lg:text-[54px] font-black text-white leading-[1.12] sm:leading-[1.08] tracking-[-0.03em] drop-shadow-md"
+            style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
+          >
+            <div className="line-mask block overflow-hidden pb-1">
+              <span className="block">{current.line1}</span>
+            </div>
+            <div className="line-mask block overflow-hidden pb-1">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300">
+                {current.line2}
+              </span>
+            </div>
+          </h1>
+
+          {/* Subtitle */}
+          <p className="hero-sub text-slate-100/90 text-xs sm:text-sm lg:text-[15px] max-w-[440px] leading-relaxed font-normal">
+            {current.sub}
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="hero-cta flex flex-wrap items-center gap-3 pt-2">
+            <button
+              onClick={handleScrollToProducts}
+              className="inline-flex items-center gap-2 px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/35 text-white font-semibold text-xs sm:text-sm uppercase tracking-wider border border-white/40 hover:border-white/60 backdrop-blur-md shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <span>Shop Products</span>
+              <ArrowForwardIcon sx={{ fontSize: 16 }} />
+            </button>
+
+            <button
+              onClick={handleWhatsAppQuote}
+              className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/25 text-white font-semibold text-xs sm:text-sm uppercase tracking-wider border border-white/30 hover:border-white/50 backdrop-blur-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <WhatsAppIcon sx={{ fontSize: 18, color: "#10b981" }} />
+              <span>Instant Quote</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* Progress Dots / Timer Bars at Bottom Right */}
+        <div ref={dotsRef} className="hero-dots absolute right-6 sm:right-10 lg:right-14 bottom-6 sm:bottom-12 z-20 flex items-center gap-2.5">
+          {SLIDES.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => goToSlide(idx)}
+              aria-label={`Slide ${idx + 1}`}
+              className="w-7 sm:w-9 h-1 sm:h-1.5 rounded-full bg-white/35 relative overflow-hidden transition-all cursor-pointer hover:bg-white/50"
+            >
+              <i className="dot-bar absolute inset-0 bg-white origin-left scale-x-0" />
+            </button>
+          ))}
+        </div>
+
+      </section>
+
+    </div>
   );
 };

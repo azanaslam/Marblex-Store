@@ -120,46 +120,276 @@ const demoProducts = [
   },
 ];
 
+// Specialized Bespoke Engineering SVGs
+const LiquidWaterproofingIcon = () => (
+  <svg viewBox="0 0 40 40" fill="none" className="w-6 h-6 text-current">
+    <path
+      d="M20 5C20 5 10 17 10 24C10 29.52 14.48 34 20 34C25.52 34 30 29.52 30 24C30 17 20 5 20 5Z"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="currentColor"
+      fillOpacity="0.15"
+    />
+    <path
+      d="M16 23.5C16 21.5 17.5 19 20 17.5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <path
+      d="M6 35.5C10 34 14 36 20 36C26 36 30 34 34 35.5"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeDasharray="2 3"
+    />
+  </svg>
+);
+
+const IndustrialFlooringIcon = () => (
+  <svg viewBox="0 0 40 40" fill="none" className="w-6 h-6 text-current">
+    <path
+      d="M5 12L20 4L35 12L20 20L5 12Z"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinejoin="round"
+      fill="currentColor"
+      fillOpacity="0.18"
+    />
+    <path
+      d="M5 20L20 28L35 20"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5 28L20 36L35 28"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle cx="20" cy="12" r="2.5" fill="currentColor" />
+  </svg>
+);
+
+const RubberWaterstopsIcon = () => (
+  <svg viewBox="0 0 40 40" fill="none" className="w-6 h-6 text-current">
+    <path
+      d="M6 10H34M6 30H34"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+    />
+    <path
+      d="M12 10V30M28 10V30"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeDasharray="2 2"
+    />
+    <circle
+      cx="20"
+      cy="20"
+      r="7"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      fill="currentColor"
+      fillOpacity="0.2"
+    />
+    <path
+      d="M20 16V24M16 20H24"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const AdmixturesGroutsIcon = () => (
+  <svg viewBox="0 0 40 40" fill="none" className="w-6 h-6 text-current">
+    <path
+      d="M17 5H23V12L29 27C30.5 30.5 28 34 24 34H16C12 34 9.5 30.5 11 27L17 12V5Z"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinejoin="round"
+      fill="currentColor"
+      fillOpacity="0.15"
+    />
+    <path
+      d="M14 23Q20 20 26 23"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+    <circle cx="18" cy="27" r="1.5" fill="currentColor" />
+    <circle cx="23" cy="26" r="1.8" fill="currentColor" />
+    <circle cx="20" cy="30" r="1.2" fill="currentColor" />
+  </svg>
+);
+
+// 4-Stage Methodology Bespoke SVGs
+const SubstrateDiagnosticIcon = () => (
+  <svg viewBox="0 0 40 40" fill="none" className="w-6 h-6 text-current">
+    <rect
+      x="6"
+      y="6"
+      width="28"
+      height="28"
+      rx="6"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      fill="currentColor"
+      fillOpacity="0.1"
+    />
+    <circle cx="20" cy="20" r="6.5" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 2" />
+    <circle cx="20" cy="20" r="2.2" fill="currentColor" />
+    <path d="M10 20H30M20 10V30" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 3" />
+    <path d="M12 14L15 11M25 29L28 26" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+const DeepPrimerIcon = () => (
+  <svg viewBox="0 0 40 40" fill="none" className="w-6 h-6 text-current">
+    <path d="M5 12H35" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+    <path d="M11 12V22M20 12V29M29 12V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M9 22L11 25L13 22M18 29L20 32L22 29M27 20L29 23L31 20" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
+    <circle cx="20" cy="7" r="2" fill="currentColor" />
+    <path d="M8 7C14 9.5 26 4.5 32 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2" />
+  </svg>
+);
+
+const MultilayerFormulationIcon = () => (
+  <svg viewBox="0 0 40 40" fill="none" className="w-6 h-6 text-current">
+    <path
+      d="M20 5L32 10V20C32 27.5 20 34 20 34C20 34 8 27.5 8 20V10L20 5Z"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinejoin="round"
+      fill="currentColor"
+      fillOpacity="0.14"
+    />
+    <path
+      d="M15 19L18.5 22.5L25 16"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M13.5 27C15.5 29.5 18 31 20 32C22 31 24.5 29.5 26.5 27"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const HydrostaticSignOffIcon = () => (
+  <svg viewBox="0 0 40 40" fill="none" className="w-6 h-6 text-current">
+    <circle
+      cx="20"
+      cy="17"
+      r="11.5"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      fill="currentColor"
+      fillOpacity="0.15"
+    />
+    <path
+      d="M15.5 17L18.5 20L24.5 14"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M15 26L12.5 35L20 31L27.5 35L25 26"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      fill="currentColor"
+      fillOpacity="0.1"
+    />
+    <circle cx="20" cy="17" r="8.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="2 2" />
+  </svg>
+);
+
 // Industrial Solutions Matrix
 const industrialDivisions = [
   {
+    code: "WPF-01",
     title: "Liquid Waterproofing",
     subtitle: "Seamless Elastomeric Polymer Barrier",
-    desc: "100% seamless, UV-stable liquid membranes that bridge structural micro-cracks and withstand ponding water.",
-    icon: WaterDropOutlinedIcon,
+    desc: "100% seamless, UV-stable liquid membranes that bridge structural micro-cracks and withstand continuous ponding water.",
+    icon: LiquidWaterproofingIcon,
     badge: "ASTM D-6083",
     color: "#0a3d52",
-    accent: "#ff6b4a",
+    accentGradient: "from-cyan-500 to-sky-600",
+    accentText: "text-cyan-600 dark:text-cyan-400",
+    accentBorder: "border-cyan-500/25 dark:border-cyan-400/30",
+    accentBg: "bg-cyan-50 dark:bg-cyan-950/40",
+    metrics: [
+      { label: "Elongation", val: "650%" },
+      { label: "Tensile", val: "4.8 MPa" },
+    ],
     categoryId: "waterproofing",
   },
   {
+    code: "FLR-02",
     title: "Industrial Flooring",
     subtitle: "Heavy-Duty Epoxy & Polyurea",
-    desc: "Abrasion-resistant, chemical-proof epoxy systems designed for manufacturing plants, warehouses, and hospitals.",
-    icon: FormatPaintOutlinedIcon,
+    desc: "Abrasion-resistant, chemical-proof epoxy systems designed for manufacturing plants, heavy warehouses, and hospitals.",
+    icon: IndustrialFlooringIcon,
     badge: "Heavy Traffic",
     color: "#0c313d",
-    accent: "#38bdf8",
+    accentGradient: "from-amber-500 to-orange-600",
+    accentText: "text-amber-600 dark:text-amber-400",
+    accentBorder: "border-amber-500/25 dark:border-amber-400/30",
+    accentBg: "bg-amber-50 dark:bg-amber-950/40",
+    metrics: [
+      { label: "Hardness", val: "Shore D 85" },
+      { label: "Compressive", val: "85 MPa" },
+    ],
     categoryId: "elastomeric",
   },
   {
+    code: "WST-03",
     title: "Rubber Waterstops",
     subtitle: "Hydrostatic Joint Sealing Systems",
-    desc: "Vulcanized high-elongation rubber profiles engineered for hydrostatic head pressure in tunnels, dams, and foundations.",
-    icon: ConstructionOutlinedIcon,
+    desc: "Vulcanized high-elongation rubber profiles engineered for extreme hydrostatic head pressure in tunnels, dams, and foundations.",
+    icon: RubberWaterstopsIcon,
     badge: "Hydrostatic Head",
     color: "#082a38",
-    accent: "#10b981",
+    accentGradient: "from-emerald-500 to-teal-600",
+    accentText: "text-emerald-600 dark:text-emerald-400",
+    accentBorder: "border-emerald-500/25 dark:border-emerald-400/30",
+    accentBg: "bg-emerald-50 dark:bg-emerald-950/40",
+    metrics: [
+      { label: "Head Press.", val: "50m Head" },
+      { label: "Standard", val: "DIN 18541" },
+    ],
     categoryId: "rubber",
   },
   {
+    code: "GRT-04",
     title: "Admixtures & Grouts",
     subtitle: "High-Strength Structural Repair",
-    desc: "Non-shrink precision grouts, plasticizers, and waterproofing crystallizers enhancing concrete density.",
-    icon: ScienceOutlinedIcon,
+    desc: "Non-shrink precision grouts, plasticizers, and waterproofing crystallizers enhancing concrete density and load capability.",
+    icon: AdmixturesGroutsIcon,
     badge: "High Strength",
     color: "#0f3c4b",
-    accent: "#f59e0b",
+    accentGradient: "from-indigo-500 to-blue-600",
+    accentText: "text-indigo-600 dark:text-indigo-400",
+    accentBorder: "border-indigo-500/25 dark:border-indigo-400/30",
+    accentBg: "bg-indigo-50 dark:bg-indigo-950/40",
+    metrics: [
+      { label: "Strength", val: "90 MPa" },
+      { label: "Expansion", val: "Non-Shrink" },
+    ],
     categoryId: "chemicals",
   },
 ];
@@ -168,31 +398,67 @@ const industrialDivisions = [
 const engineeringSteps = [
   {
     step: "01",
+    phase: "PHASE 01",
     title: "Substrate Diagnostic",
+    subtitle: "Surface Moisture & Crack Mapping",
     desc: "Core moisture scanning, tensile surface profiling, and structural crack mapping before any chemical compounding.",
     badge: "Surface Profiling",
-    icon: FactCheckOutlinedIcon,
+    spec: "ASTM D-4263 • Tensile >1.5 MPa",
+    qcGate: "Gate 1 Verified",
+    iso: "ISO 9001:2015",
+    icon: SubstrateDiagnosticIcon,
+    accentGradient: "from-sky-500 to-blue-600",
+    accentText: "text-sky-600 dark:text-sky-400",
+    accentBorder: "border-sky-500/25 dark:border-sky-400/30",
+    accentBg: "bg-sky-50 dark:bg-sky-950/40",
   },
   {
     step: "02",
+    phase: "PHASE 02",
     title: "Deep Primer Penetration",
+    subtitle: "Capillary Pore Consolidation",
     desc: "Application of low-viscosity epoxy or acrylic primer to consolidate porous concrete and ensure 2.5+ MPa adhesion.",
     badge: "2.5+ MPa Adhesion",
-    icon: LayersOutlinedIcon,
+    spec: "Epoxy Primer • ASTM D-4541",
+    qcGate: "Gate 2 Verified",
+    iso: "ISO 9001:2015",
+    icon: DeepPrimerIcon,
+    accentGradient: "from-teal-500 to-emerald-600",
+    accentText: "text-teal-600 dark:text-teal-400",
+    accentBorder: "border-teal-500/25 dark:border-teal-400/30",
+    accentBg: "bg-teal-50 dark:bg-teal-950/40",
   },
   {
     step: "03",
+    phase: "PHASE 03",
     title: "Multilayer Formulation",
+    subtitle: "Seamless Elastomeric Armor",
     desc: "Deployment of seamless elastomeric liquid membranes, vulcanized waterstops, or high-build polyurea coatings.",
     badge: "Seamless Elastomeric",
-    icon: ShieldOutlinedIcon,
+    spec: "Pure Polyurea / Vulcanized Profile",
+    qcGate: "Gate 3 Verified",
+    iso: "EN 1504-2",
+    icon: MultilayerFormulationIcon,
+    accentGradient: "from-indigo-500 to-purple-600",
+    accentText: "text-indigo-600 dark:text-indigo-400",
+    accentBorder: "border-indigo-500/25 dark:border-indigo-400/30",
+    accentBg: "bg-indigo-50 dark:bg-indigo-950/40",
   },
   {
     step: "04",
+    phase: "PHASE 04",
     title: "Hydrostatic Quality Sign-Off",
+    subtitle: "Flood Testing & Audit Release",
     desc: "72-hour continuous water flooding test, thermal imaging audit, and official 10-Year MARBLEX warranty issuance.",
     badge: "10-Yr Certified Warranty",
-    icon: WorkspacePremiumOutlinedIcon,
+    spec: "72H Flood Test • Thermal Imaging",
+    qcGate: "Warranty Active",
+    iso: "ASTM C-836",
+    icon: HydrostaticSignOffIcon,
+    accentGradient: "from-amber-500 to-orange-600",
+    accentText: "text-amber-600 dark:text-amber-400",
+    accentBorder: "border-amber-500/25 dark:border-amber-400/30",
+    accentBg: "bg-amber-50 dark:bg-amber-950/40",
   },
 ];
 
@@ -342,7 +608,7 @@ export const ShopPage = ({ addToCart }) => {
     return () => observer.disconnect();
   }, []);
 
-  // Specialized Capabilities Scroll Reveal Animation (Content from Top, Cards from Bottom)
+  // Specialized Capabilities Scroll Reveal Animation (Alternating Left & Right from Screen Edges)
   useEffect(() => {
     if (!capabilitiesSectionRef.current) return;
 
@@ -350,39 +616,68 @@ export const ShopPage = ({ addToCart }) => {
     const headerEl = el.querySelector(".capabilities-header-anim");
     const cards = el.querySelectorAll(".capabilities-card-anim");
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // Header content animates from TOP
-            if (headerEl) {
+    const observers = [];
+
+    // Header Observer
+    if (headerEl) {
+      const headerObs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
               gsap.fromTo(
                 headerEl,
                 { opacity: 0, y: -45 },
                 { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
               );
+              headerObs.unobserve(entry.target);
             }
-            // Cards animate from BOTTOM with staggered sequence
-            if (cards.length) {
+          });
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -35px 0px" }
+      );
+      headerObs.observe(headerEl);
+      observers.push(headerObs);
+    }
+
+    // Individual Cards: Alternating from Left & Right Screen Edges
+    cards.forEach((card, idx) => {
+      const isLeft = idx % 2 === 0;
+      const cardObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const screenW = typeof window !== "undefined" ? window.innerWidth : 800;
+              const dist = Math.min(screenW * 0.95, 550);
               gsap.fromTo(
-                cards,
-                { opacity: 0, y: 65, scale: 0.95 },
-                { opacity: 1, y: 0, scale: 1, duration: 1.15, stagger: 0.15, ease: "power3.out" }
+                card,
+                {
+                  opacity: 0,
+                  x: isLeft ? -dist : dist,
+                  scale: 0.94,
+                },
+                {
+                  opacity: 1,
+                  x: 0,
+                  scale: 1,
+                  duration: 1.1,
+                  ease: "power3.out",
+                  clearProps: "transform",
+                }
               );
+              cardObserver.unobserve(entry.target);
             }
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.08, rootMargin: "0px 0px -45px 0px" }
-    );
+          });
+        },
+        { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
+      );
+      cardObserver.observe(card);
+      observers.push(cardObserver);
+    });
 
-    observer.observe(el);
-
-    return () => observer.disconnect();
+    return () => observers.forEach((obs) => obs.disconnect());
   }, []);
 
-  // Field Proof & Case Studies Scroll Reveal (Header from TOP, Card 1 from LEFT, Card 2 from RIGHT on all screens)
+  // Field Proof & Case Studies Scroll Reveal (Card 1 from Left Screen Edge, Card 2 from Right Screen Edge)
   useEffect(() => {
     if (!caseStudiesSectionRef.current) return;
 
@@ -414,25 +709,28 @@ export const ShopPage = ({ addToCart }) => {
       observers.push(headerObs);
     }
 
-    // Left Card Observer (Animates from LEFT on mobile & desktop)
+    // Left Card Observer (Animates from LEFT screen edge)
     if (leftCard) {
       const leftObs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
+              const screenW = typeof window !== "undefined" ? window.innerWidth : 800;
+              const dist = Math.min(screenW * 0.95, 550);
               gsap.fromTo(
                 leftCard,
                 {
                   opacity: 0,
-                  x: -90,
+                  x: -dist,
                   scale: 0.94,
                 },
                 {
                   opacity: 1,
                   x: 0,
                   scale: 1,
-                  duration: 1.1,
+                  duration: 1.15,
                   ease: "power3.out",
+                  clearProps: "transform",
                 }
               );
               leftObs.unobserve(entry.target);
@@ -445,25 +743,28 @@ export const ShopPage = ({ addToCart }) => {
       observers.push(leftObs);
     }
 
-    // Right Card Observer (Animates from RIGHT on mobile & desktop)
+    // Right Card Observer (Animates from RIGHT screen edge)
     if (rightCard) {
       const rightObs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
+              const screenW = typeof window !== "undefined" ? window.innerWidth : 800;
+              const dist = Math.min(screenW * 0.95, 550);
               gsap.fromTo(
                 rightCard,
                 {
                   opacity: 0,
-                  x: 90,
+                  x: dist,
                   scale: 0.94,
                 },
                 {
                   opacity: 1,
                   x: 0,
                   scale: 1,
-                  duration: 1.1,
+                  duration: 1.15,
                   ease: "power3.out",
+                  clearProps: "transform",
                 }
               );
               rightObs.unobserve(entry.target);
@@ -481,7 +782,7 @@ export const ShopPage = ({ addToCart }) => {
     };
   }, []);
 
-  // 4-Stage Certified Engineering Methodology Scroll Reveal (Header from TOP, Card 1 & 3 from LEFT, Card 2 & 4 from RIGHT)
+  // 4-Stage Certified Engineering Methodology Scroll Reveal (Cards from Left & Right Screen Edges)
   useEffect(() => {
     if (!methodologySectionRef.current) return;
 
@@ -509,7 +810,7 @@ export const ShopPage = ({ addToCart }) => {
       headerObserver.observe(headerEl);
     }
 
-    // Individual Card Observers (Animates each card smoothly as it enters viewport on mobile/desktop)
+    // Individual Card Observers (Animates each card from Left or Right Screen Edge)
     const cardObservers = [];
     cards.forEach((card, idx) => {
       const isLeft = idx % 2 === 0;
@@ -517,11 +818,13 @@ export const ShopPage = ({ addToCart }) => {
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
+              const screenW = typeof window !== "undefined" ? window.innerWidth : 800;
+              const dist = Math.min(screenW * 0.95, 550);
               gsap.fromTo(
                 card,
                 {
                   opacity: 0,
-                  x: isLeft ? -90 : 90,
+                  x: isLeft ? -dist : dist,
                   scale: 0.94,
                 },
                 {
@@ -530,6 +833,7 @@ export const ShopPage = ({ addToCart }) => {
                   scale: 1,
                   duration: 1.1,
                   ease: "power3.out",
+                  clearProps: "transform",
                 }
               );
               cardObserver.unobserve(entry.target);
@@ -672,34 +976,15 @@ export const ShopPage = ({ addToCart }) => {
           }
         );
       }
-
-      if (productsGridRef.current && productsGridRef.current.children.length > 0) {
-        gsap.fromTo(
-          productsGridRef.current.children,
-          { opacity: 0, y: 45, scale: 0.95 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.9,
-            stagger: 0.1,
-            ease: "power3.out",
-            clearProps: "transform",
-            scrollTrigger: {
-              trigger: productsGridRef.current,
-              start: "top 85%",
-              toggleActions: "play none none none",
-            },
-          }
-        );
-      }
     });
 
     return () => ctx.revert();
   }, [loading, filteredProducts]);
 
+
+
   return (
-    <div ref={scrollRef} className="pb-16 w-full max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-4">
+    <div ref={scrollRef} className="pb-16 w-full max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-4 overflow-x-clip">
       
       {/* 1. Hero Section */}
       <HeroBanner />
@@ -708,15 +993,22 @@ export const ShopPage = ({ addToCart }) => {
       <EnterpriseMetricsBar />
 
       {/* 3. Core Industrial Engineering Divisions */}
-      <div ref={capabilitiesSectionRef} className="my-14 sm:my-20 overflow-hidden">
+      <div ref={capabilitiesSectionRef} className="my-14 sm:my-20 relative overflow-x-clip">
+        {/* Subtle Ambient Radial Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] max-w-full h-[320px] bg-gradient-to-r from-sky-500/10 via-[#0a3d52]/5 to-transparent blur-3xl pointer-events-none rounded-full" />
+
         {/* Content Header (Animates from TOP) */}
-        <div className="capabilities-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
-          <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/20 shadow-xs">
+        <div className="capabilities-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4 relative z-10">
+          <div className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#0a3d52]/10 via-sky-500/10 to-[#0a3d52]/10 dark:from-sky-400/15 dark:to-cyan-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/30 shadow-sm backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+            </span>
             <PrecisionManufacturingOutlinedIcon sx={{ fontSize: 16 }} />
             <span>Engineering Disciplines</span>
           </div>
           <h2 
-            className="text-2xl sm:text-4xl lg:text-[38px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
+            className="text-2xl sm:text-4xl lg:text-[40px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
             style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             Specialized Chemical & Rubber Capabilities
@@ -727,54 +1019,74 @@ export const ShopPage = ({ addToCart }) => {
         </div>
 
         {/* Cards Grid (Animates from BOTTOM with Stagger) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 px-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 px-1 relative z-10">
           {industrialDivisions.map((div, i) => {
             const IconComponent = div.icon;
             return (
               <div
                 key={i}
                 onClick={() => handleSelectDivisionCategory(div.categoryId)}
-                className="capabilities-card-anim opacity-0 group relative bg-white dark:bg-[#0c222e] rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/12 dark:hover:shadow-black/50 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer"
+                className="capabilities-card-anim opacity-0 group relative bg-white/95 dark:bg-[#0c222e]/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_-4px_rgba(10,61,82,0.06)] hover:shadow-2xl hover:shadow-[#0a3d52]/15 dark:hover:shadow-black/70 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer"
               >
-                {/* Top Subtle Sheen Accent Line on Hover */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] dark:via-sky-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {/* Top Subtle Hover Sheen Line */}
+                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${div.accentGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm`} />
                 
                 {/* Ambient Card Background Tint on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0a3d52]/5 dark:from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-sky-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                {/* Subtle Background Discipline Code Watermark */}
+                <div className="absolute top-4 right-5 text-3xl font-black font-mono tracking-tighter text-slate-900/[0.04] dark:text-white/[0.05] group-hover:text-slate-900/[0.09] dark:group-hover:text-white/[0.09] transition-colors pointer-events-none select-none">
+                  {div.code}
+                </div>
 
                 <div className="relative z-10">
                   {/* Card Header: Icon & Badge */}
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-[#0a3d52] dark:text-sky-300 flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-[#0a3d52] group-hover:to-[#0d4e68] dark:group-hover:from-sky-600 dark:group-hover:to-sky-500 group-hover:text-white group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[#0a3d52]/25 dark:group-hover:shadow-sky-500/25 transition-all duration-300">
-                      <IconComponent sx={{ fontSize: 24 }} />
+                    <div className={`w-12 h-12 rounded-2xl ${div.accentBg} ${div.accentText} border ${div.accentBorder} flex items-center justify-center group-hover:scale-110 group-hover:shadow-lg transition-all duration-300 relative`}>
+                      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${div.accentGradient} opacity-0 group-hover:opacity-20 blur-md transition-opacity`} />
+                      <div className="relative z-10">
+                        <IconComponent />
+                      </div>
                     </div>
                     
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 group-hover:border-[#0a3d52]/30 dark:group-hover:border-sky-500/30 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 transition-colors">
+                    <span className={`text-[10px] font-mono font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg ${div.accentBg} ${div.accentText} border ${div.accentBorder} shadow-xs`}>
                       {div.badge}
                     </span>
                   </div>
 
                   {/* Title & Subtitle */}
                   <h3 
-                    className="text-lg font-bold text-[#0a3d52] dark:text-white mb-1 group-hover:text-[#0a3d52] dark:group-hover:text-sky-400 transition-colors duration-200 tracking-tight"
+                    className="text-lg font-bold text-[#0a3d52] dark:text-white mb-1 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 transition-colors duration-200 tracking-tight"
                     style={{ fontFamily: "'Poppins', sans-serif" }}
                   >
                     {div.title}
                   </h3>
                   
-                  <p className="text-xs font-semibold text-[#0d4e68] dark:text-sky-300/90 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 mb-2.5 transition-colors">
+                  <p className={`text-xs font-semibold ${div.accentText} mb-2.5 transition-colors`}>
                     {div.subtitle}
                   </p>
                   
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal mb-4">
                     {div.desc}
                   </p>
+
+                  {/* Technical Metrics Strip */}
+                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 mb-2 bg-slate-50/70 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60">
+                    {div.metrics.map((m, mi) => (
+                      <div key={mi} className="flex flex-col">
+                        <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">{m.label}</span>
+                        <span className="text-xs font-extrabold font-mono text-slate-800 dark:text-slate-200">{m.val}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Footer Action */}
-                <div className="relative z-10 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-[#0a3d52] dark:group-hover:text-sky-400 transition-colors duration-200">
-                  <span>Explore Formulation</span>
-                  <ArrowForwardRoundedIcon sx={{ fontSize: 16 }} className="group-hover:translate-x-1.5 transition-transform duration-200" />
+                <div className="relative z-10 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 transition-colors duration-200">
+                  <span className="tracking-wide">Explore Formulation</span>
+                  <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-[#0a3d52] dark:group-hover:bg-sky-500 text-slate-600 dark:text-slate-300 group-hover:text-white flex items-center justify-center transition-all duration-200 shadow-xs">
+                    <ArrowForwardRoundedIcon sx={{ fontSize: 15 }} className="group-hover:translate-x-0.5 transition-transform duration-200" />
+                  </div>
                 </div>
               </div>
             );
@@ -784,8 +1096,9 @@ export const ShopPage = ({ addToCart }) => {
       
       {/* 4. Clean Catalog Page Header */}
       <div 
+        id="products-section"
         ref={catalogHeaderRef}
-        className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pt-6 pb-4 gap-5 border-b border-[#e0e6ed] dark:border-slate-800"
+        className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pt-6 pb-4 gap-5 border-b border-[#e0e6ed] dark:border-slate-800 scroll-mt-24"
       >
         {/* Left: Eyebrow + Heading + Description */}
         <div className="space-y-1.5 max-w-2xl">
@@ -848,7 +1161,7 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* 6. Products Grid (4 Col Desktop, 2 Col Tablet, 1 Col Mobile) */}
-      <div ref={productsGridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch">
+      <div ref={productsGridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch overflow-x-clip px-1 py-1">
         {loading ? (
           [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <ProductCardSkeleton key={i} />
@@ -865,13 +1178,17 @@ export const ShopPage = ({ addToCart }) => {
           </div>
         ) : (
           filteredProducts.map((product, idx) => (
-            <ProductCard
+            <div
               key={product._id || idx}
-              product={product}
-              index={idx}
-              onAddToCart={addToCart}
-              onOpenProduct={handleOpenProduct}
-            />
+              className="w-full flex"
+            >
+              <ProductCard
+                product={product}
+                index={idx}
+                onAddToCart={addToCart}
+                onOpenProduct={handleOpenProduct}
+              />
+            </div>
           ))
         )}
       </div>
@@ -1176,15 +1493,22 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* 9. 4-Stage Application Methodology */}
-      <div ref={methodologySectionRef} className="mt-20 sm:mt-28 overflow-hidden">
+      <div ref={methodologySectionRef} className="mt-20 sm:mt-28 relative overflow-x-clip">
+        {/* Subtle Ambient Radial Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] max-w-full h-[350px] bg-gradient-to-r from-emerald-500/8 via-[#0a3d52]/5 to-transparent blur-3xl pointer-events-none rounded-full" />
+
         {/* Header (Animates from TOP) */}
-        <div className="methodology-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
-          <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/20 shadow-xs">
+        <div className="methodology-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4 relative z-10">
+          <div className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#0a3d52]/10 via-emerald-500/10 to-[#0a3d52]/10 dark:from-emerald-400/15 dark:to-teal-400/10 text-[#0a3d52] dark:text-emerald-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-emerald-400/30 shadow-sm backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
             <FactCheckOutlinedIcon sx={{ fontSize: 16 }} />
             <span>Standard Operating Procedure</span>
           </div>
           <h3 
-            className="text-2xl sm:text-4xl lg:text-[38px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
+            className="text-2xl sm:text-4xl lg:text-[40px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
             style={{ fontFamily: "'Poppins', sans-serif" }}
           >
             4-Stage Certified Engineering Methodology
@@ -1194,8 +1518,23 @@ export const ShopPage = ({ addToCart }) => {
           </p>
         </div>
 
+        {/* Desktop Progress Sequence Track */}
+        <div className="hidden lg:grid grid-cols-4 gap-6 px-1 mb-4 pointer-events-none relative z-10">
+          {["01 Diagnostic", "02 Consolidation", "03 Formulation", "04 Certification"].map((phaseLabel, sIdx) => (
+            <div key={sIdx} className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-[10px] font-mono font-black shadow-xs">
+                {sIdx + 1}
+              </div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                {phaseLabel}
+              </span>
+              <div className="flex-1 h-0.5 bg-gradient-to-r from-emerald-400/50 via-emerald-400/20 to-transparent rounded-full" />
+            </div>
+          ))}
+        </div>
+
         {/* Cards Grid: 1 & 3 from Left, 2 & 4 from Right */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 px-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 px-1 relative z-10">
           {engineeringSteps.map((step, idx) => {
             const IconComponent = step.icon;
 
@@ -1205,56 +1544,78 @@ export const ShopPage = ({ addToCart }) => {
                 href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20am%20interested%20in%20learning%20more%20about%20Stage%20${step.step}%3A%20${encodeURIComponent(step.title)}.`}
                 target="_blank"
                 rel="noreferrer"
-                className="methodology-card-item opacity-0 group relative bg-white dark:bg-[#0c222e] rounded-3xl p-6 sm:p-7 border border-slate-200/85 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/15 dark:hover:shadow-black/70 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer"
+                className="methodology-card-item opacity-0 group relative bg-white/95 dark:bg-[#0c222e]/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_-4px_rgba(10,61,82,0.06)] hover:shadow-2xl hover:shadow-[#0a3d52]/15 dark:hover:shadow-black/70 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer"
               >
                 {/* Top Subtle Hover Sheen Line */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] dark:via-sky-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${step.accentGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm`} />
 
                 {/* Ambient Card Background Tint on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0a3d52]/5 dark:from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                 <div className="relative z-10">
-                  {/* Step Header: Big Number & Icon */}
-                  <div className="flex items-center justify-between mb-5">
-                    <span 
-                      className="text-4xl font-black text-[#0a3d52]/20 dark:text-sky-400/20 group-hover:text-[#0a3d52] dark:group-hover:text-sky-400 transition-colors duration-300 tracking-tight"
-                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                    >
-                      {step.step}
-                    </span>
+                  {/* Step Header: Big Gradient Number & Icon */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-baseline gap-2">
+                      <span 
+                        className="text-4xl sm:text-5xl font-black font-mono tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-[#0a3d52] to-sky-500 dark:from-white dark:to-sky-400 group-hover:scale-105 transition-transform duration-300"
+                      >
+                        {step.step}
+                      </span>
+                      <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500">
+                        {step.phase}
+                      </span>
+                    </div>
 
-                    <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-[#0a3d52] dark:text-sky-300 flex items-center justify-center group-hover:bg-gradient-to-br group-hover:from-[#0a3d52] group-hover:to-[#0d4e68] dark:group-hover:from-sky-600 dark:group-hover:to-sky-500 group-hover:text-white group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[#0a3d52]/25 dark:group-hover:shadow-sky-500/25 transition-all duration-300">
-                      <IconComponent sx={{ fontSize: 22 }} />
+                    <div className={`w-12 h-12 rounded-2xl ${step.accentBg} ${step.accentText} border ${step.accentBorder} flex items-center justify-center group-hover:scale-110 group-hover:shadow-lg transition-all duration-300 relative`}>
+                      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${step.accentGradient} opacity-0 group-hover:opacity-20 blur-md transition-opacity`} />
+                      <div className="relative z-10">
+                        <IconComponent />
+                      </div>
                     </div>
                   </div>
 
                   {/* Step Badge */}
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-md bg-sky-50 dark:bg-sky-950/40 text-[#0a3d52] dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/40 inline-block mb-3">
-                    {step.badge}
-                  </span>
+                  <div className="mb-3">
+                    <span className={`text-[10px] font-mono font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-md ${step.accentBg} ${step.accentText} border ${step.accentBorder} inline-block shadow-xs`}>
+                      {step.badge}
+                    </span>
+                  </div>
 
                   {/* Step Title */}
                   <h4 
-                    className="text-base sm:text-lg font-bold text-[#0a3d52] dark:text-white mb-2 group-hover:text-[#0a3d52] dark:group-hover:text-sky-400 transition-colors duration-200 tracking-tight"
+                    className="text-base sm:text-lg font-bold text-[#0a3d52] dark:text-white mb-1 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 transition-colors duration-200 tracking-tight"
                     style={{ fontFamily: "'Poppins', sans-serif" }}
                   >
                     {step.title}
                   </h4>
 
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                    {step.subtitle}
+                  </p>
+
                   {/* Step Description */}
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal mb-4">
                     {step.desc}
                   </p>
+
+                  {/* Technical Spec Box */}
+                  <div className="bg-slate-50/80 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80 mb-2 flex items-center justify-between text-[11px]">
+                    <span className="font-mono font-semibold text-slate-600 dark:text-slate-300 text-[10px] truncate max-w-[62%]">{step.spec}</span>
+                    <span className="text-[9px] font-bold uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/50 dark:border-emerald-800/40 shrink-0">{step.qcGate}</span>
+                  </div>
                 </div>
 
                 {/* Card Footer: Verified Badge */}
-                <div className="relative z-10 mt-6 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <div className="relative z-10 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400">
-                    <CheckCircleRoundedIcon sx={{ fontSize: 14 }} />
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
                     <span>Quality Verified</span>
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                    ISO Standard
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded">
+                    {step.iso}
                   </span>
                 </div>
               </a>

@@ -74,7 +74,7 @@ export const enterpriseMetrics = [
   },
 ];
 
-export const EnterpriseMetricsBar = ({ className = "my-10 sm:my-14" }) => {
+export const EnterpriseMetricsBar = ({ className = "my-6 sm:my-8" }) => {
   return (
     <div className={`${className} bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] rounded-3xl py-6 sm:py-7 text-white shadow-xl shadow-[#0a3d52]/15 border border-[#1b556e]/50 relative overflow-hidden group select-none`}>
       
