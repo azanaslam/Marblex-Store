@@ -18,7 +18,7 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   const blexLetters = ["B", "L", "E", "X"];
 
   const handleFinish = useCallback(() => {
-    // Broadcast event so Navbar, Hero Banner & Landing Page initiate their entrance immediately
+    // Broadcast event so Navbar, Hero Banner & Landing Page initiate their entrance seamlessly
     window.dispatchEvent(new CustomEvent("marblex:intro_reveal"));
     onComplete?.();
 
@@ -35,11 +35,13 @@ export const BrandSplashPreloader = ({ onComplete }) => {
       });
 
       if (logoWrapperRef.current) {
-        tl.to(logoWrapperRef.current, {
-          scale: 1.05,
+        tl.to([logoWrapperRef.current, subtitleRef.current, badgeRef.current, accentLineRef.current], {
+          scale: 1.03,
           opacity: 0,
-          filter: "blur(10px)",
-          duration: 0.35,
+          y: -10,
+          filter: "blur(6px)",
+          duration: 0.45,
+          stagger: 0.02,
           ease: "power2.inOut",
         });
       }
@@ -49,10 +51,11 @@ export const BrandSplashPreloader = ({ onComplete }) => {
           curtainRef.current,
           {
             opacity: 0,
-            duration: 0.45,
+            scale: 1.01,
+            duration: 0.55,
             ease: "power2.inOut",
           },
-          "-=0.2"
+          "-=0.3"
         );
       }
     } catch {
@@ -61,56 +64,73 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   }, [onComplete]);
 
   useEffect(() => {
-    // Safety fallback: auto-dismiss quickly so page is never blocked
+    // Safety fallback: auto-dismiss after sufficient duration
     const safetyTimer = setTimeout(() => {
       handleFinish();
-    }, 1200);
+    }, 3600);
 
     const ctx = gsap.context(() => {
       try {
-        const tl = gsap.timeline({
-          onComplete: () => {
-            gsap.delayedCall(0.2, handleFinish);
-          },
-        });
-
         const activeMarLetters = marLettersRef.current.filter(Boolean);
         const activeBlexLetters = blexLettersRef.current.filter(Boolean);
         const allLetters = [...activeMarLetters, ...activeBlexLetters];
 
-        // --- 1. Initial State ---
-        if (logoWrapperRef.current) gsap.set(logoWrapperRef.current, { scale: 0.7, opacity: 0, y: 20 });
-        if (glowRingRef.current) gsap.set(glowRingRef.current, { scale: 0.5, opacity: 0 });
-        if (shineSweepRef.current) gsap.set(shineSweepRef.current, { xPercent: -150 });
-        if (allLetters.length) gsap.set(allLetters, { opacity: 0, y: 20, filter: "blur(4px)" });
+        // --- 1. Initial State (Clean Crisp Reset) ---
+        if (logoWrapperRef.current) gsap.set(logoWrapperRef.current, { scale: 0.82, opacity: 0, y: 16 });
+        if (glowRingRef.current) gsap.set(glowRingRef.current, { scale: 0.6, opacity: 0 });
+        if (shineSweepRef.current) gsap.set(shineSweepRef.current, { xPercent: -160 });
+        if (allLetters.length) gsap.set(allLetters, { opacity: 0, y: 14, filter: "blur(6px)" });
         if (accentLineRef.current) gsap.set(accentLineRef.current, { scaleX: 0, transformOrigin: "center center" });
-        if (subtitleRef.current) gsap.set(subtitleRef.current, { opacity: 0, y: 8 });
-        if (badgeRef.current) gsap.set(badgeRef.current, { opacity: 0, scale: 0.85 });
+        if (subtitleRef.current) gsap.set(subtitleRef.current, { opacity: 0, y: 8, filter: "blur(3px)" });
+        if (badgeRef.current) gsap.set(badgeRef.current, { opacity: 0, scale: 0.9, y: 6 });
 
-        // --- 2. Smooth Motion Sequence ---
+        // --- 2. Smooth Master Timeline ---
+        const tl = gsap.timeline({
+          defaults: { ease: "power3.out" },
+          onComplete: () => {
+            // "kuch mili seconds roko" -> Deliberate pause (750ms) to admire full brand presentation before transitioning
+            gsap.delayedCall(0.75, handleFinish);
+          },
+        });
+
+        // Ambient radial glow expansion
         if (glowRingRef.current) {
-          tl.to(glowRingRef.current, { scale: 1.2, opacity: 0.7, duration: 0.45, ease: "power2.out" });
+          tl.to(glowRingRef.current, { scale: 1.25, opacity: 0.85, duration: 0.75, ease: "power2.out" }, 0);
         }
+
+        // Emblem card smooth elevation
         if (logoWrapperRef.current) {
-          tl.to(logoWrapperRef.current, { scale: 1, opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, "-=0.3");
+          tl.to(logoWrapperRef.current, { scale: 1, opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.05);
         }
+
+        // Emblem glass shine reflection
         if (shineSweepRef.current) {
-          tl.to(shineSweepRef.current, { xPercent: 200, duration: 0.45, ease: "power2.inOut" }, "-=0.15");
+          tl.to(shineSweepRef.current, { xPercent: 220, duration: 0.65, ease: "power2.inOut" }, 0.25);
         }
+
+        // MAR Letters Smooth Cascade
         if (activeMarLetters.length) {
-          tl.to(activeMarLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, stagger: 0.03, ease: "power3.out" }, "-=0.2");
+          tl.to(activeMarLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.45, stagger: 0.04 }, 0.3);
         }
+
+        // BLEX Letters Smooth Cascade
         if (activeBlexLetters.length) {
-          tl.to(activeBlexLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, stagger: 0.03, ease: "power3.out" }, "-=0.2");
+          tl.to(activeBlexLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.45, stagger: 0.04 }, 0.42);
         }
+
+        // Gradient line expansion
         if (accentLineRef.current) {
-          tl.to(accentLineRef.current, { scaleX: 1, duration: 0.35, ease: "power2.out" }, "-=0.15");
+          tl.to(accentLineRef.current, { scaleX: 1, duration: 0.5, ease: "power2.out" }, 0.55);
         }
+
+        // Subtitle text reveal
         if (subtitleRef.current) {
-          tl.to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, "-=0.15");
+          tl.to(subtitleRef.current, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.45, ease: "power2.out" }, 0.65);
         }
+
+        // Certified badge pop
         if (badgeRef.current) {
-          tl.to(badgeRef.current, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.4)" }, "-=0.15");
+          tl.to(badgeRef.current, { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "back.out(1.5)" }, 0.75);
         }
       } catch {
         handleFinish();

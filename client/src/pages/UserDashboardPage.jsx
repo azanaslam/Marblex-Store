@@ -474,28 +474,38 @@ export const UserDashboardPage = () => {
                         <ShoppingCartCheckoutRoundedIcon className="text-slate-400" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-black text-slate-900 text-lg uppercase tracking-tight">Order #{String(order._id || "").slice(-6).toUpperCase()}</h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-black text-slate-900 text-base sm:text-lg uppercase tracking-tight">
+                            {order.orderNumber || `Order #${String(order._id || "").slice(-6).toUpperCase()}`}
+                          </h3>
                           <button 
-                            onClick={() => copyOrderId(order._id)}
+                            onClick={() => copyOrderId(order.orderNumber || order._id)}
                             className="p-1 text-slate-400 hover:text-slate-900 transition-colors"
-                            title="Copy Order ID"
+                            title="Copy Order Reference"
                           >
                             <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
                           </button>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 uppercase">
+                            {order.paymentMethod ? String(order.paymentMethod).replace("_", " ") : "COD"}
+                          </span>
                         </div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                           {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-xs ${
                         order.paymentStatus === 'paid' 
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                        : order.paymentStatus === 'pending_verification'
+                        ? 'bg-blue-50 text-blue-600 border-blue-100'
                         : 'bg-amber-50 text-amber-600 border-amber-100'
                       }`}>
-                        {order.paymentStatus}
+                        {order.paymentStatus ? String(order.paymentStatus).replace("_", " ") : "Pending"}
+                      </span>
+                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-200">
+                        {order.orderStatus || "Pending"}
                       </span>
                     </div>
                   </div>

@@ -660,6 +660,139 @@ const sendContactReplyEmail = async (toEmail, userName, question, reply) => {
   });
 };
 
+/**
+ * 6. Order Confirmation Email to Customer
+ */
+const sendOrderConfirmationEmail = async (order) => {
+  try {
+    const config = await getEmailConfig();
+    const requestedAt =
+      new Date().toLocaleString("en-US", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }) +
+      " (PKT)";
+
+    const itemsHtml = (order.items || [])
+      .map(
+        (item) => `
+        <tr>
+          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0b2f3c;font-weight:600;">${item.name}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#5a6b79;text-align:center;">x${item.quantity}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0b2f3c;font-weight:700;text-align:right;">PKR ${(item.price * item.quantity).toLocaleString()}</td>
+        </tr>
+      `
+      )
+      .join("");
+
+    const centerContent = `
+      <tr><td class="pad" style="padding:28px 40px 0;">
+        <div style="display:inline-block;background:#ecfdf5;color:#047857;font-size:11px;font-weight:700;letter-spacing:1px;padding:6px 14px;border-radius:999px;margin-bottom:12px;">ORDER CONFIRMATION</div>
+        <h1 style="margin:0 0 10px 0;font-size:24px;line-height:1.3;color:#0b2f3c;font-weight:800;">Thank You For Your Order!</h1>
+        <p style="margin:0 0 18px 0;font-size:14px;line-height:1.6;color:#5a6b79;">
+          Hello <strong style="color:#0b2f3c;">${order.customerName}</strong>, we have received your order 
+          <strong style="color:#ff6b47;">#${order.orderNumber || String(order._id).slice(-6).toUpperCase()}</strong>.
+        </p>
+
+        <!-- Order Summary Box -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:12px;color:#64748b;">
+            <span><strong>Date:</strong> ${requestedAt}</span>
+            <span><strong>Payment Method:</strong> ${String(order.paymentMethod || "COD").toUpperCase()}</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f1f5f9;text-align:left;font-size:11px;text-transform:uppercase;color:#475569;">
+                <th style="padding:8px 12px;border-radius:6px 0 0 6px;">Product</th>
+                <th style="padding:8px 12px;text-align:center;">Qty</th>
+                <th style="padding:8px 12px;text-align:right;border-radius:0 6px 6px 0;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          <div style="text-align:right;margin-top:14px;padding-top:10px;border-top:1px dashed #cbd5e1;font-size:16px;font-weight:800;color:#0b2f3c;">
+            Subtotal: <span style="color:#ff6b47;">PKR ${(order.subtotal || 0).toLocaleString()}</span>
+          </div>
+        </div>
+
+        <!-- Delivery info -->
+        <div style="background:#f0fdf4;border-left:4px solid #10b981;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#166534;">
+          <strong>Delivery & Logistics:</strong> Our logistics engineering team will contact you on <strong>${order.phone}</strong> to confirm site dispatch and delivery details.
+        </div>
+
+        <p style="margin:0 0 24px 0;font-size:13px;line-height:1.6;color:#64748b;">
+          If you have questions about this order, please reply to this email or reach us on WhatsApp at <strong>+92 348 1116611</strong>.
+        </p>
+      </td></tr>
+    `;
+
+    const html = buildMasterShell({
+      title: `MARBLEX Order Confirmation: #${order.orderNumber || String(order._id).slice(-6).toUpperCase()}`,
+      preheader: `We've received your MARBLEX order for PKR ${(order.subtotal || 0).toLocaleString()}`,
+      centerContent,
+      senderEmail: config.senderEmail,
+    });
+
+    return await sendEmail({
+      to: order.email,
+      subject: `MARBLEX Order Confirmation: #${order.orderNumber || String(order._id).slice(-6).toUpperCase()}`,
+      html,
+      text: `Thank you for your order ${order.orderNumber || order._id}. Total: PKR ${order.subtotal}. We will contact you at ${order.phone} to confirm delivery.`,
+    });
+  } catch (err) {
+    console.error("Failed to send customer order confirmation email:", err.message);
+    return null;
+  }
+};
+
+/**
+ * 7. Admin Order Notification Email
+ */
+const sendAdminOrderNotificationEmail = async (order) => {
+  try {
+    const config = await getEmailConfig();
+    const adminEmail = env.adminEmail || "Marblexpak@gmail.com";
+
+    const centerContent = `
+      <tr><td class="pad" style="padding:28px 40px 0;">
+        <div style="display:inline-block;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;letter-spacing:1px;padding:6px 14px;border-radius:999px;margin-bottom:12px;">NEW ORDER NOTIFICATION</div>
+        <h1 style="margin:0 0 10px 0;font-size:22px;line-height:1.3;color:#0b2f3c;font-weight:800;">New Store Order Received</h1>
+        <p style="margin:0 0 14px 0;font-size:13px;line-height:1.6;color:#5a6b79;">
+          A new order <strong>#${order.orderNumber || String(order._id).slice(-6).toUpperCase()}</strong> has been submitted.
+        </p>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;">
+          <p style="margin:0 0 6px 0;"><strong>Customer:</strong> ${order.customerName}</p>
+          <p style="margin:0 0 6px 0;"><strong>Phone:</strong> ${order.phone}</p>
+          <p style="margin:0 0 6px 0;"><strong>Email:</strong> ${order.email}</p>
+          <p style="margin:0 0 6px 0;"><strong>City:</strong> ${order.city || "Not specified"}</p>
+          <p style="margin:0 0 6px 0;"><strong>Address:</strong> ${order.address || "Not specified"}</p>
+          <p style="margin:0 0 6px 0;"><strong>Payment Method:</strong> ${String(order.paymentMethod || "COD").toUpperCase()}</p>
+          <p style="margin:0 0 6px 0;"><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+          ${order.transactionReference ? `<p style="margin:0 0 6px 0;color:#0284c7;"><strong>Transaction Ref / TID:</strong> ${order.transactionReference}</p>` : ""}
+          <p style="margin:8px 0 0 0;font-size:15px;font-weight:bold;color:#ff6b47;"><strong>Total:</strong> PKR ${(order.subtotal || 0).toLocaleString()}</p>
+        </div>
+      </td></tr>
+    `;
+
+    const html = buildMasterShell({
+      title: `New Order Alert: #${order.orderNumber || String(order._id).slice(-6).toUpperCase()}`,
+      preheader: `New order from ${order.customerName} - PKR ${(order.subtotal || 0).toLocaleString()}`,
+      centerContent,
+      senderEmail: config.senderEmail,
+    });
+
+    return await sendEmail({
+      to: adminEmail,
+      subject: `🚨 New Order Alert: #${order.orderNumber || String(order._id).slice(-6).toUpperCase()} (${order.customerName})`,
+      html,
+      text: `New order #${order.orderNumber || order._id} received from ${order.customerName} (${order.phone}) for PKR ${order.subtotal}.`,
+    });
+  } catch (err) {
+    console.error("Failed to send admin order notification email:", err.message);
+    return null;
+  }
+};
+
 module.exports = {
   sendEmail,
   send2FACodeEmail,
@@ -667,9 +800,12 @@ module.exports = {
   sendLoginAlertEmail,
   sendPasswordResetEmail,
   sendContactReplyEmail,
+  sendOrderConfirmationEmail,
+  sendAdminOrderNotificationEmail,
   otpEmailTemplate,
   welcomeEmailTemplate,
   loginAlertEmailTemplate,
   passwordResetEmailTemplate,
   contactReplyEmailTemplate,
 };
+

@@ -1,111 +1,366 @@
 const Order = require("../models/Order");
+const Product = require("../models/Product");
 const mongoose = require("mongoose");
 const Stripe = require("stripe");
-const { whatsappNumber, stripeSecretKey, frontendUrl } = require("../config/env");
+const { whatsappNumber, stripeSecretKey, stripeWebhookSecret, stripeCurrency, frontendUrl, cloudinaryCloudName, cloudinaryApiKey, cloudinaryApiSecret } = require("../config/env");
+const paymentConfig = require("../config/paymentConfig");
+const { sendOrderConfirmationEmail, sendAdminOrderNotificationEmail } = require("../utils/sendEmail");
+const cloudinary = require("cloudinary").v2;
+
+if (cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret) {
+  cloudinary.config({
+    cloud_name: cloudinaryCloudName,
+    api_key: cloudinaryApiKey,
+    api_secret: cloudinaryApiSecret,
+  });
+}
 
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 
-const createOrder = async (req, res) => {
-  const { customerName, email, phone, notes, channel, items } = req.body;
-  if (channel === "website" && !req.user) {
-    return res.status(401).json({ message: "Please login first to continue website payment" });
-  }
-  if (channel === "website" && req.user?.role !== "user") {
-    return res.status(403).json({ message: "Only user account can place website order" });
-  }
-  if (!items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ message: "Cart items are required" });
-  }
+// Validate Pakistani Phone Numbers (+923XXXXXXXXX, 03XXXXXXXXX, 923XXXXXXXXX, 03XX-XXXXXXX)
+const validatePkPhone = (phone) => {
+  if (!phone || typeof phone !== "string") return false;
+  const clean = phone.replace(/[\s\-_()]/g, "");
+  return /^((\+92)|(0092)|(92)|(0))?3[0-9]{9}$/.test(clean);
+};
 
-  const normalizedItems = items
-    .map((item) => {
-      const quantity = Number(item.quantity);
-      const price = Number(item.price);
-      return {
-        productId: mongoose.Types.ObjectId.isValid(item.productId) ? item.productId : undefined,
-        name: item.name,
-        imageUrl: item.imageUrl || "",
-        price: Number.isFinite(price) && price >= 0 ? price : 0,
-        quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
-      };
-    })
-    .filter((item) => item.name && item.quantity > 0);
+// Generate high-readability unique order number
+const generateOrderNumber = () => {
+  const year = new Date().getFullYear();
+  const rand = Math.floor(100000 + Math.random() * 900000);
+  return `ORD-${year}-${rand}`;
+};
 
-  const subtotal = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const order = await Order.create({
-    userId: req.user?.id,
-    customerName,
-    email: req.user?.email || email,
-    phone,
-    notes: notes || "",
-    channel,
-    items: normalizedItems,
-    subtotal,
-    paymentStatus: channel === "website" ? "pending" : "paid",
+const getPaymentConfig = async (req, res) => {
+  return res.json({
+    success: true,
+    config: paymentConfig,
   });
+};
 
-  if (channel === "website") {
-    if (!stripe) {
-      return res.status(500).json({ message: "Stripe is not configured on server" });
+const uploadPaymentProof = async (req, res) => {
+  try {
+    const { imageBase64 } = req.body;
+    if (!imageBase64) {
+      return res.status(400).json({ message: "No image file provided" });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: email,
-      success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}/payment/cancel?order_id=${order._id}`,
-      metadata: { orderId: String(order._id) },
-      line_items: normalizedItems.map((item) => ({
-        price_data: {
-          currency: "pkr",
-          product_data: { name: item.name },
-          unit_amount: Math.round(item.price * 100),
-        },
-        quantity: item.quantity,
-      })),
+    if (cloudinaryCloudName && cloudinaryApiKey) {
+      const uploadRes = await cloudinary.uploader.upload(imageBase64, {
+        folder: "marblex_payment_proofs",
+        resource_type: "image",
+        transformation: [{ quality: "auto", fetch_format: "auto" }],
+      });
+      return res.json({ success: true, url: uploadRes.secure_url });
+    }
+
+    // Fallback: return base64 / data URL directly
+    return res.json({ success: true, url: imageBase64 });
+  } catch (error) {
+    console.error("Payment proof upload error:", error);
+    return res.status(500).json({ message: "Failed to upload payment proof. Please try again." });
+  }
+};
+
+const createOrder = async (req, res) => {
+  try {
+    const {
+      customerName,
+      email,
+      phone,
+      city,
+      address,
+      areaSize,
+      deliveryDate,
+      notes,
+      channel,
+      items,
+      paymentMethod = "cod",
+      transactionReference = "",
+      paymentScreenshotUrl = "",
+    } = req.body;
+
+    const orderChannel = channel === "whatsapp" ? "whatsapp" : "website";
+
+    // 1. Validation (Form Data)
+    if (!customerName || typeof customerName !== "string" || customerName.trim().length < 2) {
+      return res.status(400).json({ message: "Full name is required (minimum 2 characters)" });
+    }
+
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!email || !emailRegex.test(String(email).trim())) {
+      return res.status(400).json({ message: "Valid email address is required" });
+    }
+
+    if (!phone || !validatePkPhone(phone)) {
+      return res.status(400).json({ message: "Valid Pakistani phone number is required (e.g. 0348 1116611 or +923481116611)" });
+    }
+
+    if (orderChannel === "website") {
+      if (!city || typeof city !== "string" || city.trim().length < 2) {
+        return res.status(400).json({ message: "City is required" });
+      }
+      if (!address || typeof address !== "string" || address.trim().length < 4) {
+        return res.status(400).json({ message: "Full delivery site address is required" });
+      }
+    }
+
+    // 2. Validate Cart Items
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: "Cart items are required to place an order" });
+    }
+
+    // 3. Server-Side Price & Product Recalculation (Never trust prices sent from client!)
+    const productIds = items
+      .map((i) => i.productId || i._id)
+      .filter((id) => mongoose.Types.ObjectId.isValid(id));
+
+    const dbProducts = await Product.find({ _id: { $in: productIds } }).lean();
+    const dbProductMap = new Map(dbProducts.map((p) => [String(p._id), p]));
+
+    const normalizedItems = [];
+    for (const item of items) {
+      const pId = String(item.productId || item._id || "");
+      const dbProd = dbProductMap.get(pId);
+
+      const quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
+      // Use database price if product exists; fallback to item.price only if legacy product
+      const unitPrice = dbProd ? Number(dbProd.price) : Number(item.price) || 0;
+      const itemName = dbProd ? dbProd.name : String(item.name || "Product").trim();
+      const itemImage = dbProd?.imageUrl || item.imageUrl || "";
+
+      normalizedItems.push({
+        productId: dbProd ? dbProd._id : undefined,
+        name: itemName,
+        imageUrl: itemImage,
+        price: unitPrice >= 0 ? unitPrice : 0,
+        quantity,
+      });
+    }
+
+    if (normalizedItems.length === 0) {
+      return res.status(400).json({ message: "No valid products found in order" });
+    }
+
+    const subtotal = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    // 4. Validate Payment Method
+    const validMethods = ["cod", "stripe", "easypaisa", "jazzcash", "bank_transfer"];
+    const chosenMethod = validMethods.includes(paymentMethod) ? paymentMethod : "cod";
+
+    if (orderChannel === "website" && ["easypaisa", "jazzcash", "bank_transfer"].includes(chosenMethod)) {
+      if (!transactionReference || String(transactionReference).trim().length < 3) {
+        return res.status(400).json({ message: "Transaction ID / Reference Number is required for manual online payments." });
+      }
+    }
+
+    // 5. Build Order Document
+    const orderNumber = generateOrderNumber();
+    const isGuest = !req.user;
+    const finalUserId = req.user?.id || null;
+    const finalEmail = String(email).trim().toLowerCase();
+    const guestEmail = isGuest ? finalEmail : "";
+
+    let initialPaymentStatus = "pending";
+    if (chosenMethod === "cod") {
+      initialPaymentStatus = "unpaid";
+    } else if (["easypaisa", "jazzcash", "bank_transfer"].includes(chosenMethod)) {
+      initialPaymentStatus = "pending_verification";
+    } else if (chosenMethod === "stripe") {
+      initialPaymentStatus = "unpaid";
+    }
+
+    const order = await Order.create({
+      orderNumber,
+      userId: finalUserId,
+      guestEmail,
+      customerName: customerName.trim(),
+      email: finalEmail,
+      phone: phone.trim(),
+      city: String(city || "").trim(),
+      address: String(address || "").trim(),
+      areaSize: String(areaSize || "").trim(),
+      deliveryDate: String(deliveryDate || "").trim(),
+      notes: String(notes || "").trim(),
+      channel: orderChannel,
+      orderSource: orderChannel,
+      items: normalizedItems,
+      subtotal,
+      paymentMethod: chosenMethod,
+      paymentStatus: initialPaymentStatus,
+      orderStatus: "pending",
+      transactionReference: String(transactionReference || "").trim(),
+      paymentScreenshotUrl: String(paymentScreenshotUrl || "").trim(),
     });
 
-    order.stripeSessionId = session.id;
-    await order.save();
+    // 6. Channel & Payment Specific Execution
+    if (orderChannel === "whatsapp") {
+      // Send background emails
+      sendOrderConfirmationEmail(order).catch(() => {});
+      sendAdminOrderNotificationEmail(order).catch(() => {});
+
+      return res.status(201).json({
+        success: true,
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        subtotal,
+        whatsappNumber,
+      });
+    }
+
+    // Website Order - Stripe Flow
+    if (chosenMethod === "stripe") {
+      if (!stripe) {
+        return res.status(500).json({
+          message: "Stripe payment gateway is currently not configured on server. Please choose Cash on Delivery, Easypaisa, or JazzCash.",
+        });
+      }
+
+      try {
+        const allowedFrontend = String(frontendUrl || "http://localhost:5173").split(",")[0].trim();
+        const lineItems = normalizedItems.map((item) => ({
+          price_data: {
+            currency: stripeCurrency || "pkr",
+            product_data: {
+              name: item.name,
+              images: item.imageUrl ? [item.imageUrl] : undefined,
+            },
+            unit_amount: Math.round(item.price * 100),
+          },
+          quantity: item.quantity,
+        }));
+
+        const session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          customer_email: finalEmail,
+          client_reference_id: String(order._id),
+          metadata: {
+            orderId: String(order._id),
+            orderNumber: order.orderNumber,
+          },
+          success_url: `${allowedFrontend}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${allowedFrontend}/payment/cancel?order_id=${order._id}`,
+          line_items: lineItems,
+        });
+
+        order.stripeSessionId = session.id;
+        await order.save();
+
+        return res.status(201).json({
+          success: true,
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          subtotal,
+          checkoutUrl: session.url,
+        });
+      } catch (stripeErr) {
+        console.error("Stripe Session Creation Error:", stripeErr);
+        return res.status(500).json({
+          message: `Stripe Checkout Error: ${stripeErr.message || "Failed to initialize payment gateway"}. Please try manual online payment or Cash on Delivery.`,
+        });
+      }
+    }
+
+    // Website Order - COD & Manual Payments (Easypaisa, JazzCash, Bank Transfer)
+    sendOrderConfirmationEmail(order).catch(() => {});
+    sendAdminOrderNotificationEmail(order).catch(() => {});
 
     return res.status(201).json({
+      success: true,
       orderId: order._id,
+      orderNumber: order.orderNumber,
       subtotal,
-      checkoutUrl: session.url,
+      paymentMethod: chosenMethod,
+      paymentStatus: order.paymentStatus,
+      customerName: order.customerName,
+      email: order.email,
     });
+  } catch (error) {
+    console.error("Create order error:", error);
+    return res.status(500).json({ message: error.message || "Internal server error while creating order" });
   }
-
-  return res.status(201).json({ orderId: order._id, subtotal, whatsappNumber });
 };
 
 const verifyStripeSession = async (req, res) => {
-  const { sessionId } = req.params;
-  if (!stripe) return res.status(500).json({ message: "Stripe is not configured on server" });
+  try {
+    const { sessionId } = req.params;
+    if (!stripe) return res.status(500).json({ message: "Stripe is not configured on server" });
 
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
-  if (!session) return res.status(404).json({ message: "Session not found" });
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!session) return res.status(404).json({ message: "Stripe session not found" });
 
-  const orderId = session.metadata?.orderId;
-  const order = await Order.findById(orderId);
-  if (!order) return res.status(404).json({ message: "Order not found" });
+    const orderId = session.metadata?.orderId || session.client_reference_id;
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ message: "Associated order not found" });
 
-  if (session.payment_status === "paid") {
-    order.paymentStatus = "paid";
-    order.stripePaymentIntentId = String(session.payment_intent || "");
-    await order.save();
+    if (session.payment_status === "paid") {
+      order.paymentStatus = "paid";
+      order.stripePaymentIntentId = String(session.payment_intent || "");
+      await order.save();
+
+      // Dispatch confirmation email once paid
+      sendOrderConfirmationEmail(order).catch(() => {});
+      sendAdminOrderNotificationEmail(order).catch(() => {});
+    }
+
+    return res.json({
+      success: true,
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      paymentStatus: order.paymentStatus,
+      customerName: order.customerName,
+      email: order.email,
+      subtotal: order.subtotal,
+    });
+  } catch (error) {
+    console.error("Verify Stripe Session Error:", error);
+    return res.status(500).json({ message: error.message || "Failed to verify Stripe payment" });
+  }
+};
+
+const stripeWebhook = async (req, res) => {
+  if (!stripe) return res.status(500).json({ message: "Stripe not initialized" });
+
+  const sig = req.headers["stripe-signature"];
+  let event;
+
+  try {
+    if (stripeWebhookSecret && sig) {
+      event = stripe.webhooks.constructEvent(req.body, sig, stripeWebhookSecret);
+    } else {
+      event = req.body;
+    }
+  } catch (err) {
+    console.error("Stripe Webhook Signature Verification Failed:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  return res.json({
-    orderId: order._id,
-    paymentStatus: order.paymentStatus,
-    customerName: order.customerName,
-    email: order.email,
-  });
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const orderId = session.metadata?.orderId || session.client_reference_id;
+    if (orderId) {
+      const order = await Order.findById(orderId);
+      if (order && order.paymentStatus !== "paid") {
+        order.paymentStatus = "paid";
+        order.stripePaymentIntentId = String(session.payment_intent || "");
+        await order.save();
+
+        sendOrderConfirmationEmail(order).catch(() => {});
+        sendAdminOrderNotificationEmail(order).catch(() => {});
+      }
+    }
+  }
+
+  res.json({ received: true });
 };
 
 const getMyOrders = async (req, res) => {
-  const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
-  res.json(orders);
+  try {
+    const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 const updateOrderStatus = async (req, res) => {
@@ -130,4 +385,13 @@ const updatePaymentStatus = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, verifyStripeSession, getMyOrders, updateOrderStatus, updatePaymentStatus };
+module.exports = {
+  getPaymentConfig,
+  uploadPaymentProof,
+  createOrder,
+  verifyStripeSession,
+  stripeWebhook,
+  getMyOrders,
+  updateOrderStatus,
+  updatePaymentStatus,
+};

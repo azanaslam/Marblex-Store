@@ -44,14 +44,44 @@ export const AboutPage = () => {
   ];
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    if (containerRef.current) {
-      gsap.fromTo(
-        containerRef.current.querySelectorAll(".anim-reveal"),
-        { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: "power2.out" }
+    window.scrollTo({ top: 0, behavior: "instant" });
+    if (!containerRef.current) return;
+
+    const sections = containerRef.current.querySelectorAll(".scroll-section");
+    const observers = [];
+
+    sections.forEach((section) => {
+      // Set initial state for smooth scroll entrance
+      gsap.set(section, { opacity: 0, y: 28 });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              gsap.to(entry.target, {
+                opacity: 1,
+                y: 0,
+                duration: 0.7,
+                ease: "power2.out",
+                clearProps: "opacity,transform",
+              });
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          threshold: 0.06,
+          rootMargin: "0px 0px -25px 0px",
+        }
       );
-    }
+
+      observer.observe(section);
+      observers.push(observer);
+    });
+
+    return () => {
+      observers.forEach((obs) => obs.disconnect());
+    };
   }, []);
 
   const handleChange = (e) => {
@@ -178,7 +208,7 @@ export const AboutPage = () => {
       <EnterpriseMetricsBar className="my-8 sm:my-12" />
 
       {/* ==================== 3. Company Heritage & Structural Chemistry ==================== */}
-      <section className="anim-reveal relative overflow-hidden bg-white dark:bg-[#0c222e] p-6 sm:p-10 lg:p-12 rounded-[28px] sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_25px_-5px_rgba(10,61,82,0.07)] dark:shadow-2xl dark:shadow-black/50 transition-all duration-300">
+      <section className="scroll-section relative overflow-hidden bg-white dark:bg-[#0c222e] p-6 sm:p-10 lg:p-12 rounded-[28px] sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_25px_-5px_rgba(10,61,82,0.07)] dark:shadow-2xl dark:shadow-black/50 transition-all duration-300">
         
         {/* Ambient Subtle Glow Accents */}
         <div className="absolute top-0 right-1/3 w-[500px] h-[500px] bg-sky-400/[0.04] dark:bg-sky-500/[0.06] rounded-full blur-[120px] pointer-events-none" />
@@ -354,7 +384,7 @@ export const AboutPage = () => {
       </section>
 
       {/* ==================== 4. Strategic Milestones & Evolution Timeline ==================== */}
-      <section className="anim-reveal space-y-8 sm:space-y-10">
+      <section className="scroll-section space-y-8 sm:space-y-10">
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto space-y-3 px-2">
@@ -418,7 +448,7 @@ export const AboutPage = () => {
       </section>
 
       {/* ==================== 5. Core Engineering Capabilities (4 Pillars Grid) ==================== */}
-      <section className="anim-reveal space-y-8 sm:space-y-10">
+      <section className="scroll-section space-y-8 sm:space-y-10">
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto space-y-3 px-2">
@@ -478,7 +508,7 @@ export const AboutPage = () => {
       </section>
 
       {/* ==================== 6. Advanced Testing & QC Laboratory ==================== */}
-      <section className="anim-reveal bg-gradient-to-br from-[#0a3d52]/5 via-white to-slate-50 dark:from-[#091b24] dark:via-[#0c222e] dark:to-[#08161e] p-6 sm:p-10 lg:p-12 rounded-[28px] sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-lg space-y-8">
+      <section className="scroll-section bg-gradient-to-br from-[#0a3d52]/5 via-white to-slate-50 dark:from-[#091b24] dark:via-[#0c222e] dark:to-[#08161e] p-6 sm:p-10 lg:p-12 rounded-[28px] sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-lg space-y-8">
         
         {/* Header with Direct TDS CTA */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 border-b border-slate-200/80 dark:border-slate-800/80 pb-6">
@@ -537,7 +567,7 @@ export const AboutPage = () => {
       </section>
 
       {/* ==================== 7. Contact & Technical Project Consultation Form ==================== */}
-      <section className="anim-reveal bg-white dark:bg-[#0c222e] p-6 sm:p-10 lg:p-12 rounded-[28px] sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl">
+      <section className="scroll-section bg-white dark:bg-[#0c222e] p-6 sm:p-10 lg:p-12 rounded-[28px] sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
           {/* Left Column: Office & Direct Engineering Hotline */}
@@ -692,7 +722,7 @@ export const AboutPage = () => {
       </section>
 
       {/* ==================== 8. Contractor & Engineering FAQ Accordion ==================== */}
-      <section className="anim-reveal space-y-6 sm:space-y-8">
+      <section className="scroll-section space-y-6 sm:space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2.5 px-2">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 text-xs font-bold uppercase tracking-wider border border-[#0a3d52]/15 dark:border-sky-400/20 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

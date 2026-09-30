@@ -447,94 +447,158 @@ export const AdminPage = () => {
     { title: "Security & System", items: [3, 11] },
   ];
 
-  const render3DOrderCard = (order) => (
-    <TiltCard3D
-      key={order._id}
-      maxTilt={3}
-      scale={1.01}
-      className="group rounded-2xl bg-white border border-[#e0e6ed] p-5 shadow-sm transition-all duration-300 hover:border-[#ff8c73] hover:shadow-md"
-    >
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b border-[#e0e6ed]/60">
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-xl bg-[#0a3d52]/5 border border-[#0a3d52]/10 flex items-center justify-center font-mono font-bold text-[#0a3d52]">
-            #{String(order._id).slice(-4).toUpperCase()}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h4 className="text-base font-bold text-[#0a3d52] font-heading">{order.customerName}</h4>
-              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#f5f7fa] text-[#565e69] border border-[#e0e6ed]">
-                {order.channel}
-              </span>
+  const render3DOrderCard = (order) => {
+    const displayNum = order.orderNumber || `#${String(order._id).slice(-6).toUpperCase()}`;
+    const isManual = ["easypaisa", "jazzcash", "bank_transfer"].includes(order.paymentMethod);
+
+    return (
+      <TiltCard3D
+        key={order._id}
+        maxTilt={3}
+        scale={1.01}
+        className="group rounded-2xl bg-white border border-[#e0e6ed] p-5 shadow-sm transition-all duration-300 hover:border-[#ff8c73] hover:shadow-md"
+      >
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b border-[#e0e6ed]/60">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-[#0a3d52]/5 border border-[#0a3d52]/10 flex items-center justify-center font-mono font-bold text-[#0a3d52] text-xs">
+              {String(displayNum).slice(-4)}
             </div>
-            <p className="text-xs text-[#565e69] font-medium">
-              {order.email} <span className="text-slate-300">|</span> {order.phone}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => copyOrderId(order._id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f5f7fa] hover:bg-[#e0e6ed] text-[#0a3d52] border border-[#e0e6ed] text-xs font-mono transition-colors"
-            title="Copy ID"
-          >
-            <ContentCopyRoundedIcon sx={{ fontSize: 13 }} />
-            #{String(order._id).slice(-6).toUpperCase()}
-          </button>
-
-          <div className="flex items-center rounded-lg bg-[#f5f7fa] border border-[#e0e6ed] p-1">
-            <select
-              value={order.paymentStatus || "pending"}
-              onChange={(e) => handleUpdatePaymentStatus(order._id, e.target.value)}
-              className={`text-xs font-bold uppercase px-2.5 py-1 rounded border-0 bg-transparent focus:ring-0 cursor-pointer ${
-                order.paymentStatus === "paid" ? "text-emerald-700 font-bold" : "text-amber-600"
-              }`}
-            >
-              <option value="pending">Pending Pay</option>
-              <option value="paid">Paid</option>
-              <option value="failed">Failed</option>
-            </select>
-
-            <div className="w-px h-3.5 bg-[#e0e6ed] mx-1" />
-
-            <select
-              value={order.orderStatus || "pending"}
-              onChange={(e) => handleUpdateOrderStatus(order, e.target.value)}
-              className="text-xs font-bold uppercase px-2.5 py-1 rounded border-0 bg-transparent focus:ring-0 cursor-pointer text-[#0a3d52]"
-            >
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="on the way">On The Way</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-
-          <div className="px-3.5 py-1.5 rounded-lg bg-[#0a3d52] text-white font-bold text-xs shadow-sm font-subheading">
-            PKR {order.subtotal?.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
-      <div className="pt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {order.items?.map((item, idx) => (
-          <div key={`${order._id}-${idx}`} className="flex items-center gap-3 p-2.5 rounded-xl bg-[#f5f7fa] border border-[#e0e6ed]/60">
-            <img
-              src={item.imageUrl || "/products/Banner1.jpeg"}
-              alt={item.name}
-              className="w-10 h-10 rounded-lg object-cover border border-[#e0e6ed] bg-white shrink-0"
-            />
-            <div className="min-w-0">
-              <h5 className="text-xs font-bold text-[#0f1929] truncate">{item.name}</h5>
-              <p className="text-[11px] text-[#565e69] font-medium">
-                Qty: <span className="text-[#ff6b4a] font-bold">{item.quantity}</span> · PKR {item.price?.toLocaleString()}
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-base font-bold text-[#0a3d52] font-heading">{order.customerName}</h4>
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#f5f7fa] text-[#565e69] border border-[#e0e6ed]">
+                  {order.channel || order.orderSource}
+                </span>
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                  order.paymentMethod === "cod"
+                    ? "bg-slate-100 text-slate-700"
+                    : order.paymentMethod === "stripe"
+                    ? "bg-purple-50 text-purple-700 border border-purple-200"
+                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                }`}>
+                  {order.paymentMethod ? String(order.paymentMethod).replace("_", " ") : "COD"}
+                </span>
+              </div>
+              <p className="text-xs text-[#565e69] font-medium mt-0.5">
+                {order.email} <span className="text-slate-300">|</span> {order.phone}
               </p>
             </div>
           </div>
-        ))}
-      </div>
-    </TiltCard3D>
-  );
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => copyOrderId(displayNum)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f5f7fa] hover:bg-[#e0e6ed] text-[#0a3d52] border border-[#e0e6ed] text-xs font-mono transition-colors cursor-pointer"
+              title="Copy Order Number"
+            >
+              <ContentCopyRoundedIcon sx={{ fontSize: 13 }} />
+              {displayNum}
+            </button>
+
+            <div className="flex items-center rounded-lg bg-[#f5f7fa] border border-[#e0e6ed] p-1">
+              <select
+                value={order.paymentStatus || "pending"}
+                onChange={(e) => handleUpdatePaymentStatus(order._id, e.target.value)}
+                className={`text-xs font-bold uppercase px-2.5 py-1 rounded border-0 bg-transparent focus:ring-0 cursor-pointer ${
+                  order.paymentStatus === "paid"
+                    ? "text-emerald-700 font-bold"
+                    : order.paymentStatus === "pending_verification"
+                    ? "text-blue-700 font-bold"
+                    : "text-amber-600"
+                }`}
+              >
+                <option value="unpaid">Unpaid</option>
+                <option value="pending">Pending</option>
+                <option value="pending_verification">Pending Verification</option>
+                <option value="paid">Paid</option>
+                <option value="failed">Failed</option>
+              </select>
+
+              <div className="w-px h-3.5 bg-[#e0e6ed] mx-1" />
+
+              <select
+                value={order.orderStatus || "pending"}
+                onChange={(e) => handleUpdateOrderStatus(order, e.target.value)}
+                className="text-xs font-bold uppercase px-2.5 py-1 rounded border-0 bg-transparent focus:ring-0 cursor-pointer text-[#0a3d52]"
+              >
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="on the way">On The Way</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div className="px-3.5 py-1.5 rounded-lg bg-[#0a3d52] text-white font-bold text-xs shadow-sm font-subheading">
+              PKR {order.subtotal?.toLocaleString()}
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed Address & Transaction Verification Bar */}
+        <div className="py-2.5 px-3 rounded-xl bg-slate-50 border border-[#e0e6ed]/80 my-3 text-xs space-y-1">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700">
+            {order.city && (
+              <span><strong>City:</strong> {order.city}</span>
+            )}
+            {order.address && (
+              <span><strong>Site Address:</strong> {order.address}</span>
+            )}
+            {order.areaSize && (
+              <span><strong>Area Size:</strong> {order.areaSize} sq ft</span>
+            )}
+            {order.deliveryDate && (
+              <span><strong>Pref. Date:</strong> {order.deliveryDate}</span>
+            )}
+          </div>
+
+          {(order.transactionReference || order.paymentScreenshotUrl) && (
+            <div className="pt-1.5 border-t border-slate-200/80 flex flex-wrap items-center gap-3 text-xs">
+              {order.transactionReference && (
+                <span className="text-blue-700 font-semibold flex items-center gap-1">
+                  <strong>TID / Ref:</strong> <span className="font-mono bg-blue-50 px-2 py-0.5 rounded border border-blue-200">{order.transactionReference}</span>
+                </span>
+              )}
+              {order.paymentScreenshotUrl && (
+                <a
+                  href={order.paymentScreenshotUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[#ff6b4a] hover:underline font-bold text-xs flex items-center gap-1"
+                >
+                  📸 View Receipt Screenshot
+                </a>
+              )}
+            </div>
+          )}
+
+          {order.notes && (
+            <div className="text-[11px] text-slate-500 italic pt-0.5">
+              <strong>Notes:</strong> {order.notes}
+            </div>
+          )}
+        </div>
+
+        <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {order.items?.map((item, idx) => (
+            <div key={`${order._id}-${idx}`} className="flex items-center gap-3 p-2.5 rounded-xl bg-[#f5f7fa] border border-[#e0e6ed]/60">
+              <img
+                src={item.imageUrl || "/products/Banner1.jpeg"}
+                alt={item.name}
+                className="w-10 h-10 rounded-lg object-cover border border-[#e0e6ed] bg-white shrink-0"
+              />
+              <div className="min-w-0">
+                <h5 className="text-xs font-bold text-[#0f1929] truncate">{item.name}</h5>
+                <p className="text-[11px] text-[#565e69] font-medium">
+                  Qty: <span className="text-[#ff6b4a] font-bold">{item.quantity}</span> · PKR {item.price?.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </TiltCard3D>
+    );
+  };
 
   return (
     <div className="admin-redesign relative min-h-screen w-full bg-[#f7f7f5] text-[#17201d] font-sans selection:bg-[#17201d] selection:text-white pb-16">

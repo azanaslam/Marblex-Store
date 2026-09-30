@@ -200,7 +200,7 @@ export const AppLayout = ({ cartCount, children }) => {
   const navLinks = [
     { label: "Home", path: "/" },
     { label: "About Us", path: "/about" },
-    { label: "Services", path: "/services", hasDropdown: true },
+    { label: "Services", path: "/services" },
     { label: "Contact", path: "/contact" },
     { label: "Blogs", path: "/blogs" },
     { label: "Catalogs", path: "/catalogs" },
