@@ -64,71 +64,32 @@ const getEmailConfig = async () => {
 
   const smtpPass = rawPass ? String(rawPass).replace(/\s+/g, "").trim() : "";
 
-  return { brevoApiKey, senderEmail, smtpUser, smtpPass };
+  return { senderEmail, smtpUser, smtpPass };
 };
 
 /**
- * Send email via Brevo (Sendinblue) HTTPS API (Port 443 - Never blocked on Render/Cloud)
- */
-const sendViaBrevoHttpApi = async ({ brevoApiKey, senderEmail, to, subject, html, text }) => {
-  const url = "https://api.brevo.com/v3/smtp/email";
-  const payload = {
-    sender: { name: "MARBLEX Security", email: senderEmail },
-    to: [{ email: to }],
-    subject: subject,
-    htmlContent: html,
-    textContent: text || "",
-  };
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "accept": "application/json",
-      "api-key": brevoApiKey.trim(),
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Brevo HTTP API error (${response.status}): ${errorBody}`);
-  }
-
-  const result = await response.json();
-  return { success: true, provider: "Brevo HTTPS API", messageId: result?.messageId };
-};
-
-/**
- * Send email via Nodemailer SMTP with IPv4 and Port 587 STARTTLS
+ * Direct Nodemailer Gmail SMTP Transporter with Port 465 SSL & IPv4
  */
 const sendViaNodemailerSmtp = async ({ senderEmail, smtpUser, smtpPass, to, subject, html, text }) => {
   if (!smtpPass) {
-    throw new Error("SMTP Password is not configured.");
+    throw new Error("SMTP App Password is not configured in EMAIL_PASS or SMTP_PASS.");
   }
 
+  // Primary: Port 465 SSL with direct IPv4 family
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // Port 587 uses STARTTLS
-    requireTLS: true,
-    lookup: (hostname, options, callback) => {
-      // Force IPv4 lookup for Render and Cloud Linux containers
-      dns.lookup(hostname, { family: 4 }, (err, address, family) => {
-        callback(err, address, 4);
-      });
-    },
+    port: 465,
+    secure: true,
+    family: 4, // Force IPv4 to prevent ENETUNREACH on Render
     auth: {
       user: smtpUser,
       pass: smtpPass,
     },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
     tls: {
-      servername: "smtp.gmail.com",
       rejectUnauthorized: false,
-      minVersion: "TLSv1.2",
     },
   });
 
@@ -146,34 +107,15 @@ const sendViaNodemailerSmtp = async ({ senderEmail, smtpUser, smtpPass, to, subj
     },
   });
 
-  return { success: true, provider: "Nodemailer SMTP (Port 587 IPv4)", messageId: info?.messageId };
+  return { success: true, provider: "Gmail SMTP (Port 465 SSL IPv4)", messageId: info?.messageId };
 };
 
 /**
- * Single Unified SendEmail Helper with Dual-Provider Fallback Architecture
+ * Single Unified SendEmail Helper
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   const config = await getEmailConfig();
 
-  // Try Provider 1: Brevo HTTPS API (if API Key provided)
-  if (config.brevoApiKey) {
-    try {
-      const result = await sendViaBrevoHttpApi({
-        brevoApiKey: config.brevoApiKey,
-        senderEmail: config.senderEmail,
-        to,
-        subject,
-        html,
-        text,
-      });
-      console.log(`[Mailer] Email sent successfully via Brevo HTTPS API`);
-      return result;
-    } catch (brevoErr) {
-      console.warn(`[Mailer] Brevo HTTPS API failed (${brevoErr.message}). Attempting fallback to SMTP...`);
-    }
-  }
-
-  // Try Provider 2: Nodemailer SMTP
   try {
     const result = await sendViaNodemailerSmtp({
       senderEmail: config.senderEmail,
@@ -184,11 +126,43 @@ const sendEmail = async ({ to, subject, html, text }) => {
       html,
       text,
     });
-    console.log(`[Mailer] Email sent successfully via Nodemailer SMTP`);
+    console.log(`[Mailer] Email sent successfully to ${to}`);
     return result;
   } catch (smtpErr) {
     console.error(`[Mailer] Email delivery failed: ${smtpErr.message}`);
-    return { success: false, error: smtpErr.message, simulated: !config.smtpPass && !config.brevoApiKey };
+
+    // If port 465 has a socket timeout, attempt fallback with service: 'gmail'
+    if (!config.smtpPass) {
+      return { success: false, error: smtpErr.message, simulated: true };
+    }
+
+    try {
+      console.log(`[Mailer] Attempting fallback to Gmail service transporter...`);
+      const fallbackTransporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: config.smtpUser,
+          pass: config.smtpPass,
+        },
+        family: 4,
+        tls: { rejectUnauthorized: false },
+      });
+
+      const fallbackInfo = await fallbackTransporter.sendMail({
+        from: `"MARBLEX Security" <${config.senderEmail}>`,
+        to,
+        replyTo: config.senderEmail,
+        subject,
+        text: text || "",
+        html,
+      });
+
+      console.log(`[Mailer] Email sent successfully via Gmail service fallback`);
+      return { success: true, provider: "Gmail Service Fallback", messageId: fallbackInfo?.messageId };
+    } catch (fallbackErr) {
+      console.error(`[Mailer] Gmail service fallback also failed: ${fallbackErr.message}`);
+      return { success: false, error: fallbackErr.message };
+    }
   }
 };
 
