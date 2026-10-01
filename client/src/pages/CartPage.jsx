@@ -1337,20 +1337,25 @@ export const CartPage = ({ cart = [], setCart }) => {
 
           {/* Action Buttons */}
           <div className="relative z-10 px-4 sm:px-6 pb-5 sm:pb-6 pt-1 flex flex-col gap-2.5 sm:gap-3">
-            <button
-              onClick={() => submitOrder("website")}
-              disabled={isOrderDisabled}
-              className="w-full py-3.5 sm:py-4 px-4 rounded-xl bg-gradient-to-r from-[#0a3d52] to-[#0d4e68] hover:from-[#0d4e68] hover:to-[#0a3d52] text-white font-bold text-sm sm:text-[15px] border-0 shadow-lg shadow-[#0a3d52]/20 hover:shadow-xl hover:shadow-[#0a3d52]/30 active:scale-[0.98] disabled:opacity-45 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <ShoppingCartOutlinedIcon sx={{ fontSize: 19 }} />
-              <span>{loadingOrder ? "Processing Order..." : "Place Website Order"}</span>
-            </button>
+            <div className="glowing-border-wrap-rounded w-full">
+              <div className="glowing-border-beam" />
+              <div className="glowing-border-body w-full">
+                <button
+                  onClick={() => submitOrder("website")}
+                  disabled={isOrderDisabled}
+                  className="shimmer-btn w-full py-3.5 sm:py-4 px-4 rounded-xl bg-gradient-to-r from-[#0a3d52] to-[#0d4e68] hover:from-[#0d4e68] hover:to-[#0a3d52] text-white font-bold text-sm sm:text-[15px] border-0 shadow-lg shadow-[#0a3d52]/20 hover:shadow-xl hover:shadow-[#0a3d52]/30 active:scale-[0.98] disabled:opacity-45 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <ShoppingCartOutlinedIcon sx={{ fontSize: 19 }} />
+                  <span>{loadingOrder ? "Processing Order..." : "Place Website Order"}</span>
+                </button>
+              </div>
+            </div>
 
             <button
               onClick={() => submitOrder("whatsapp")}
               disabled={cart.length === 0 || loadingOrder}
               title="For bulk orders or price negotiation"
-              className="w-full py-3 sm:py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm border-0 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/25 active:scale-[0.98] disabled:opacity-45 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="shimmer-btn w-full py-3 sm:py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm border-0 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/25 active:scale-[0.98] disabled:opacity-45 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <WhatsAppIcon sx={{ fontSize: 19 }} />
               <span>Order on WhatsApp (Negotiate / Bulk)</span>

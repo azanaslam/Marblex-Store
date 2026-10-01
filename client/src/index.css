@@ -254,3 +254,134 @@
   animation-play-state: paused;
 }
 
+/* ── 1. Universal Shimmer Light Pass & Glowing Animations on Buttons ── */
+@keyframes moveAround {
+  0%   { top: -40px; left: -40px; }
+  25%  { top: -40px; left: 110%; transform: translateX(-80%); }
+  50%  { top: 110%; left: 110%; transform: translate(-80%, -80%); }
+  75%  { top: 110%; left: -40px; transform: translateY(-40%); }
+  100% { top: -40px; left: -40px; }
+}
+
+@keyframes shimmer {
+  0% { left: -75%; }
+  12% { left: 125%; }
+  100% { left: 125%; }
+}
+
+/* Universal Shimmer for ALL buttons in the project */
+button,
+[role="button"],
+.shimmer-btn,
+.btn-3d-accent,
+.btn-3d-primary,
+.btn-3d-navy,
+.btn-3d-white,
+.btn-3d-blue {
+  position: relative;
+  overflow: hidden;
+}
+
+button:not(.no-shimmer)::before,
+[role="button"]:not(.no-shimmer)::before,
+.shimmer-btn::before,
+.btn-3d-accent::before,
+.btn-3d-primary::before,
+.btn-3d-navy::before,
+.btn-3d-white::before,
+.btn-3d-blue::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  transform: skewX(-20deg);
+  animation: shimmer 6s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Glowing Orbiting Light Beam Containers */
+.glowing-border-wrap {
+  position: relative;
+  z-index: 10;
+  overflow: clip;
+  border-radius: 9999px;
+}
+
+.glowing-border-wrap-rounded {
+  position: relative;
+  z-index: 10;
+  overflow: clip;
+  border-radius: 16px;
+}
+
+.glowing-border-beam {
+  position: absolute;
+  filter: blur(4px);
+  z-index: -10;
+  background-color: #ffffff;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  animation: moveAround 3s linear infinite;
+}
+
+.glowing-border-body {
+  padding: 2px;
+  width: 100%;
+  border-radius: inherit;
+  display: inline-flex;
+}
+
+/* Universal Glowing Orange Button Class */
+.btn-orange-glow {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff522b 100%);
+  color: #ffffff !important;
+  box-shadow: 0 0 25px rgba(255, 107, 74, 0.45);
+  transition: all 0.25s ease;
+}
+
+.btn-orange-glow:hover {
+  transform: scale(0.99);
+  box-shadow: 0 0 32px rgba(255, 107, 74, 0.6);
+}
+
+.btn-orange-glow:active {
+  transform: scale(0.95);
+}
+
+/* ── 2. Lenis Smooth Scroll CSS ── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+
+

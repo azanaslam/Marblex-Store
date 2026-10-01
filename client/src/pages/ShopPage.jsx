@@ -1101,7 +1101,7 @@ export const ShopPage = ({ addToCart }) => {
         className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pt-6 pb-4 gap-5 border-b border-[#e0e6ed] dark:border-slate-800 scroll-mt-24"
       >
         {/* Left: Eyebrow + Heading + Description */}
-        <div className="space-y-1.5 max-w-2xl">
+        <div className="space-y-1.5 max-w-3xl">
           <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#ff6b4a]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b4a] animate-pulse" />
             <span>HIGH GRADE PRODUCT CATALOG</span>
@@ -1115,24 +1115,6 @@ export const ShopPage = ({ addToCart }) => {
           <p className="text-[#565e69] dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
             Certified industrial solutions engineered for waterproofing, structural integrity, and long-term durability.
           </p>
-        </div>
-
-        {/* Right: Products In Catalog Pill Card */}
-        <div className="flex items-center gap-3 bg-[#0a3d52] dark:bg-[#0c2432] text-white px-4 sm:px-5 py-3 rounded-2xl shadow-md border border-slate-700/60 shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-slate-200 shrink-0">
-            <MenuBookOutlinedIcon sx={{ fontSize: 20 }} />
-          </div>
-          <div className="flex flex-col text-left pr-2">
-            <span className="text-xs sm:text-sm font-extrabold text-white leading-tight font-heading">
-              {products.length || 12} Products In Catalog
-            </span>
-            <span className="text-[10px] text-slate-300 font-medium">
-              Explore our complete range
-            </span>
-          </div>
-          <div className="w-7 h-7 rounded-full bg-[#ff6b4a] flex items-center justify-center text-white shrink-0 shadow-sm">
-            <EastIcon sx={{ fontSize: 15 }} />
-          </div>
         </div>
       </div>
 
@@ -1768,19 +1750,24 @@ export const ShopPage = ({ addToCart }) => {
         </div>
 
         <div className="relative z-10 flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full md:w-auto">
-          <a
-            href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20need%20technical%20consultation%20for%20my%20project."
-            target="_blank"
-            rel="noreferrer"
-            className="w-full sm:w-auto py-3.5 px-6 bg-[#ff6b4a] hover:bg-[#d94826] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-lg shadow-[#ff6b4a]/30 transition-all duration-200 flex items-center justify-center gap-2"
-          >
-            <WhatsAppIcon sx={{ fontSize: 18 }} />
-            <span>Consult on WhatsApp</span>
-          </a>
+          <div className="glowing-border-wrap-rounded w-full sm:w-auto">
+            <div className="glowing-border-beam" />
+            <div className="glowing-border-body w-full">
+              <a
+                href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20need%20technical%20consultation%20for%20my%20project."
+                target="_blank"
+                rel="noreferrer"
+                className="shimmer-btn w-full sm:w-auto py-3.5 px-6 bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-lg shadow-[#ff6b4a]/30 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <WhatsAppIcon sx={{ fontSize: 18 }} />
+                <span>Consult on WhatsApp</span>
+              </a>
+            </div>
+          </div>
 
           <a
             href="tel:03481116611"
-            className="w-full sm:w-auto py-3.5 px-6 bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider rounded-2xl border border-white/20 transition-all duration-200 flex items-center justify-center gap-2"
+            className="shimmer-btn w-full sm:w-auto py-3.5 px-6 bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider rounded-2xl border border-white/20 transition-all duration-200 flex items-center justify-center gap-2"
           >
             <LocalPhoneOutlinedIcon sx={{ fontSize: 18 }} />
             <span>Call Hotline</span>

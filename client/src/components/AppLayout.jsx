@@ -436,29 +436,39 @@ export const AppLayout = ({ cartCount, children }) => {
               </RouterLink>
 
               {/* Vertical Divider Stick */}
-              <span className="hidden sm:block h-5 w-[1px] bg-slate-300 dark:bg-slate-700 mx-0.5" />
+              <span className="hidden lg:block h-5 w-[1px] bg-slate-300 dark:bg-slate-700 mx-0.5" />
 
-              {/* Login / Portal Button with User Icon + Arrow (Exact Match) */}
+              {/* Login / Portal Button with User Icon + Arrow (Visible ONLY on desktop >= lg, inside mobile menu on mobile) */}
               {!isUserLoggedIn ? (
-                <RouterLink
-                  to="/login"
-                  className="bg-gradient-to-r from-[#ff6243] to-[#f35231] hover:from-[#f35231] hover:to-[#e04524] active:scale-95 text-white h-10 px-5 sm:px-6 rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-[#ff6b4a]/25 hidden sm:flex items-center gap-2 transition-all"
-                >
-                  <PersonOutlinedIcon sx={{ fontSize: 17 }} />
-                  <span>LOGIN</span>
-                  <ArrowForwardIcon sx={{ fontSize: 14 }} className="ml-0.5" />
-                </RouterLink>
-              ) : (
-                <div className="hidden sm:flex items-center gap-2">
-                  {isAdmin && (
+                <div className="hidden lg:inline-flex glowing-border-wrap">
+                  <div className="glowing-border-beam" />
+                  <div className="glowing-border-body">
                     <RouterLink
-                      to="/admin"
-                      className="bg-gradient-to-r from-[#ff6243] to-[#f35231] hover:from-[#f35231] hover:to-[#e04524] text-white px-4 py-2 text-xs font-bold rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-[#ff6b4a]/25"
+                      to="/login"
+                      className="shimmer-btn bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] active:scale-95 text-white h-9 sm:h-10 px-5 sm:px-6 rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-[#ff6b4a]/30 flex items-center gap-2 transition-all cursor-pointer"
                     >
-                      <PersonOutlinedIcon sx={{ fontSize: 15 }} />
-                      <span>ADMIN PORTAL</span>
-                      <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
+                      <PersonOutlinedIcon sx={{ fontSize: 17 }} />
+                      <span>LOGIN</span>
+                      <ArrowForwardIcon sx={{ fontSize: 14 }} className="ml-0.5" />
                     </RouterLink>
+                  </div>
+                </div>
+              ) : (
+                <div className="hidden lg:flex items-center gap-2">
+                  {isAdmin && (
+                    <div className="hidden lg:inline-flex glowing-border-wrap">
+                      <div className="glowing-border-beam" />
+                      <div className="glowing-border-body">
+                        <RouterLink
+                          to="/admin"
+                          className="shimmer-btn bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] text-white px-4 py-2 text-xs font-bold rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-[#ff6b4a]/30"
+                        >
+                          <PersonOutlinedIcon sx={{ fontSize: 15 }} />
+                          <span>ADMIN PORTAL</span>
+                          <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
+                        </RouterLink>
+                      </div>
+                    </div>
                   )}
                   {isCustomer && (
                     <RouterLink
@@ -521,7 +531,7 @@ export const AppLayout = ({ cartCount, children }) => {
               {!isUserLoggedIn ? (
                 <RouterLink
                   to="/login"
-                  className="bg-gradient-to-r from-[#ff6b4a] to-[#f95738] flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl font-bold text-xs uppercase text-white shadow-md"
+                  className="shimmer-btn bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl font-bold text-xs uppercase text-white shadow-md cursor-pointer"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <PersonOutlinedIcon sx={{ fontSize: 16 }} />
@@ -533,7 +543,7 @@ export const AppLayout = ({ cartCount, children }) => {
                   {isAdmin && (
                     <RouterLink
                       to="/admin"
-                      className="bg-gradient-to-r from-[#ff6b4a] to-[#f95738] flex items-center justify-between w-full py-2.5 px-4 rounded-xl text-white font-bold text-xs uppercase"
+                      className="shimmer-btn bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] flex items-center justify-between w-full py-2.5 px-4 rounded-xl text-white font-bold text-xs uppercase shadow-md cursor-pointer"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <span>ADMIN PORTAL</span>

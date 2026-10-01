@@ -400,19 +400,24 @@ export const ServicesPage = () => {
 
               {/* Action CTAs */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 mb-8">
-                <a
-                  href="#service-estimator"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#0a3d52] to-[#0d4e68] hover:from-[#0d4e68] hover:to-[#0a3d52] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-[#0a3d52]/25 hover:shadow-xl active:scale-95 transition-all cursor-pointer"
-                >
-                  <CalculateOutlinedIcon sx={{ fontSize: 18 }} />
-                  <span>Calculate Cost Estimate</span>
-                </a>
+                <div className="glowing-border-wrap-rounded">
+                  <div className="glowing-border-beam" />
+                  <div className="glowing-border-body">
+                    <a
+                      href="#service-estimator"
+                      className="shimmer-btn inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#0a3d52] to-[#0d4e68] hover:from-[#0d4e68] hover:to-[#0a3d52] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-[#0a3d52]/25 hover:shadow-xl active:scale-95 transition-all cursor-pointer w-full"
+                    >
+                      <CalculateOutlinedIcon sx={{ fontSize: 18 }} />
+                      <span>Calculate Cost Estimate</span>
+                    </a>
+                  </div>
+                </div>
 
                 <a
                   href="https://wa.me/923481116611?text=Hello%20MARBLEX%20Engineering%2C%20I%20need%20expert%20consultation%20for%20my%20construction%20project."
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/20 hover:shadow-xl active:scale-95 transition-all cursor-pointer"
+                  className="shimmer-btn inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/20 hover:shadow-xl active:scale-95 transition-all cursor-pointer"
                 >
                   <WhatsAppIcon sx={{ fontSize: 18 }} />
                   <span>Chat with Site Engineer</span>
@@ -1168,13 +1173,18 @@ export const ServicesPage = () => {
                 <span>Technical Specifications</span>
               </button>
 
-              <button
-                onClick={() => navigate("/contact")}
-                className="px-6 sm:px-8 py-3.5 rounded-xl bg-[#ff6b4a] hover:bg-[#ff5733] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-[#ff6b4a]/30 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
-              >
-                <PhoneInTalkRoundedIcon sx={{ fontSize: 18 }} />
-                <span>Contact Engineering Desk</span>
-              </button>
+              <div className="glowing-border-wrap-rounded">
+                <div className="glowing-border-beam" />
+                <div className="glowing-border-body">
+                  <button
+                    onClick={() => navigate("/contact")}
+                    className="shimmer-btn px-6 sm:px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-[#ff6b4a]/30 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+                  >
+                    <PhoneInTalkRoundedIcon sx={{ fontSize: 18 }} />
+                    <span>Contact Engineering Desk</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

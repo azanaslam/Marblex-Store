@@ -211,18 +211,23 @@ export const AboutHeroBanner = () => {
 
           {/* CTAs */}
           <div className="about-hero-cta flex flex-wrap items-center gap-3 pt-2">
-            <button
-              onClick={() => navigate("/catalogs")}
-              className="inline-flex items-center gap-2 px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-[#ff6b4a] hover:bg-[#ff5530] active:bg-[#e04520] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-[#ff6b4a]/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-            >
-              <MenuBookOutlinedIcon sx={{ fontSize: 18 }} />
-              <span>Explore Technical Catalog</span>
-              <ArrowForwardIcon sx={{ fontSize: 16 }} />
-            </button>
+            <div className="glowing-border-wrap">
+              <div className="glowing-border-beam" />
+              <div className="glowing-border-body">
+                <button
+                  onClick={() => navigate("/catalogs")}
+                  className="shimmer-btn inline-flex items-center gap-2 px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-[0_0_28px_rgba(255,107,74,0.45)] transition-all hover:scale-[0.99] active:scale-95 cursor-pointer"
+                >
+                  <MenuBookOutlinedIcon sx={{ fontSize: 18 }} />
+                  <span>Explore Technical Catalog</span>
+                  <ArrowForwardIcon sx={{ fontSize: 16 }} />
+                </button>
+              </div>
+            </div>
 
             <button
               onClick={handleWhatsAppConsult}
-              className="inline-flex items-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/25 text-white font-semibold text-xs sm:text-sm uppercase tracking-wider border border-white/30 hover:border-white/50 backdrop-blur-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              className="shimmer-btn inline-flex items-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white/15 hover:bg-white/25 active:bg-white/30 text-white font-semibold text-xs sm:text-sm uppercase tracking-wider border border-white/30 hover:border-white/50 backdrop-blur-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
             >
               <WhatsAppIcon sx={{ fontSize: 18, color: "#10b981" }} />
               <span>Direct WhatsApp</span>

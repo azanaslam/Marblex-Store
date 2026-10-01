@@ -438,24 +438,34 @@ export const ProductDetailPage = ({ addToCart }) => {
 
             {/* Buttons Row: Add to Cart (Slate Navy) + Instant WhatsApp Quote (Crimson) */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 pt-1">
-              <button
-                onClick={handleAddToCart}
-                className="sm:col-span-5 bg-[#0a3d52] hover:bg-[#082e3e] active:bg-[#06212d] text-white py-3.5 px-5 rounded-2xl font-bold text-xs uppercase tracking-wider shadow-md shadow-[#0a3d52]/20 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
-              >
-                <ShoppingCartOutlinedIcon sx={{ fontSize: 18 }} />
-                <span>Add to Cart</span>
-              </button>
-
-              <button
-                onClick={handleWhatsAppInquiry}
-                className="sm:col-span-7 bg-[#ff6b4a] hover:bg-[#e05333] active:bg-[#c94528] text-white py-3 px-5 rounded-2xl shadow-md shadow-[#ff6b4a]/25 transition-all flex items-center gap-3 text-left active:scale-95 cursor-pointer"
-              >
-                <WhatsAppIcon sx={{ fontSize: 24 }} className="shrink-0 text-white" />
-                <div className="flex flex-col leading-tight">
-                  <span className="font-extrabold text-xs uppercase tracking-wide">Instant WhatsApp Quote</span>
-                  <span className="text-[10px] text-white/90 font-normal">Technical consultation & pricing</span>
+              <div className="sm:col-span-5 glowing-border-wrap-rounded w-full">
+                <div className="glowing-border-beam" />
+                <div className="glowing-border-body w-full">
+                  <button
+                    onClick={handleAddToCart}
+                    className="shimmer-btn w-full bg-[#0a3d52] hover:bg-[#082e3e] active:bg-[#06212d] text-white py-3.5 px-5 rounded-2xl font-bold text-xs uppercase tracking-wider shadow-md shadow-[#0a3d52]/20 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                  >
+                    <ShoppingCartOutlinedIcon sx={{ fontSize: 18 }} />
+                    <span>Add to Cart</span>
+                  </button>
                 </div>
-              </button>
+              </div>
+
+              <div className="sm:col-span-7 glowing-border-wrap-rounded w-full">
+                <div className="glowing-border-beam" />
+                <div className="glowing-border-body w-full">
+                  <button
+                    onClick={handleWhatsAppInquiry}
+                    className="shimmer-btn w-full bg-[#ff6b4a] hover:bg-[#e05333] active:bg-[#c94528] text-white py-3 px-5 rounded-2xl shadow-md shadow-[#ff6b4a]/25 transition-all flex items-center gap-3 text-left active:scale-95 cursor-pointer"
+                  >
+                    <WhatsAppIcon sx={{ fontSize: 24 }} className="shrink-0 text-white" />
+                    <div className="flex flex-col leading-tight">
+                      <span className="font-extrabold text-xs uppercase tracking-wide">Instant WhatsApp Quote</span>
+                      <span className="text-[10px] text-white/90 font-normal">Technical consultation & pricing</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Added to Cart Notification Toast */}
