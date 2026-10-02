@@ -1,16 +1,77 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Box, IconButton, Badge, Typography, Fade, Slide } from "@mui/material";
+import { Box, IconButton, Typography, Fade, Slide } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
 import { MarblexAiChat } from "./MarblexAiChat";
-import { getAuthToken, getAuthUser } from "../auth/session";
-import { authHeaders, http } from "../api/http";
+import { getAuthUser } from "../auth/session";
 
 const BOT_SRC = "/marblex-bot-peek.mp4";
 const CYCLE_PAUSE_MS = 3800;
 const FADE_MS = 720;
 /** Brief hold after wave ends before fade-out */
 const BOT_STAY_MS = 900;
+
+const BOT_GREETINGS = [
+  "Hey!",
+  "Hi there!",
+  "Salam!",
+  "Ask me!",
+  "Tap me!",
+  "I'm here",
+  "Need help?",
+  "Let's chat",
+  "Got a minute?",
+  "Quick tip?",
+  "Pro tip?",
+  "Talk shop",
+  "Ask Marblex",
+  "Got a project?",
+  "Site issue?",
+  "Need a seal?",
+  "Waterstops?",
+  "Membranes?",
+  "Leak check?",
+  "Quotes?",
+  "Get a quote",
+  "Specs ready?",
+  "Catalogs?",
+  "TDS packs?",
+  "Browse shop",
+  "Joint seal?",
+  "Basement wet?",
+  "Roof seepage?",
+  "Pool seal?",
+  "Termite bar?",
+  "PU grout?",
+  "Epoxy floors?",
+  "Torch-on?",
+  "APP sheet?",
+  "Crystalline?",
+  "Need SOPs?",
+  "ISO ready",
+  "Engineer desk",
+  "Project help",
+  "Pick a system",
+  "Right product?",
+  "Tech support",
+  "Chat free",
+  "No login needed",
+  "Ask anything",
+  "Start here",
+  "Wave & tap",
+  "Ready when you are",
+  "Let's solve it",
+  "Marblex AI",
+];
+
+function nextGreeting(prev) {
+  if (BOT_GREETINGS.length < 2) return BOT_GREETINGS[0];
+  let pick = prev;
+  while (pick === prev) {
+    pick = BOT_GREETINGS[Math.floor(Math.random() * BOT_GREETINGS.length)];
+  }
+  return pick;
+}
 
 function keyWhiteBackdrop(ctx, w, h) {
   const frame = ctx.getImageData(0, 0, w, h);
@@ -35,8 +96,8 @@ function keyWhiteBackdrop(ctx, w, h) {
 
 export const FloatingChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [showHey, setShowHey] = useState(false);
+  const [greeting, setGreeting] = useState(() => nextGreeting(""));
   const [botVisible, setBotVisible] = useState(false);
   const [botOpacity, setBotOpacity] = useState(0);
 
@@ -46,25 +107,11 @@ export const FloatingChatWidget = () => {
   const cycleTimer = useRef(null);
   const fadeTimer = useRef(null);
   const stayTimer = useRef(null);
+  const greetingRef = useRef(greeting);
 
   const user = getAuthUser();
-  const token = getAuthToken();
   const isAdmin = user?.role === "admin";
   const showLauncher = !isAdmin;
-  const isLoggedInUser = Boolean(token && user && user.role !== "admin");
-
-  useEffect(() => {
-    if (!isLoggedInUser) return;
-    const fetchUnread = () => {
-      http
-        .get("/chat/unread-count", authHeaders(token))
-        .then((res) => setUnreadCount(Number(res.data?.count) || 0))
-        .catch(() => {});
-    };
-    fetchUnread();
-    const id = setInterval(fetchUnread, 30000);
-    return () => clearInterval(id);
-  }, [token, isLoggedInUser]);
 
   useEffect(() => {
     if (!botVisible || isOpen) {
@@ -116,6 +163,9 @@ export const FloatingChatWidget = () => {
     clearTimeout(cycleTimer.current);
     clearTimeout(fadeTimer.current);
     clearTimeout(stayTimer.current);
+    const next = nextGreeting(greetingRef.current);
+    greetingRef.current = next;
+    setGreeting(next);
     v.playbackRate = 0.68;
     v.currentTime = 0;
     setBotVisible(true);
@@ -170,11 +220,7 @@ export const FloatingChatWidget = () => {
   if (!showLauncher) return null;
 
   const toggleOpen = () => {
-    setIsOpen((open) => {
-      const next = !open;
-      if (next) setUnreadCount(0);
-      return next;
-    });
+    setIsOpen((open) => !open);
   };
 
   const ease = "cubic-bezier(0.22, 1, 0.36, 1)";
@@ -305,26 +351,21 @@ export const FloatingChatWidget = () => {
                 minHeight: 0,
               }}
             >
-              <MarblexAiChat key={isOpen ? "open" : "closed"} />
+              <MarblexAiChat />
             </Box>
           </Box>
         </Box>
       </Slide>
 
-      {/* ── Bot launcher (position independent of chat panel) ── */}
+      {/* ── Bot launcher: soft right-edge peek, above mobile cart ── */}
       <Box
         sx={{
           position: "fixed",
-          top: {
-            xs: "calc(46vh + 300px)",
-            sm: "calc(44vh + 150px)",
-            md: "calc(42vh + 350px)",
-            lg: "calc(42vh + 350px)",
-          },
-          right: -40,
+          bottom: { xs: 186, sm: 150, md: 140 },
+          top: "auto",
+          right: { xs: -8, sm: -12, md: -16 },
           zIndex: 10050,
           pointerEvents: "none",
-          transform: "translateY(-50%)",
         }}
       >
         <Box
@@ -336,7 +377,7 @@ export const FloatingChatWidget = () => {
           sx={{
             pointerEvents: botVisible && !isOpen && botOpacity > 0.25 ? "auto" : "none",
             opacity: !isOpen ? botOpacity : 0,
-            transform: !isOpen && botOpacity > 0.5 ? "translateX(0)" : "translateX(12px)",
+            transform: !isOpen && botOpacity > 0.5 ? "translateX(0)" : "translateX(10px)",
             transition: `opacity ${FADE_MS}ms ${ease}, transform ${FADE_MS}ms ${ease}`,
             position: "relative",
             display: "block",
@@ -347,8 +388,8 @@ export const FloatingChatWidget = () => {
             cursor: "pointer",
             outline: "none",
             WebkitTapHighlightColor: "transparent",
-            width: { xs: 118, sm: 140, md: 160 },
-            height: { xs: 128, sm: 150, md: 170 },
+            width: { xs: 112, sm: 132, md: 148 },
+            height: { xs: 122, sm: 142, md: 158 },
             overflow: "visible",
             "&::before": { display: "none !important", content: '""', animation: "none !important" },
           }}
@@ -356,12 +397,16 @@ export const FloatingChatWidget = () => {
           <Box
             sx={{
               position: "absolute",
-              top: { xs: 10, sm: 14 },
-              left: { xs: -2, sm: 2 },
+              top: { xs: 28, sm: 34 },
+              left: "auto",
+              // Anchor near the bot; long text grows leftward
+              right: { xs: "72%", sm: "74%" },
               zIndex: 3,
               opacity: showHey && !isOpen ? botOpacity : 0,
               transform:
-                showHey && botOpacity > 0.45 ? "translateX(0) scale(1)" : "translateX(8px) scale(0.94)",
+                showHey && botOpacity > 0.45
+                  ? "translateX(0) scale(1)"
+                  : "translateX(6px) scale(0.94)",
               transition: `opacity ${FADE_MS}ms ${ease}, transform ${FADE_MS}ms ${ease}`,
               pointerEvents: "none",
             }}
@@ -370,69 +415,53 @@ export const FloatingChatWidget = () => {
               sx={{
                 bgcolor: "#0a3d52",
                 color: "#fff",
-                px: 1.1,
-                py: 0.4,
+                px: 1.15,
+                py: 0.45,
                 borderRadius: "12px 12px 4px 12px",
                 fontWeight: 800,
-                fontSize: 11,
+                fontSize: { xs: 10.5, sm: 11 },
+                letterSpacing: "0.01em",
                 boxShadow: "0 6px 14px rgba(10,61,82,0.28)",
                 whiteSpace: "nowrap",
+                lineHeight: 1.2,
               }}
             >
-              Hey!
+              {greeting}
             </Box>
           </Box>
 
-          <Badge
-            badgeContent={unreadCount}
-            overlap="circular"
+          <Box
+            component="video"
+            ref={videoRef}
+            src={BOT_SRC}
+            muted
+            playsInline
+            preload="auto"
+            sx={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              opacity: 0,
+              pointerEvents: "none",
+              left: 0,
+              top: 0,
+            }}
+          />
+          <Box
+            component="canvas"
+            ref={canvasRef}
+            width={300}
+            height={330}
             sx={{
               width: "100%",
               height: "100%",
               display: "block",
-              overflow: "hidden",
-              "& .MuiBadge-badge": {
-                fontWeight: 900,
-                bgcolor: "#ff6b4a",
-                top: 6,
-                left: 6,
-                right: "auto",
-              },
+              objectFit: "contain",
+              objectPosition: "center right",
+              filter: "drop-shadow(-3px 6px 14px rgba(10,61,82,0.28))",
+              pointerEvents: "none",
             }}
-          >
-            <Box
-              component="video"
-              ref={videoRef}
-              src={BOT_SRC}
-              muted
-              playsInline
-              preload="auto"
-              sx={{
-                position: "absolute",
-                width: 1,
-                height: 1,
-                opacity: 0,
-                pointerEvents: "none",
-                left: 0,
-                top: 0,
-              }}
-            />
-            <Box
-              component="canvas"
-              ref={canvasRef}
-              width={300}
-              height={330}
-              sx={{
-                width: "100%",
-                height: "100%",
-                display: "block",
-                objectFit: "contain",
-                objectPosition: "right center",
-                filter: "drop-shadow(-2px 4px 12px rgba(10,61,82,0.3))",
-                pointerEvents: "none",
-              }}
-            />
-          </Badge>
+          />
         </Box>
       </Box>
     </>

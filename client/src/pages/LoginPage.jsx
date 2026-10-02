@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { http } from "../api/http";
 import { setAuthSession } from "../auth/session";
+import { promptGoogleSignIn, preloadGoogleIdentity } from "../auth/googleSignIn";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -97,7 +98,7 @@ export const LoginPage = () => {
   const showRef = useRef(null);
   const formRef = useRef(null);
 
-  // Load saved email on mount
+  // Load saved email on mount + warm Google Identity for instant click
   useEffect(() => {
     try {
       const savedEmail = localStorage.getItem("mx_email");
@@ -106,6 +107,7 @@ export const LoginPage = () => {
         setRememberMe(true);
       }
     } catch (e) { }
+    preloadGoogleIdentity();
   }, []);
 
   // 2FA Timer Tick
@@ -394,13 +396,8 @@ export const LoginPage = () => {
     }
   };
 
-  // Available SSO Accounts (Matching user Chrome profiles from screenshot)
+  // Available SSO Accounts (Microsoft / LinkedIn demo chooser only — Google uses real OAuth)
   const ssoAccounts = {
-    google: [
-      { name: "Azan Aslam", email: "azanaslam907@gmail.com", avatar: "A", color: "#ea4335" },
-      { name: "Ismail", email: "ismail.marblex@gmail.com", avatar: "I", color: "#0f7c8f" },
-      { name: "Zelios", email: "zelios.marblex@gmail.com", avatar: "Z", color: "#f15b37" },
-    ],
     microsoft: [
       { name: "Azan Aslam", email: "azanaslam907@gmail.com", avatar: "A", color: "#00a4ef" },
       { name: "Admin Portal", email: "admin@marblex.onmicrosoft.com", avatar: "M", color: "#7fba00" },
@@ -411,8 +408,39 @@ export const LoginPage = () => {
     ],
   };
 
-  // Trigger Account Chooser Modal
+  // Real Google Identity picker → verify token → Marblex email 2FA
+  const handleGoogleAuth = async () => {
+    setMsg({ text: "", type: "" });
+    setSsoLoading(true);
+    try {
+      const credential = await promptGoogleSignIn();
+      const res = await http.post("/auth/google", { credential });
+      setSsoModal(null);
+      setVerifyEmail(res.data?.email || "");
+      setStageVerify(true);
+      setOtpDigits(["", "", "", "", "", ""]);
+      setIsOtpSuccess(false);
+      setVMsg({
+        text: res.data?.message || "Google verified. Enter the 6-digit code sent to your email.",
+        type: "success",
+      });
+    } catch (err) {
+      const apiMsg = err?.response?.data?.message;
+      const cancelled = /cancel/i.test(err?.message || "");
+      if (!cancelled) {
+        triggerShake(apiMsg || err?.message || "Google Sign-In failed. Please try again.");
+      }
+    } finally {
+      setSsoLoading(false);
+    }
+  };
+
+  // Trigger Account Chooser Modal (Microsoft / LinkedIn only)
   const handleSocialAuth = (provider) => {
+    if (provider === "google") {
+      handleGoogleAuth();
+      return;
+    }
     setCustomSsoEmail("");
     setSsoLoading(false);
     setSsoModal({ provider, isCustom: false });
@@ -1888,7 +1916,7 @@ export const LoginPage = () => {
       {/* ======================================================== */}
       {ssoModal && (() => {
         const provider = ssoModal?.provider || (typeof ssoModal === "string" ? ssoModal : "google");
-        const accounts = ssoAccounts[provider] || ssoAccounts.google;
+        const accounts = ssoAccounts[provider] || ssoAccounts.microsoft;
 
         return (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
@@ -2570,11 +2598,12 @@ export const LoginPage = () => {
 
                   {/* Social SSO Buttons */}
                   <div className="mx-soc">
-                    {/* Google SSO */}
+                    {/* Google SSO — real Google Identity account picker */}
                     <button
                       type="button"
-                      onClick={() => handleSocialAuth("google")}
-                      className="hover:scale-105 transition-transform"
+                      onClick={() => handleGoogleAuth()}
+                      disabled={ssoLoading}
+                      className="hover:scale-105 transition-transform disabled:opacity-60 disabled:hover:scale-100"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" className="shrink-0">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

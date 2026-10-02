@@ -9,23 +9,38 @@ import {
 } from "../chat/marblexAiKnowledge";
 
 const BOT_SRC = "/marblex-bot-peek.mp4";
+const CHAT_STORAGE_KEY = "mx_ai_chat_v1";
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function welcomeMessage() {
+  return {
+    id: uid(),
+    role: "ai",
+    text: WELCOME_QUESTION,
+    links: [
+      { label: "View catalogs", href: "/catalogs" },
+      { label: "Browse shop", href: "/shop" },
+    ],
+  };
+}
+
+function loadSavedMessages() {
+  try {
+    const raw = sessionStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return [welcomeMessage()];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || !parsed.length) return [welcomeMessage()];
+    return parsed;
+  } catch {
+    return [welcomeMessage()];
+  }
+}
+
 export function MarblexAiChat() {
-  const [messages, setMessages] = useState(() => [
-    {
-      id: uid(),
-      role: "ai",
-      text: WELCOME_QUESTION,
-      links: [
-        { label: "View catalogs", href: "/catalogs" },
-        { label: "Browse shop", href: "/shop" },
-      ],
-    },
-  ]);
+  const [messages, setMessages] = useState(loadSavedMessages);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const scrollRef = useRef(null);
@@ -34,6 +49,14 @@ export function MarblexAiChat() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, typing]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, [messages]);
 
   const pushUserAndReply = (text) => {
     const trimmed = String(text || "").trim();

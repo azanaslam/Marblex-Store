@@ -4,6 +4,8 @@ const {
   register,
   login,
   ssoLogin,
+  googleAuth,
+  getAuthConfig,
   verify2FA,
   resend2FA,
   forgotPassword,
@@ -17,9 +19,11 @@ const {
 
 const router = express.Router();
 
+router.get("/config", getAuthConfig);
 router.post("/register", register);
 router.post("/login", login);
 router.post("/sso-init", ssoLogin);
+router.post("/google", googleAuth);
 router.post("/verify-2fa", verify2FA);
 router.post("/resend-2fa", resend2FA);
 router.post("/forgot-password", forgotPassword);

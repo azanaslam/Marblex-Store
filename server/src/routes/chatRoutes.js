@@ -5,6 +5,8 @@ const {
   getUserConversation,
   listBroadcasts,
   getChatUnreadCount,
+  getChatInbox,
+  markChatRead,
   reactToMessage,
 } = require("../controllers/chatController");
 
@@ -15,5 +17,7 @@ router.post("/messages", auth, sendUserMessage);
 router.post("/messages/:messageId/react", auth, reactToMessage);
 router.get("/broadcasts", auth, listBroadcasts);
 router.get("/unread-count", auth, getChatUnreadCount);
+router.get("/inbox", auth, getChatInbox);
+router.post("/mark-read", auth, markChatRead);
 
 module.exports = router;

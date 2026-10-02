@@ -36,6 +36,8 @@ module.exports = {
   senderEmail: process.env.SENDER_EMAIL || process.env.SMTP_USER || process.env.EMAIL_USER || "Marblexpak@gmail.com",
   smtpUser: process.env.SMTP_USER || process.env.EMAIL_USER || "",
   smtpPass: process.env.SMTP_PASS || process.env.EMAIL_PASS || "",
+  /** Google Identity Services — Web Client ID (same value on frontend) */
+  googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || "",
 };
 
 

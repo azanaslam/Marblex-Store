@@ -263,6 +263,66 @@ const getChatUnreadCount = async (req, res) => {
   return res.json({ count });
 };
 
+/** Peek unread support messages without marking them read. */
+const getChatInbox = async (req, res) => {
+  try {
+    if (req.user.role === "admin") {
+      return res.status(400).json({ message: "Use admin chat threads." });
+    }
+    const adminId = await getAdminId();
+    const uid = req.user.id;
+    const messages = await DirectMessage.find({
+      sender: adminId,
+      recipient: uid,
+      seenByUser: false,
+    })
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .populate("sender", "name email role")
+      .populate("recipient", "name email role");
+    return res.json({ messages });
+  } catch (e) {
+    if (e.statusCode === 500) return res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: "Could not load inbox" });
+  }
+};
+
+/** Mark one message or all unread support messages as read. */
+const markChatRead = async (req, res) => {
+  try {
+    if (req.user.role === "admin") {
+      return res.status(400).json({ message: "Not available for admin." });
+    }
+    const adminId = await getAdminId();
+    const uid = req.user.id;
+    const messageId = req.body?.messageId;
+
+    if (messageId) {
+      if (!mongoose.Types.ObjectId.isValid(messageId)) {
+        return res.status(400).json({ message: "Invalid message id" });
+      }
+      await DirectMessage.updateOne(
+        { _id: messageId, recipient: uid, seenByUser: false },
+        { $set: { seenByUser: true } }
+      );
+    } else {
+      await DirectMessage.updateMany(
+        { sender: adminId, recipient: uid, seenByUser: false },
+        { $set: { seenByUser: true } }
+      );
+    }
+
+    const count = await DirectMessage.countDocuments({
+      recipient: uid,
+      seenByUser: false,
+    });
+    return res.json({ ok: true, count });
+  } catch (e) {
+    if (e.statusCode === 500) return res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: "Could not mark messages read" });
+  }
+};
+
 module.exports = {
   sendUserMessage,
   getUserConversation,
@@ -272,5 +332,7 @@ module.exports = {
   createBroadcast,
   listBroadcasts,
   getChatUnreadCount,
+  getChatInbox,
+  markChatRead,
   reactToMessage,
 };

@@ -22,13 +22,32 @@ body.embedded #bl,
 body.embedded #np{display:none!important}
 body.embedded .tr{gap:8px}
 body.embedded .app{min-height:100%;height:100svh}
-body.embedded .main{border-radius:24px 0 0 24px;box-shadow:inset 1px 0 0 rgba(255,255,255,.04)}
-body.embedded .top{border-radius:24px 0 0 0;padding-top:14px;padding-bottom:14px}
-body.embedded .top h1{font-size:20px;letter-spacing:-.01em}
-body.embedded .side{top:0;height:100svh}
+/* Embedded under the site navbar: no second brand header — slim workspace toolbar only */
+body.embedded .main{border-radius:18px 0 0 18px;box-shadow:inset 1px 0 0 rgba(255,255,255,.04)}
+body.embedded .brand-block{display:none!important}
+body.embedded .ctx{display:block;min-width:0}
+body.embedded .top{
+  border-radius:18px 0 0 0;
+  padding:10px 22px;
+  min-height:52px;
+  gap:12px;
+  background:var(--bg);
+  backdrop-filter:none;
+  border-bottom:1px solid var(--line);
+  box-shadow:none;
+}
+body.embedded .top .gs{height:38px;min-width:240px;max-width:340px;border-radius:11px;font-size:12.5px}
+body.embedded .top .ib{width:38px;height:38px;border-radius:11px}
+body.embedded .ctx small{font:700 9.5px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+body.embedded .ctx b{font:700 16px 'Space Grotesk';display:block;letter-spacing:-.01em;color:var(--ink);margin-top:1px}
+body.embedded .side{top:0;height:100svh;padding:18px 14px}
+body.embedded .prof{padding:2px 6px 14px;gap:10px}
+body.embedded .av{width:40px;height:40px;font-size:16px}
+body.embedded .sec{letter-spacing:.14em;opacity:.85;padding-top:2px}
+body.embedded .sfoot .nv span{font-size:12.5px}
 @media(max-width:900px){
 body.embedded .main{border-radius:0}
-body.embedded .top{border-radius:0}
+body.embedded .top{border-radius:0;padding:10px 14px}
 body.embedded .app{height:100svh}
 }
 .side{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100svh - env(safe-area-inset-top,0px));background:linear-gradient(180deg,var(--sd1),var(--sd2));color:#fff;display:flex;flex-direction:column;padding:22px 16px;z-index:40}
@@ -145,6 +164,9 @@ body.embedded .app{height:100svh}
 .gs{display:flex;align-items:center;gap:10px;height:42px;padding:0 14px;min-width:290px;margin-left:auto;border-radius:14px;border:1px solid var(--line);background:var(--field);color:var(--mut);font:500 13px Inter;transition:.2s}
 .gs:hover{border-color:var(--or);color:var(--ink)}.gs kbd,.pi kbd{margin-left:auto;font:600 10.5px Inter;padding:3px 7px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--mut)}
 .mt small{font:700 9.5px Inter;letter-spacing:.22em;color:var(--or)}.mt b{font:700 17px 'Space Grotesk';display:block}
+.ctx{display:none;min-width:0}
+.ctx small{font:700 9.5px Inter;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.ctx b{font:700 17px 'Space Grotesk';display:block;letter-spacing:-.015em;color:var(--ink);margin-top:1px}
 #pb{position:fixed;top:0;left:0;height:3px;width:0;opacity:0;background:linear-gradient(90deg,var(--or),#ffb347);z-index:300;box-shadow:0 0 12px var(--or)}
 #pb.go{animation:pbar .75s ease-out forwards}@keyframes pbar{0%{width:0;opacity:1}80%{width:100%;opacity:1}100%{width:100%;opacity:0}}
 .np{position:fixed;top:calc(env(safe-area-inset-top,0px) + 74px);right:28px;width:370px;max-height:72svh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45);z-index:60;display:none;padding:8px}
@@ -176,7 +198,7 @@ body.embedded .app{height:100svh}
 .mo{align-items:end;padding:0}.md{border-radius:26px 26px 0 0;max-width:none}
 }
 @media(max-width:900px){
-.dk{display:none!important}.mv{display:grid}.mt.mv{display:block}
+.dk{display:none!important}.mv{display:grid}.ctx{display:block}
 .top{padding:10px 14px;gap:10px}.top .tr{margin-left:auto}.top .av{width:40px;height:40px;font-size:15px;border:0;color:#fff}
 .body{padding:16px 16px calc(108px + env(safe-area-inset-bottom,0px))}
 .bn{display:flex;position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:50;padding:6px;gap:2px;border-radius:26px;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(20px);box-shadow:0 20px 40px -12px rgba(7,34,44,.45)}
@@ -249,8 +271,8 @@ body.embedded .app{height:100svh}
     <header class="top">
       <button class="ib dk" id="mn" aria-label="Collapse sidebar"><svg class="ic"><use href="#i-menu"/></svg></button>
       <button class="av mv" id="av2" aria-label="Open menu">A</button>
-      <div class="dk"><h1>MAR<span>BLEX</span> Client Portal</h1><p>Manage orders, quotes, documents, and support in one place.</p></div>
-      <div class="mt mv"><small>MARBLEX</small><b id="pgt">Overview</b></div>
+      <div class="dk brand-block"><h1>MAR<span>BLEX</span> Client Portal</h1><p>Manage orders, quotes, documents, and support in one place.</p></div>
+      <div class="ctx"><small>Workspace</small><b id="pgt">Overview</b></div>
       <button class="gs dk" id="gs"><svg class="ic"><use href="#i-search"/></svg><span>Search orders, documents, actions…</span><kbd>Ctrl K</kbd></button>
       <div class="tr"><button class="ib mv" id="gs2" aria-label="Search"><svg class="ic"><use href="#i-search"/></svg></button><button class="ib dk" id="th" aria-label="Theme"></button><button class="ib" id="bl" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg><i class="dot" id="dot">3</i></button></div>
     </header>
@@ -265,21 +287,89 @@ body.embedded .app{height:100svh}
 const $=s=>document.querySelector(s),I=(n,c='')=>`<svg class="ic ${c}"><use href="#i-${n}"/></svg>`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pk=n=>'PKR '+n.toLocaleString('en-US'),now=()=>new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})+' (PKT)';
-const S={v:'overview',unread:3,t:{support:'chat',account:'profile'},
+const fmtPkt=(d)=>d.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})+' (PKT)';
+const PRODUCTS=[
+  ['Elastomeric Sealant 600 ml',200],
+  ['PVC Waterstop 150 mm',150],
+  ['Waterproofing Primer 5 L',625],
+  ['APP Bituminous Membrane',2000],
+  ['Vulcanized Rubber Waterstop',4000],
+  ['Polymer Wall Putty 20 kg',3000],
+  ['Termite (Marblex) 2.9c',2499],
+  ['Mosaic Swimming Pool Seal',650],
+  ['Interior Emulsion Paint 4 L',2400],
+  ['PU Injection Grout 1 kg',1800],
+  ['Crystalline Waterproofing 25 kg',4500],
+  ['Entryway Flooring Kit',4000],
+];
+const STATUSES=['pending','processing','shipped','delivered'];
+function buildDemoOrders(count=30){
+  const out=[];
+  for(let i=0;i<count;i++){
+    const nItems=1+(i%4);
+    const items=[];
+    let amt=0;
+    for(let j=0;j<nItems;j++){
+      const p=PRODUCTS[(i*3+j)%PRODUCTS.length];
+      const qty=2+((i+j)%10);
+      const line=Math.round(p[1]*qty*(0.85+((i+j)%5)*0.05));
+      items.push([p[0],qty,line]);
+      amt+=line;
+    }
+    const day=new Date(2026,8,30);
+    day.setDate(day.getDate()-i*2);
+    day.setHours(10+(i%8), (i*7)%60, 0, 0);
+    const id=(0x8EAE9D+i*0x113).toString(16).toUpperCase().slice(-6);
+    out.push({id,st:STATUSES[i%STATUSES.length],date:fmtPkt(day),amt,items});
+  }
+  return out;
+}
+const DEMO_MSGS=[
+  ['th','Assalam o Alaikum — welcome to Marblex Spot support. How can we help with your site materials today?'],
+  ['me','Need waterstop profiles for a basement expansion joint in Lahore.'],
+  ['th','Got it. For basement joints we usually recommend vulcanized rubber waterstops. Do you have joint width / center-bulb preference?'],
+  ['me','About 150–200 mm. Also share TDS if available.'],
+  ['th','Perfect. Check Documents → PVC / Rubber Waterstop TDS, or open Catalogs on the shop. Want a quote for 40 meters?'],
+  ['me','Yes, quote for 40 m + welding kit please.'],
+  ['th','RFQ noted. Our engineering desk will reply in Live chat / Quotes within one business day. Anything else?'],
+  ['me','Also status of my latest pending order?'],
+  ['th','You can tap any order under Recent orders for full tracking. We are processing active lines now — thank you for choosing MARBLEX.'],
+];
+const DEMO_ANN=[
+  ['Marblex Spot · Spring catalog drop — waterstops & membranes updated','Oct 1, 2026, 9:00 AM (PKT)'],
+  ['Site tip: heat-weld rubber waterstops before pour for zero leak paths','Sep 28, 2026, 3:15 PM (PKT)'],
+  ['Wholesale RFQ desk open Mon–Sat 9am–6pm (PKT)','Sep 22, 2026, 11:40 AM (PKT)'],
+  ['New: APP torch-on membrane packs now in Shop','Sep 18, 2026, 5:05 PM (PKT)'],
+  ['Reminder: complete NTN / STRN on Account for faster invoicing','Sep 12, 2026, 2:20 PM (PKT)'],
+];
+const S={v:'overview',unread:4,t:{support:'chat',account:'profile'},
 user:{name:'Azzan',co:'Chemical Industry',email:'azanaslam907@gmail.com',phone:'03084585792',ind:'waterproofing',city:'Lahore G.P.O.',ntn:'',strn:'',gender:'Prefer not to say'},
-orders:[{id:'8EAE9D',st:'pending',date:'Sep 30, 2026, 2:28 PM (PKT)',amt:6649,items:[['Elastomeric Sealant 600 ml',12,2400],['PVC Waterstop 150 mm',20,3000],['Waterproofing Primer 5 L',2,1249]]}],
-rfqs:[],tickets:[],lists:[],msgs:[],sites:[['Head Office','Lahore G.P.O., Lahore']],tfa:false,
+orders:buildDemoOrders(30),
+rfqs:[
+  {id:'RFQ-2001',proj:'Canal Road Basement Waterproofing',cat:'PVC waterstops',qty:'40 m',date:'Sep 29, 2026, 11:10 AM (PKT)'},
+  {id:'RFQ-2002',proj:'DHA Phase 8 Podium Deck',cat:'Waterproofing membranes',qty:'1,200 m²',date:'Sep 20, 2026, 4:42 PM (PKT)'},
+  {id:'RFQ-2003',proj:'Industrial Floor — Korangi Plant',cat:'Epoxy & grouts',qty:'800 m²',date:'Sep 10, 2026, 9:18 AM (PKT)'},
+],
+tickets:[
+  {id:'T-1001',sub:'Invoice for order #8EAE9D',pr:'Normal',date:'Sep 30, 2026, 3:05 PM (PKT)'},
+  {id:'T-1002',sub:'TDS request — crystalline system',pr:'High',date:'Sep 24, 2026, 10:22 AM (PKT)'},
+],
+lists:['Waterproofing – Site A','Basement joints kit','Podium torch-on pack'],
+msgs:DEMO_MSGS.slice(),
+sites:[['Head Office','Lahore G.P.O., Lahore'],['Site Store — Canal Road','Canal Road, Lahore']],
+tfa:false,
 sess:[['Chrome · Windows','Lahore, PK','This device'],['Safari · iPhone','Lahore, PK','2 days ago']],
-ann:[['hey','May 8, 2026, 4:28 PM (PKT)'],['Hey everyone...........!','May 5, 2026, 6:47 PM (PKT)'],['Hey Good Morning Team..........!','May 5, 2026, 6:45 PM (PKT)']],
+ann:DEMO_ANN,
 docs:[['Brochure','MARBLEX Corporate Profile','Company overview, product lines, and industrial capabilities.'],['Manual','Application Manual – Waterproofing Systems','Field application guidance for membranes and coatings.'],['TDS','Elastomeric Sealants – Product Guide','Sealant selection and performance data for construction joints.'],['TDS','PVC Waterstop Technical Data','Technical specifications for PVC waterstop profiles.']]};
-const NAV=[['overview','grid','Overview'],['orders','bag','Orders'],['quotes','clip','Quotes / RFQ'],['docs','doc','Documents'],['support','headset','Support'],['favs','heart','Favorites & Lists'],['account','user','Account']];
+const NAV=[['overview','grid','Overview'],['orders','bag','Orders'],['quotes','clip','Quotes / RFQ'],['docs','doc','Documents'],['notifs','bell','Notifications'],['support','headset','Support'],['favs','heart','Favorites & Lists'],['account','user','Account']];
 const H=(t,p,a='')=>`<div class="ph"><div><h2>${t}</h2><p>${p}</p></div>${a?`<div class="oa">${a}</div>`:''}</div>`;
 const T=(items,cur)=>`<div class="tabs">${items.map(([k,l])=>`<button class="tb${k===cur?' on':''}" data-tab="${k}">${l}</button>`).join('')}</div>`;
 const F=(id,l,v='',t='text',cls='',at='')=>`<div class="fl ${cls}"><input id="${id}" type="${t}" value="${esc(v)}" placeholder=" " ${at}><label for="${id}">${l}</label></div>`;
 const SEL=(id,l,o,v='',cls='')=>`<div class="fl ${cls}"><select id="${id}">${o.map(x=>`<option${x===v?' selected':''}>${x}</option>`).join('')}</select><label for="${id}">${l}</label></div>`;
 const trk=ix=>['Placed','Processing','On the way','Delivered'].map((l,i)=>`<div class="ts${i<ix?' done':''}${i===ix?' cur':''}"><i>${i<ix?I('check'):i+1}</i>${l}</div>`).join('');
-const ixOf=o=>['pending','processing','shipped','delivered'].indexOf(o.st);
-const orow=(o,full)=>`<div class="or"><div><b>#${o.id}</b><span class="chip s-${o.st}">${o.st}</span><small>${o.date} · ${pk(o.amt)}${full?` · ${o.items.length} item(s)`:''}</small></div>${full?`<div class="oa"><button class="t" data-det="${o.id}">${I('eye')}Details</button><button class="t" data-cp="${o.id}">${I('copy')}Copy ID</button><button class="b sm" data-re="${o.id}">${I('cart')}Reorder</button></div>`:''}</div>`;
+const ixOf=o=>Math.max(0,['pending','processing','shipped','delivered'].indexOf(o.st));
+const stLabel=s=>s==='shipped'?'on the way':s;
+const orow=(o,full)=>`<div class="or" data-det="${o.id}" role="button" tabindex="0" style="cursor:pointer" title="Open order #${o.id}"><div><b>#${o.id}</b><span class="chip s-${o.st}">${stLabel(o.st)}</span><small>${o.date} · ${pk(o.amt)}${full?` · ${o.items.length} item(s)`:''}</small></div>${full?`<div class="oa"><button class="t" data-det="${o.id}">${I('eye')}Details</button><button class="t" data-cp="${o.id}">${I('copy')}Copy ID</button><button class="b sm" data-re="${o.id}">${I('cart')}Reorder</button></div>`:`<div class="oa"><button class="t" data-det="${o.id}">${I('eye')}Open</button></div>`}</div>`;
 const empty=(i,t,d,b='')=>`<div class="em2"><i>${I(i)}</i><h3>${t}</h3><p>${d}</p>${b}</div>`;
 const prof=()=>{const u=S.user,f=[['Name',u.name],['Phone',u.phone],['Company',u.co],['Industry',u.ind],['City',u.city],['NTN',u.ntn],['STRN',u.strn]],ok=f.filter(x=>x[1]&&x[1].trim()),p=Math.round(ok.length/f.length*100),ms=f.filter(x=>!x[1]||!x[1].trim()).map(x=>x[0]);
 return `<div class="card"><div class="ch"><h3>Profile completeness</h3></div><div class="pf"><div class="prwrap"><svg class="ringp" viewBox="0 0 80 80" aria-hidden="true"><circle class="tr0" cx="40" cy="40" r="34"/><circle class="pr0" cx="40" cy="40" r="34" style="--l:${p*2.14}px"/></svg><b class="pp">${p}%</b></div><div><p class="mut">${ok.length} of ${f.length} details completed${ms.length?'. Missing: '+ms.join(', ')+'.':'. Great job!'}</p>${ms.length?'<button class="g sm" style="margin-top:10px" data-go="account">Complete profile</button>':''}</div></div></div>`};
@@ -290,12 +380,12 @@ function modal(t,b,ok,lb='Save'){const m=$('#modal');m.innerHTML=`<div class="mo
 m.firstChild.onclick=e=>{if(e.target.classList.contains('mo')||e.target.closest('[data-x]'))close()};if(ok)$('#mok').onclick=()=>{if(ok()!==false)close()}}
 const V={},P={};
 V.overview=()=>{const o=S.orders,act=o.filter(x=>x.st!=='delivered').length,l=o[0];
-return `<section class="hero tilt"><div class="rg r1"></div><div class="rg r2"></div><div class="orb"></div><small>WELCOME BACK</small><h2>${esc(S.user.name)}</h2><p>${esc(S.user.co)} · ${esc(S.user.ind)}</p>
+return `<section class="hero tilt"><div class="rg r1"></div><div class="rg r2"></div><div class="orb"></div><small>WELCOME BACK · MARBLEX SPOT</small><h2>${esc(S.user.name)}</h2><p>${esc(S.user.co)} · ${esc(S.user.ind)}</p>
 <div class="acts"><button class="b" data-go="orders">${I('cart')}View orders</button><button class="g" data-go="quotes" data-new="rfq">${I('clip')}New RFQ</button><button class="g" data-a="shop">${I('store')}Browse catalog</button><button class="g" data-go="support">${I('headset')}Support</button></div></section>
 <div class="kpis">${[['TOTAL ORDERS',o.length,'All-time website orders','bag'],['ACTIVE',act,'Pending / processing / on the way','truck'],['OPEN RFQs',S.rfqs.length,'Awaiting quote or review','clip'],['SUPPORT',S.tickets.length,'Open or waiting tickets','headset']].map(k=>`<div class="kpi tilt"><i>${I(k[3])}</i><small>${k[0]}</small><b data-n="${k[1]}">0</b><span>${k[2]}</span></div>`).join('')}</div>
-<div class="g2"><div class="stack"><div class="card"><div class="ch"><h3>Recent orders</h3><a data-go="orders">See all</a></div><div class="list">${o.slice(0,3).map(x=>orow(x)).join('')}</div></div>
-${l?`<div class="card"><div class="ch"><h3>Order tracker · #${l.id}</h3><span class="chip s-${l.st}">${l.st}</span></div><div class="trk">${trk(ixOf(l))}</div></div>`:''}</div>
-<div class="stack">${prof()}<div class="card"><div class="ch"><h3>Announcements</h3><a data-go="support" data-t="bc">View all</a></div>${S.ann.map(a=>`<div class="an"><b>${a[0]}</b><small>${a[1]}</small></div>`).join('')}</div></div></div>`};
+<div class="g2"><div class="stack"><div class="card"><div class="ch"><h3>Recent orders</h3><a data-go="orders">See all</a></div><div class="list">${o.slice(0,5).map(x=>orow(x)).join('')}</div></div>
+${l?`<div class="card"><div class="ch"><h3>Order tracker · #${l.id}</h3><span class="chip s-${l.st}">${stLabel(l.st)}</span></div><div class="trk">${trk(ixOf(l))}</div></div>`:''}</div>
+<div class="stack">${prof()}<div class="card"><div class="ch"><h3>Announcements</h3><a data-go="support" data-t="bc">View all</a></div>${S.ann.slice(0,3).map(a=>`<div class="an"><b>${esc(a[0])}</b><small>${a[1]}</small></div>`).join('')}</div></div></div>`};
 V.orders=()=>H('Orders','Track status, reorder materials, and open invoices.')+`<div class="fb"><label class="si">${I('search')}<input id="oq" placeholder="Search order #"></label><select class="sel" id="os"><option value="">All statuses</option><option>pending</option><option>processing</option><option>shipped</option><option>delivered</option></select><button class="g" id="of">${I('filter')}Filter</button></div><div id="ol" class="list"></div>`;
 P.orders=()=>{const d=()=>{const q=$('#oq').value.trim().toLowerCase().replace('#',''),s=$('#os').value,r=S.orders.filter(o=>o.id.toLowerCase().includes(q)&&(!s||o.st===s));$('#ol').innerHTML=r.length?r.map(o=>orow(o,1)).join(''):info('No orders match your filters.')};$('#oq').oninput=$('#os').onchange=$('#of').onclick=d;d()};
 V.quotes=()=>H('Quotes / RFQ','Request project pricing for wholesale or site packages.',`<button class="b" id="nr">${I('plus')}New RFQ</button>`)+(S.rfqs.length?`<div class="list">${S.rfqs.map(r=>`<div class="or"><div><b>${r.id}</b><span class="chip s-review">Under review</span><small>${esc(r.proj)} · ${esc(r.cat)} · Qty ${esc(r.qty)} · ${r.date}</small></div></div>`).join('')}</div>`:empty('clip','No RFQs yet','Submit a request when you need volume pricing for a site.',`<button class="b" data-fa="rfq">${I('plus')}New RFQ</button>`));
@@ -309,10 +399,10 @@ V.support=()=>H('Support','Live chat, announcements, and formal tickets.',`<butt
 P.support=()=>{const t=S.t.support,sp=$('#sp');$('#nt').onclick=tkt;
 if(t==='bc')sp.innerHTML=S.ann.map(a=>`<div class="an card" style="margin-bottom:12px"><b>${I('bell')} ${a[0]}</b><small>${a[1]}</small></div>`).join('');
 else if(t==='tk')sp.innerHTML=S.tickets.length?`<div class="list">${S.tickets.map(k=>`<div class="or"><div><b>${k.id}</b><span class="chip s-open">open</span><small>${esc(k.sub)} · ${esc(k.pr)} priority · ${k.date}</small></div></div>`).join('')}</div>`:empty('headset','No tickets yet','Create a ticket for formal requests and track replies here.',`<button class="b" data-fa="tkt">${I('plus')}New ticket</button>`);
-else{sp.innerHTML=`<div class="chat"><div class="chh"><i>${I('headset')}</i><div><small>MARBLEX SUPPORT</small><h3>Chat with us</h3><p>Messages go to the store team. Replies show up here.</p></div></div><div class="cm" id="cm"></div><div class="cp"><button class="ib" id="ce" aria-label="Emoji">${I('smile')}</button><input id="ci" placeholder="Type a message..." autocomplete="off"><button class="b rd" id="cs" disabled aria-label="Send">${I('send')}</button></div></div>`;
-const dm=()=>{$('#cm').innerHTML=S.msgs.length?S.msgs.map(m=>`<div class="bu ${m[0]}">${esc(m[1])}</div>`).join(''):'<div class="em"><b>No messages yet</b>Say hello below — we typically reply soon.</div>';$('#cm').scrollTop=1e5};dm();
+else{sp.innerHTML=`<div class="chat"><div class="chh"><i>${I('headset')}</i><div><small>MARBLEX SPOT</small><h3>Chat with support</h3><p>Industrial desk for orders, TDS, and site quotes. Replies show up here.</p></div></div><div class="cm" id="cm"></div><div class="cp"><button class="ib" id="ce" aria-label="Emoji">${I('smile')}</button><input id="ci" placeholder="Message Marblex Spot..." autocomplete="off"><button class="b rd" id="cs" disabled aria-label="Send">${I('send')}</button></div></div>`;
+const dm=()=>{$('#cm').innerHTML=S.msgs.length?S.msgs.map(m=>`<div class="bu ${m[0]}">${esc(m[1])}</div>`).join(''):'<div class="em"><b>No messages yet</b>Say hello below — Marblex Spot typically replies soon.</div>';$('#cm').scrollTop=1e5};dm();
 const ci=$('#ci'),snd=()=>{const v=ci.value.trim();if(!v)return;S.msgs.push(['me',v]);ci.value='';$('#cs').disabled=true;dm();const ty=document.createElement('div');ty.className='bu th ty';ty.innerHTML='<span></span><span></span><span></span>';$('#cm').appendChild(ty);$('#cm').scrollTop=1e5;
-setTimeout(()=>{S.msgs.push(['th',['Thanks for reaching out! A team member will reply shortly.','Got it. Our store team is checking this for you.','Thank you. We will update you here very soon.'][S.msgs.length%3]]);if($('#cm'))dm()},1600)};
+setTimeout(()=>{S.msgs.push(['th',['Thanks — Marblex Spot received your note. A specialist will follow up shortly.','Got it. We are checking catalogs / stock for you.','Noted. You can also track orders under Recent orders anytime.'][S.msgs.length%3]]);if($('#cm'))dm()},1600)};
 ci.oninput=()=>$('#cs').disabled=!ci.value.trim();ci.onkeydown=e=>{if(e.key==='Enter')snd()};$('#cs').onclick=snd;$('#ce').onclick=()=>{ci.value+='😊';ci.focus();ci.oninput()}}};
 function tkt(){modal('New ticket',`<div class="fg">${F('ts','Subject','','text','w')}${SEL('tc','Category',['Order issue','Product question','Billing','Technical'])}${SEL('tp','Priority',['Normal','High','Urgent'])}<div class="fl w"><textarea id="tm" placeholder=" "></textarea><label>Message</label></div></div>`,()=>{if(!$('#ts').value.trim()){toast('Please enter a subject.',1);return false}
 S.tickets.unshift({id:'T-'+(1001+S.tickets.length),sub:$('#ts').value.trim(),pr:$('#tp').value,date:now()});S.t.support='tk';toast('Ticket created.');go('support',1)},'Create ticket')}
@@ -329,14 +419,15 @@ else{a.innerHTML=`<div class="g2" style="margin-top:0"><div class="card"><div cl
 <div class="card"><div class="ch"><h3>Active sessions</h3></div>${S.sess.map((s,i)=>`<div class="row"><div><b>${s[0]}</b><small>${s[1]} · ${s[2]}</small></div>${i?`<button class="t" data-rev="${i}">Revoke</button>`:'<span class="chip s-open">Current</span>'}</div>`).join('')}</div></div></div>`;
 $('#tf').onclick=e=>{S.tfa=!S.tfa;e.currentTarget.classList.toggle('on',S.tfa);toast('Two-factor authentication '+(S.tfa?'enabled.':'disabled.'))};
 $('#pw').onclick=()=>{const n=$('#p2').value;if(!$('#p1').value)return toast('Enter your current password.',1);if(n.length<8)return toast('New password must be at least 8 characters.',1);if(n!==$('#p3').value)return toast("Passwords don't match.",1);['p1','p2','p3'].forEach(i=>$('#'+i).value='');toast('Password updated successfully.')}}};
-function det(id){const o=S.orders.find(x=>x.id===id);modal('Order #'+o.id,`<div class="trk">${trk(ixOf(o))}</div><table class="tbl"><tr><th>Item</th><th>Qty</th><th>Amount</th></tr>${o.items.map(i=>`<tr><td>${i[0]}</td><td>${i[1]}</td><td>${pk(i[2])}</td></tr>`).join('')}<tr class="tot"><td colspan="2">Total</td><td>${pk(o.amt)}</td></tr></table><p class="mut">Placed ${o.date}</p>`)}
+function det(id){const o=S.orders.find(x=>x.id===id);if(!o)return toast('Order not found.',1);modal('Order #'+o.id,`<div class="trk">${trk(ixOf(o))}</div><p class="mut" style="margin:0 0 10px">Status: <b style="color:var(--ink);text-transform:capitalize">${stLabel(o.st)}</b></p><table class="tbl"><tr><th>Item</th><th>Qty</th><th>Amount</th></tr>${o.items.map(i=>`<tr><td>${esc(i[0])}</td><td>${i[1]}</td><td>${pk(i[2])}</td></tr>`).join('')}<tr class="tot"><td colspan="2">Total</td><td>${pk(o.amt)}</td></tr></table><p class="mut">Placed ${o.date}</p>`)}
 function side(){$('#av2').textContent=S.user.name[0].toUpperCase();$('#av').textContent=S.user.name[0].toUpperCase();$('#pn').textContent=S.user.name;$('#pc').textContent=S.user.co}
-function go(v,keep){S.v=v;$('#side').classList.remove('open');$('#ov').classList.remove('on');
+function go(v,keep){if(v==='notifs'){try{window.top.location.href='/dashboard/notifications'}catch(e){}return}
+S.v=v;$('#side').classList.remove('open');$('#ov').classList.remove('on');
 $('#nav').innerHTML=NAV.map(n=>`<button class="nv${n[0]===v?' on':''}" data-go="${n[0]}" title="${n[2]}">${I(n[1])}<span>${n[2]}</span></button>`).join('');
 $('#pgt').textContent=NAV.find(n=>n[0]===v)[2];$('#np').classList.remove('on');$('#fabw').classList.remove('on');const pb=$('#pb');pb.classList.remove('go');void pb.offsetWidth;pb.classList.add('go');
 $('#bn').innerHTML=[['overview','grid','Home'],['orders','bag','Orders'],['quotes','clip','RFQ'],['support','headset','Support'],['more','menu','More']].map(n=>`<button class="${n[0]===v?'on':''}" ${n[0]==='more'?'data-a="more"':`data-go="${n[0]}"`}>${I(n[1])}${n[2]}</button>`).join('');
 const w=$('#view');w.innerHTML=V[v]();[...w.children].forEach((c,i)=>c.style.setProperty('--i',keep?0:i));P[v]&&P[v]();
-w.querySelectorAll('[data-n]').forEach(el=>{const n=+el.dataset.n;let i=0;el.textContent=0;if(n)(function s(){el.textContent=++i;if(i<n)setTimeout(s,90)})()});
+w.querySelectorAll('[data-n]').forEach(el=>{const n=+el.dataset.n;if(!n){el.textContent='0';return}let i=0;const step=Math.max(1,Math.ceil(n/18));(function s(){i=Math.min(n,i+step);el.textContent=i;if(i<n)setTimeout(s,40)})()});
 if(!keep)window.scrollTo({top:0,behavior:'smooth'})}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-go],[data-det],[data-cp],[data-re],[data-a],[data-tab],[data-open],[data-del],[data-rev],[data-fa]');if(!t)return;const d=t.dataset;
 if(d.go){if(d.t)S.t.support=d.t;go(d.go);if(d.new==='rfq')rfq()}
@@ -377,7 +468,7 @@ $('#gs').onclick=$('#gs2').onclick=pal;
 const th=$('#th'),th2=$('#th2'),sT=t=>{document.documentElement.dataset.theme=t;if(th)th.innerHTML=I(t==='dark'?'sun':'moon');if(th2)th2.innerHTML=I(t==='dark'?'sun':'moon')+'<span>'+(t==='dark'?'Light mode':'Dark mode')+'</span>';try{localStorage.setItem('mx_dash_theme',t);localStorage.setItem('marblex_theme',t)}catch(_){}};
 let tt='light';try{tt=localStorage.getItem('marblex_theme')||localStorage.getItem('mx_dash_theme')||'light'}catch(_){}sT(tt);const togT=()=>sT(document.documentElement.dataset.theme==='dark'?'light':'dark');if(th)th.onclick=togT;if(th2)th2.onclick=togT;
 try{if(localStorage.getItem('mx_col'))$('.app').classList.add('col')}catch(_){}
-const pathToView=(p)=>{const m=(p||'').replace(/^\/dashboard\/?/,'').split('/')[0]||'';return({overview:'overview','':'overview',orders:'orders',quotes:'quotes',documents:'docs',support:'support',favorites:'favs',account:'account',partner:'overview'}[m]||'overview');};
+const pathToView=(p)=>{const m=(p||'').replace(/^\/dashboard\/?/,'').split('/')[0]||'';return({overview:'overview','':'overview',orders:'orders',quotes:'quotes',documents:'docs',support:'support',favorites:'favs',account:'account',partner:'overview',notifications:'notifs'}[m]||'overview');};
 window.addEventListener('message',e=>{if(!e.data)return;if(e.data.type==='MARBLEX_THEME'&&e.data.theme){sT(e.data.theme);return}if(e.data.type==='MARBLEX_MARK_NOTIFS_READ'){S.unread=0;const d=$('#dot');d&&d.remove();pushNotifs();return}if(e.data.type!=='MARBLEX_PORTAL_INIT')return;if(e.data.embedded)document.body.classList.add('embedded');if(e.data.theme)sT(e.data.theme);const u=e.data.user;if(u){Object.assign(S.user,{name:u.name||S.user.name,co:u.co||u.company||S.user.co,email:u.email||S.user.email,phone:u.phone||S.user.phone});side()}const v=e.data.view||pathToView(e.data.path);if(v&&V[v])go(v,1);pushNotifs()});
 side();go('overview');pushNotifs();
 </script>

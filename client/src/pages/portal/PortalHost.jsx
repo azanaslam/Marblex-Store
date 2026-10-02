@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { getAuthToken, getAuthUser } from "../../auth/session";
+import { PortalNotifications } from "./PortalNotifications";
 
 const pathToPortalView = (pathname) => {
   const segment = pathname.replace(/^\/dashboard\/?/, "").split("/")[0] || "";
@@ -14,6 +15,7 @@ const pathToPortalView = (pathname) => {
     favorites: "favs",
     account: "account",
     partner: "overview",
+    notifications: "notifs",
   };
   return map[segment] || "overview";
 };
@@ -23,8 +25,10 @@ export const PortalHost = () => {
   const user = getAuthUser();
   const location = useLocation();
   const iframeRef = useRef(null);
+  const isNotifications = /^\/dashboard\/notifications\/?$/.test(location.pathname);
 
   useEffect(() => {
+    if (isNotifications) return;
     const iframe = iframeRef.current;
     if (!iframe || !token) return;
 
@@ -56,10 +60,26 @@ export const PortalHost = () => {
     iframe.addEventListener("load", post);
     post();
     return () => iframe.removeEventListener("load", post);
-  }, [token, user, location.pathname]);
+  }, [token, user, location.pathname, isNotifications]);
 
   if (!token) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (isNotifications) {
+    return (
+      <div className="mx-portal-host relative flex w-full flex-1 flex-col overflow-hidden bg-[#06212b]">
+        <div
+          className="mx-portal-frame block w-full flex-1 overflow-auto border-0 bg-[#eff3f7]"
+          style={{
+            minHeight: "min(100dvh - 7.25rem, 960px)",
+            height: "calc(100dvh - 7.25rem)",
+          }}
+        >
+          <PortalNotifications />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -70,8 +90,8 @@ export const PortalHost = () => {
         src="/marblex-client-portal.html"
         className="mx-portal-frame block w-full flex-1 border-0"
         style={{
-          minHeight: "min(100dvh - 7.5rem, 900px)",
-          height: "calc(100dvh - 7.5rem)",
+          minHeight: "min(100dvh - 7.25rem, 960px)",
+          height: "calc(100dvh - 7.25rem)",
           background: "#06212b",
         }}
       />

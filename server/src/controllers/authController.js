@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const DirectMessage = require("../models/DirectMessage");
 const { createToken } = require("../utils/createToken");
@@ -8,7 +9,9 @@ const {
   sendLoginAlertEmail,
   sendPasswordResetEmail,
 } = require("../utils/sendEmail");
-const { adminEmail } = require("../config/env");
+const { adminEmail, googleClientId } = require("../config/env");
+
+const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
 
 const generate6DigitCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -238,6 +241,7 @@ const ssoLogin = async (req, res) => {
       twoFactorCode,
       twoFactorExpires,
       isEmailVerified: false,
+      authProvider: provider === "microsoft" || provider === "linkedin" ? provider : "local",
     });
   } else {
     user.twoFactorCode = twoFactorCode;
@@ -255,6 +259,112 @@ const ssoLogin = async (req, res) => {
     requires2FA: true,
     email: user.email,
     message: `A 6-digit verification code has been sent to ${user.email}.`,
+  });
+};
+
+/**
+ * Real Google Identity Sign-In:
+ * 1) Client sends GIS credential (ID token)
+ * 2) Server verifies with Google
+ * 3) Create/find user, then Marblex email 2FA continues
+ */
+const googleAuth = async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) {
+    return res.status(400).json({ message: "Google credential is required" });
+  }
+  if (!googleClientId || !googleClient) {
+    return res.status(503).json({
+      message: "Google Sign-In is not configured. Set GOOGLE_CLIENT_ID on the server.",
+    });
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: googleClientId,
+    });
+    payload = ticket.getPayload();
+  } catch (err) {
+    console.error("[MARBLEX Google Auth] Token verify failed:", err.message);
+    return res.status(401).json({ message: "Invalid Google sign-in token. Please try again." });
+  }
+
+  if (!payload?.email || !payload.email_verified) {
+    return res.status(401).json({ message: "Google account email is missing or not verified." });
+  }
+
+  const normalizedEmail = payload.email.toLowerCase().trim();
+  const googleSub = payload.sub;
+  const displayName = payload.name || normalizedEmail.split("@")[0];
+  const avatarUrl = payload.picture || "";
+
+  let user = await User.findOne({
+    $or: [{ email: normalizedEmail }, ...(googleSub ? [{ googleId: googleSub }] : [])],
+  });
+
+  const twoFactorCode = generate6DigitCode();
+  const twoFactorExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+  if (!user) {
+    const passwordHash = await bcrypt.hash(`google_oauth_${googleSub}_${Date.now()}`, 10);
+    const isAdmin = normalizedEmail === "marblexpak@gmail.com";
+    user = await User.create({
+      name: displayName,
+      email: normalizedEmail,
+      passwordHash,
+      company: "",
+      role: isAdmin ? "admin" : "user",
+      isAccessGranted: true,
+      avatarUrl,
+      googleId: googleSub,
+      authProvider: "google",
+      twoFactorCode,
+      twoFactorExpires,
+      isEmailVerified: false,
+    });
+  } else {
+    if (user.isBlocked) {
+      return res.status(403).json({
+        code: "ACCOUNT_BLOCKED",
+        message: "Your account is blocked. Please contact the administrator.",
+        contactEmail: adminEmail,
+      });
+    }
+    if (user.role === "user" && user.isAccessGranted === false) {
+      return res.status(403).json({
+        code: "PENDING_APPROVAL",
+        message: "Your account is pending admin approval.",
+        contactEmail: adminEmail,
+      });
+    }
+    user.googleId = user.googleId || googleSub;
+    user.authProvider = "google";
+    if (avatarUrl && !user.avatarUrl) user.avatarUrl = avatarUrl;
+    if (displayName && (!user.name || user.name === normalizedEmail.split("@")[0])) {
+      user.name = displayName;
+    }
+    user.twoFactorCode = twoFactorCode;
+    user.twoFactorExpires = twoFactorExpires;
+    await user.save();
+  }
+
+  send2FACodeEmail(user.email, twoFactorCode, user.name, "Google Sign-In 2FA").catch((err) =>
+    console.error("[MARBLEX Google 2FA] Email error:", err.message)
+  );
+
+  return res.json({
+    requires2FA: true,
+    email: user.email,
+    message: `Google verified. A 6-digit code was sent to ${user.email}.`,
+  });
+};
+
+const getAuthConfig = async (_req, res) => {
+  return res.json({
+    googleClientId: googleClientId || "",
+    googleEnabled: Boolean(googleClientId),
   });
 };
 
@@ -414,6 +524,8 @@ module.exports = {
   register,
   login,
   ssoLogin,
+  googleAuth,
+  getAuthConfig,
   verify2FA,
   resend2FA,
   forgotPassword,

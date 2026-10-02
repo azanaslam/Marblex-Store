@@ -33,6 +33,9 @@ const userSchema = new mongoose.Schema(
     twoFactorCode: { type: String, default: null },
     twoFactorExpires: { type: Date, default: null },
     isEmailVerified: { type: Boolean, default: false },
+    /** Google subject id when signed in via Google Identity */
+    googleId: { type: String, default: null, sparse: true },
+    authProvider: { type: String, enum: ["local", "google", "microsoft", "linkedin"], default: "local" },
   },
   { timestamps: true }
 );

@@ -25,12 +25,15 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
-import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
 import { SiteFooter } from "./SiteFooter";
+import {
+  getUnseenBroadcasts,
+  NOTIFS_CHANGED_EVENT,
+} from "../notifications/broadcastSeen";
 
 const FloatingChatWidget = lazy(() =>
   import("./FloatingChatWidget").then((m) => ({ default: m.FloatingChatWidget }))
@@ -42,10 +45,10 @@ export const AppLayout = ({ cartCount, children }) => {
   const [authUserFromStorage, setAuthUserFromStorage] = useState(getAuthUser());
   const [token, setToken] = useState(getAuthToken());
   const [chatUnreadNav, setChatUnreadNav] = useState(0);
+  const [broadcastUnread, setBroadcastUnread] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const [portalNotifs, setPortalNotifs] = useState({ unread: 0, items: [] });
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem("marblex_theme") || "light";
   });
@@ -113,32 +116,6 @@ export const AppLayout = ({ cartCount, children }) => {
     }
     syncPortalTheme(themeMode);
   }, [themeMode, syncPortalTheme]);
-
-  useEffect(() => {
-    const onMsg = (e) => {
-      if (e.origin !== window.location.origin) return;
-      if (e.data?.type !== "MARBLEX_PORTAL_NOTIFY") return;
-      setPortalNotifs({
-        unread: Number(e.data.unread) || 0,
-        items: Array.isArray(e.data.items) ? e.data.items : [],
-      });
-    };
-    window.addEventListener("message", onMsg);
-    return () => window.removeEventListener("message", onMsg);
-  }, []);
-
-  const markPortalNotifsRead = () => {
-    setPortalNotifs((prev) => ({ ...prev, unread: 0 }));
-    const frame = document.querySelector("iframe.mx-portal-frame");
-    if (frame?.contentWindow) {
-      try {
-        frame.contentWindow.postMessage(
-          { type: "MARBLEX_MARK_NOTIFS_READ" },
-          window.location.origin
-        );
-      } catch {}
-    }
-  };
 
   const logout = () => {
     clearAuthSession();
@@ -222,17 +199,50 @@ export const AppLayout = ({ cartCount, children }) => {
       const u = getAuthUser();
       if (!t || !u || (u.role !== "admin" && u.role !== "user" && u.role !== "subowner")) {
         setChatUnreadNav(0);
+        setBroadcastUnread(0);
         return;
       }
       http
         .get("/chat/unread-count", authHeaders(t))
         .then((r) => setChatUnreadNav(Number(r.data?.count) || 0))
-        .catch(() => { });
+        .catch(() => {});
+
+      if (u.role !== "admin") {
+        http
+          .get("/chat/broadcasts", authHeaders(t))
+          .then((r) => {
+            const items = Array.isArray(r.data) ? r.data : [];
+            setBroadcastUnread(getUnseenBroadcasts(items).length);
+          })
+          .catch(() => setBroadcastUnread(0));
+      } else {
+        setBroadcastUnread(0);
+      }
     };
     load();
     const id = setInterval(load, 20000);
-    return () => clearInterval(id);
+    window.addEventListener(NOTIFS_CHANGED_EVENT, load);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener(NOTIFS_CHANGED_EVENT, load);
+    };
   }, [location.pathname, authUserFromStorage, token]);
+
+  const notifCount = chatUnreadNav + broadcastUnread;
+
+  const openNotifications = (e) => {
+    e?.stopPropagation?.();
+    e?.preventDefault?.();
+    setAccountMenuOpen(false);
+    setIsMenuOpen(false);
+
+    if (isAdmin) {
+      navigate("/admin", { state: { chatUnread: chatUnreadNav, adminTab: 6 } });
+      return;
+    }
+
+    navigate("/dashboard/notifications");
+  };
 
   const showNavInstant = useCallback(() => {
     const targets = [
@@ -574,14 +584,17 @@ export const AppLayout = ({ cartCount, children }) => {
                 )}
               </button>
 
-              {/* Cart — desktop/tablet in navbar; mobile uses floating FAB above chat */}
+              {/* Cart — desktop always visible; on mobile visible only when not logged in (shifts down to floating FAB when logged in) */}
               <RouterLink
                 to="/cart"
                 aria-label="Cart"
-                className={`relative hidden sm:flex h-auto w-auto items-center gap-2 px-3.5 py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] ${isDark
+                className={`relative ${
+                  isUserLoggedIn ? "hidden sm:flex" : "flex"
+                } w-9 h-9 sm:w-auto sm:h-auto items-center justify-center sm:justify-start gap-2 sm:px-3.5 sm:py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] ${
+                  isDark
                     ? "border-slate-700 bg-[#0e2735] text-white hover:border-[#ff6b4a]"
                     : "border-slate-200 bg-[#f8fafc] hover:border-slate-300 text-[#0a3d52]"
-                  }`}
+                }`}
               >
                 <Badge
                   badgeContent={cartCount}
@@ -595,13 +608,13 @@ export const AppLayout = ({ cartCount, children }) => {
                       height: "15px",
                       minWidth: "15px",
                       top: -4,
-                      right: -4
-                    }
+                      right: -4,
+                    },
                   }}
                 >
                   <ShoppingCartIcon sx={{ fontSize: 17, color: isDark ? "#ff8c73" : "#0a3d52" }} />
                 </Badge>
-                <span className="font-subheading">Cart</span>
+                <span className="hidden sm:inline font-subheading">Cart</span>
               </RouterLink>
 
               {/* Vertical Divider Stick */}
@@ -624,16 +637,8 @@ export const AppLayout = ({ cartCount, children }) => {
                 </div>
               ) : (
                 <div className="relative" ref={accountMenuRef}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      setAccountMenuOpen((o) => !o);
-                    }}
-                    aria-expanded={accountMenuOpen}
-                    aria-haspopup="menu"
-                    aria-label="Account menu"
-                    className={`flex items-center rounded-full border transition-all lg:gap-2 lg:pl-1.5 lg:pr-2.5 lg:py-1.5 ${
+                  <div
+                    className={`flex items-center rounded-full border transition-all ${
                       accountMenuOpen
                         ? isDark
                           ? "border-[#ff6b4a]/40 bg-[#ff6b4a]/10"
@@ -641,121 +646,86 @@ export const AppLayout = ({ cartCount, children }) => {
                         : isDark
                           ? "border-slate-700 bg-[#0e2735] hover:border-slate-600"
                           : "border-slate-200 bg-[#f8fafc] hover:border-slate-300"
-                    } p-0 lg:p-0`}
+                    }`}
                   >
-                    <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] text-[11px] font-extrabold text-white shadow-sm sm:h-9 sm:w-9 lg:h-8 lg:w-8 lg:text-[12px]">
-                      {accountInitial}
-                      {(chatUnreadNav > 0 || portalNotifs.unread > 0) && (
-                        <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2 border-white bg-[#ff6b4a] dark:border-[#0c222f] sm:h-2.5 sm:w-2.5" />
-                      )}
-                    </span>
-                    <span className="hidden min-w-0 text-left lg:block">
-                      <span className={`block max-w-[7.5rem] truncate text-[12px] font-bold leading-tight ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
-                        {displayFirstName}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setAccountMenuOpen((o) => !o);
+                      }}
+                      aria-expanded={accountMenuOpen}
+                      aria-haspopup="menu"
+                      aria-label="Account menu"
+                      className="flex items-center gap-0 rounded-full p-0 lg:gap-2 lg:pl-1.5 lg:pr-2 lg:py-1.5"
+                    >
+                      <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] text-[11px] font-extrabold text-white shadow-sm sm:h-9 sm:w-9 lg:h-8 lg:w-8 lg:text-[12px]">
+                        {accountInitial}
                       </span>
-                      <span className="block text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                        {isAdmin ? "Admin" : "Account"}
+                      <span className="hidden min-w-0 text-left lg:block">
+                        <span className={`block max-w-[7.5rem] truncate text-[12px] font-bold leading-tight ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
+                          {displayFirstName}
+                        </span>
+                        <span className="block text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                          {isAdmin ? "Admin" : "Account"}
+                        </span>
                       </span>
-                    </span>
-                    <KeyboardArrowDownIcon
-                      sx={{ fontSize: 18 }}
-                      className={`mr-1 hidden text-slate-400 transition-transform lg:inline ${accountMenuOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
+                      <KeyboardArrowDownIcon
+                        sx={{ fontSize: 18 }}
+                        className={`mr-1 hidden text-slate-400 transition-transform lg:inline ${accountMenuOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                  </div>
 
                   {accountMenuOpen && (
                     <div
                       role="menu"
-                      className={`absolute right-0 top-[calc(100%+8px)] z-[80] w-[min(16.5rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border shadow-xl ${
-                        isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200 bg-white"
+                      className={`absolute right-0 top-[calc(100%+8px)] z-[80] w-[min(16.5rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border shadow-[0_18px_40px_-22px_rgba(8,34,46,.5)] ${
+                        isDark ? "border-slate-700/80 bg-[#0c222f]" : "border-slate-200/90 bg-white"
                       }`}
                     >
-                      <div className={`border-b px-3.5 py-3 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
-                        <p className={`truncate text-[13px] font-bold ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
-                          {authUser?.name || displayFirstName}
-                        </p>
-                        <p className="truncate text-[11px] text-slate-400">
-                          {authUser?.email || (isAdmin ? "Administrator" : "Client account")}
-                        </p>
+                      <div className={`flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5 sm:py-3 ${isDark ? "bg-white/[0.02]" : "bg-slate-50/80"}`}>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] text-[11px] font-extrabold text-white shadow-sm sm:h-9 sm:w-9 sm:text-[12px]">
+                          {accountInitial}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className={`truncate text-[12.5px] font-bold leading-tight sm:text-[13px] ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
+                            {authUser?.name || displayFirstName}
+                          </p>
+                          <p className="truncate text-[10.5px] text-slate-400 sm:text-[11px]">
+                            {authUser?.email || (isAdmin ? "Administrator" : "Client account")}
+                          </p>
+                        </div>
                       </div>
-                      <div className="p-1.5">
-                        {(isCustomer || isAdmin) && (
-                          <div className={`mb-1.5 rounded-xl border ${isDark ? "border-slate-700" : "border-slate-100"}`}>
-                            <div className="flex items-center justify-between gap-2 px-3 pt-2.5 pb-1">
-                              <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${isDark ? "text-slate-300" : "text-[#0a3d52]"}`}>
-                                <NotificationsNoneOutlinedIcon sx={{ fontSize: 16 }} />
-                                Notifications
-                                {portalNotifs.unread > 0 && (
-                                  <span className="rounded-full bg-[#ff6b4a] px-1.5 py-0.5 text-[9px] font-extrabold text-white">
-                                    {portalNotifs.unread}
-                                  </span>
-                                )}
-                              </span>
-                              {portalNotifs.unread > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={markPortalNotifsRead}
-                                  className="text-[10px] font-bold text-[#ff6b4a] hover:underline"
-                                >
-                                  Mark read
-                                </button>
-                              )}
-                            </div>
-                            <div className="max-h-44 overflow-y-auto px-1.5 pb-1.5">
-                              {(portalNotifs.items.length ? portalNotifs.items : [
-                                { id: "empty", icon: "bell", title: "No new notifications", time: "You're all caught up" },
-                              ]).slice(0, 5).map((n) => (
-                                <div
-                                  key={n.id}
-                                  className={`mb-1 flex gap-2.5 rounded-lg px-2 py-2 last:mb-0 ${
-                                    isDark ? "hover:bg-white/5" : "hover:bg-slate-50"
-                                  }`}
-                                >
-                                  <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                                    isDark ? "bg-[#091b24] text-[#ff8c73]" : "bg-[#ff6b4a]/10 text-[#ff6b4a]"
-                                  }`}>
-                                    {n.icon === "order" ? (
-                                      <ShoppingBagOutlinedIcon sx={{ fontSize: 16 }} />
-                                    ) : (
-                                      <NotificationsNoneOutlinedIcon sx={{ fontSize: 16 }} />
-                                    )}
-                                  </span>
-                                  <div className="min-w-0">
-                                    <p className={`truncate text-[12px] font-semibold ${isDark ? "text-slate-100" : "text-[#0a3d52]"}`}>
-                                      {n.title}
-                                    </p>
-                                    <p className="truncate text-[10px] text-slate-400">{n.time}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            {isCustomer && (
-                              <RouterLink
-                                to="/dashboard/support"
-                                onClick={() => setAccountMenuOpen(false)}
-                                className={`block border-t px-3 py-2 text-center text-[11px] font-bold ${
-                                  isDark
-                                    ? "border-slate-700 text-sky-300"
-                                    : "border-slate-100 text-[#0a3d52]"
-                                }`}
-                              >
-                                View all in portal
-                              </RouterLink>
-                            )}
-                          </div>
+
+                      <div className={`border-t p-1 sm:p-1.5 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+                        {notifCount > 0 && (
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={openNotifications}
+                            className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${
+                              isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
+                            }`}
+                          >
+                            <NotificationsNoneOutlinedIcon sx={{ fontSize: 17 }} />
+                            <span className="flex-1 text-left">Notifications</span>
+                            <span className="rounded-full bg-[#ff6b4a] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
+                              {notifCount > 99 ? "99+" : notifCount}
+                            </span>
+                          </button>
                         )}
                         {isAdmin && (
                           <RouterLink
                             to="/admin"
                             role="menuitem"
                             onClick={() => setAccountMenuOpen(false)}
-                            className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                            className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${
                               isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
                             }`}
                           >
-                            <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18 }} />
+                            <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 17 }} />
                             <span className="flex-1">Admin console</span>
-                            <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
                           </RouterLink>
                         )}
                         {isCustomer && (
@@ -763,22 +733,21 @@ export const AppLayout = ({ cartCount, children }) => {
                             to="/dashboard"
                             role="menuitem"
                             onClick={() => setAccountMenuOpen(false)}
-                            className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                            className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${
                               isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
                             }`}
                           >
-                            <DashboardOutlinedIcon sx={{ fontSize: 18 }} />
+                            <DashboardOutlinedIcon sx={{ fontSize: 17 }} />
                             <span className="flex-1">Client portal</span>
-                            <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
                           </RouterLink>
                         )}
                         <button
                           type="button"
                           role="menuitem"
                           onClick={logout}
-                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                          className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold text-rose-600 transition hover:bg-rose-50 sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] dark:text-rose-400 dark:hover:bg-rose-950/40"
                         >
-                          <LogoutRoundedIcon sx={{ fontSize: 18 }} />
+                          <LogoutRoundedIcon sx={{ fontSize: 17 }} />
                           Sign out
                         </button>
                       </div>
@@ -933,16 +902,15 @@ export const AppLayout = ({ cartCount, children }) => {
         )}
       </main>
 
-      {/* Store Footer — hidden on client portal for a tighter workspace */}
+      {/* Store footer / floating widgets stay off the portal workspace */}
       {!isPortalRoute && <SiteFooter />}
 
-      {/* Mobile floating cart — sits above chat FAB */}
-      {!isPortalRoute && (
+      {!isPortalRoute && isUserLoggedIn && (
         <RouterLink
           to="/cart"
           aria-label="Cart"
           className={`sm:hidden fixed z-[9998] flex h-14 w-14 items-center justify-center rounded-full border shadow-lg transition active:scale-95 ${
-            isCustomer ? "bottom-[9.5rem] right-5" : "bottom-6 right-6"
+            isCustomer ? "bottom-[7.25rem] right-5" : "bottom-5 right-6"
           } ${
             isDark
               ? "border-slate-600 bg-[#0e2735] text-[#ff8c73] shadow-black/40"
@@ -968,12 +936,9 @@ export const AppLayout = ({ cartCount, children }) => {
         </RouterLink>
       )}
 
-      {/* Floating Chat */}
-      {!isPortalRoute && (
-        <Suspense fallback={null}>
-          <FloatingChatWidget />
-        </Suspense>
-      )}
+      <Suspense fallback={null}>
+        <FloatingChatWidget />
+      </Suspense>
     </div>
   );
 };

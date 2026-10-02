@@ -143,11 +143,15 @@ export const AdminPage = () => {
     const backTab = location.state?.adminTab;
     if (typeof backTab === "number") {
       setActiveTab(backTab);
+      if (typeof n === "number" && n > 0) {
+        showToast("info", `You have ${n} unread message${n === 1 ? "" : "s"} from users.`);
+      }
       navigate("/admin", { replace: true, state: {} });
       return;
     }
     if (typeof n === "number" && n > 0) {
       showToast("info", `You have ${n} unread message${n === 1 ? "" : "s"} from users.`);
+      setActiveTab(6);
       navigate("/admin", { replace: true, state: {} });
     }
   }, [location.state, navigate]);
