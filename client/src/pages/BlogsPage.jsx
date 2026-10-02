@@ -416,7 +416,7 @@ export const BlogsPage = () => {
       </section>
 
       {/* ==================== 2. ENTERPRISE METRICS BAR ==================== */}
-      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 -mt-7 sm:-mt-8 relative z-20">
+      <div className="-mt-7 sm:-mt-8 relative z-20">
         <EnterpriseMetricsBar />
       </div>
 

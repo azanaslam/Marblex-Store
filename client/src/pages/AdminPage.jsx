@@ -32,6 +32,7 @@ import { AdminTicketsTab } from "../components/AdminTicketsTab";
 import { AdminPaymentQueueTab } from "../components/AdminPaymentQueueTab";
 import { AdminDocumentsTab } from "../components/AdminDocumentsTab";
 import { AdminCustomersTab } from "../components/AdminCustomersTab";
+import { AdminReviewsTab } from "../components/AdminReviewsTab";
 import { AdminCommandCenter } from "../components/AdminCommandCenter";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser } from "../auth/session";
@@ -482,6 +483,7 @@ export const AdminPage = () => {
     { id: 8, label: "Partner Submissions", icon: "🤝", badge: adminUnreadReviews },
     { id: 9, label: "Order Lookup", icon: "🔍" },
     { id: 10, label: "Client Inquiries", icon: "📧", badge: contactRequests.filter((c) => c.status === "unread").length },
+    { id: 16, label: "Client Reviews", icon: "⭐" },
     { id: 11, label: "SMTP Settings", icon: "⚙️" },
   ];
 
@@ -489,7 +491,7 @@ export const AdminPage = () => {
     { title: "Core Operations", items: [0] },
     { title: "Revenue & Sales", items: [1, 2, 12, 13, 9] },
     { title: "Catalog & Docs", items: [4, 15, 5, 8] },
-    { title: "Customers & Support", items: [3, 6, 14, 7, 10] },
+    { title: "Customers & Support", items: [3, 6, 14, 7, 10, 16] },
     { title: "System", items: [11] },
   ];
 
@@ -1429,6 +1431,12 @@ export const AdminPage = () => {
             {activeTab === 13 && (
               <TabWrapper3D tabKey={13}>
                 <AdminQuotesTab token={token} showToast={showToast} />
+              </TabWrapper3D>
+            )}
+
+            {activeTab === 16 && (
+              <TabWrapper3D tabKey={16}>
+                <AdminReviewsTab token={token} showToast={showToast} />
               </TabWrapper3D>
             )}
 

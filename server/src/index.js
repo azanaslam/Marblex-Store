@@ -9,6 +9,7 @@ const { connectDatabase } = require("./config/db");
 const { port } = require("./config/env");
 const { seedAdmin } = require("./utils/seedAdmin");
 const { seedProducts } = require("./utils/seedProducts");
+const { seedClientReviews } = require("./utils/seedClientReviews");
 const { initSocket } = require("./socket");
 
 const startServer = async () => {
@@ -16,6 +17,7 @@ const startServer = async () => {
     await connectDatabase();
     await seedAdmin();
     await seedProducts();
+    await seedClientReviews();
 
     const server = http.createServer(app);
     initSocket(server);

@@ -21,6 +21,8 @@ import WaterDropOutlinedIcon from "@mui/icons-material/WaterDropOutlined";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import FormatQuoteRoundedIcon from "@mui/icons-material/FormatQuoteRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import CalculateOutlinedIcon from "@mui/icons-material/CalculateOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
@@ -336,6 +338,7 @@ const industrialDivisions = [
       { label: "Elongation", val: "650%" },
       { label: "Tensile", val: "4.8 MPa" },
     ],
+    applications: ["Roofs", "Terraces", "Podiums"],
     categoryId: "waterproofing",
   },
   {
@@ -354,6 +357,7 @@ const industrialDivisions = [
       { label: "Hardness", val: "Shore D 85" },
       { label: "Compressive", val: "85 MPa" },
     ],
+    applications: ["Plants", "Warehouses", "Hospitals"],
     categoryId: "elastomeric",
   },
   {
@@ -372,6 +376,7 @@ const industrialDivisions = [
       { label: "Head Press.", val: "50m Head" },
       { label: "Standard", val: "DIN 18541" },
     ],
+    applications: ["Tunnels", "Dams", "Foundations"],
     categoryId: "rubber",
   },
   {
@@ -390,6 +395,7 @@ const industrialDivisions = [
       { label: "Strength", val: "90 MPa" },
       { label: "Expansion", val: "Non-Shrink" },
     ],
+    applications: ["Repair", "Columns", "Slabs"],
     categoryId: "chemicals",
   },
 ];
@@ -462,31 +468,6 @@ const engineeringSteps = [
   },
 ];
 
-// Contractor Testimonials
-const contractorTestimonials = [
-  {
-    quote: "MARBLEX elastomeric membranes eliminated severe basement seepage in our 24-story commercial tower. Zero moisture detected even after monsoon testing.",
-    name: "Engr. Salman Qureshi",
-    role: "Chief Structural Consultant",
-    company: "Apex Infrastructure Ltd.",
-    rating: 5,
-  },
-  {
-    quote: "Their vulcanized rubber waterstops and technical support during concrete pouring at the irrigation canal project were flawless. 100% recommended.",
-    name: "Tariq Mehmood",
-    role: "Project Director",
-    company: "National Hydel Works",
-    rating: 5,
-  },
-  {
-    quote: "Top quality epoxy flooring with exceptional chemical resistance. Our pharmaceutical manufacturing plant passed all international sterile audits.",
-    name: "Dr. Hamza Javed",
-    role: "Facilities Operations Lead",
-    company: "Pharmatech Bio-Labs",
-    rating: 5,
-  },
-];
-
 const enterpriseMetrics = [
   {
     value: "15",
@@ -539,11 +520,31 @@ export const ShopPage = ({ addToCart }) => {
   const filtersRef = useRef(null);
   const productsGridRef = useRef(null);
   const capabilitiesSectionRef = useRef(null);
+  const capabilitiesTrackRef = useRef(null);
+  const capabilityAutoPauseRef = useRef(0);
+  const [activeCapability, setActiveCapability] = useState(0);
   const calculatorSectionRef = useRef(null);
   const caseStudiesSectionRef = useRef(null);
   const methodologySectionRef = useRef(null);
 
   const [previewImage, setPreviewImage] = useState(null);
+  const [filterEdges, setFilterEdges] = useState({ left: false, right: true });
+  const [clientReviews, setClientReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewFeedback, setReviewFeedback] = useState("");
+  const [reviewForm, setReviewForm] = useState({
+    name: "",
+    role: "",
+    company: "",
+    quote: "",
+    rating: 5,
+    email: "",
+    phone: "",
+  });
+  const [activeReviewIndex, setActiveReviewIndex] = useState(0);
+  const reviewsTrackRef = useRef(null);
 
   const handleSelectDivisionCategory = (catId) => {
     setSelectedCategory(catId);
@@ -639,42 +640,187 @@ export const ShopPage = ({ addToCart }) => {
       observers.push(headerObs);
     }
 
-    // Individual Cards: Alternating from Left & Right Screen Edges
-    cards.forEach((card, idx) => {
-      const isLeft = idx % 2 === 0;
-      const cardObserver = new IntersectionObserver(
+    const isMobile = window.matchMedia("(max-width: 639px)").matches;
+
+    if (isMobile) {
+      const mobileObs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const screenW = typeof window !== "undefined" ? window.innerWidth : 800;
-              const dist = Math.min(screenW * 0.95, 550);
-              gsap.fromTo(
-                card,
-                {
-                  opacity: 0,
-                  x: isLeft ? -dist : dist,
-                  scale: 0.94,
-                },
-                {
-                  opacity: 1,
-                  x: 0,
-                  scale: 1,
-                  duration: 1.1,
-                  ease: "power3.out",
-                  clearProps: "transform",
-                }
-              );
-              cardObserver.unobserve(entry.target);
-            }
+            if (!entry.isIntersecting) return;
+            gsap.fromTo(
+              cards,
+              { opacity: 0, y: 22 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.7,
+                stagger: 0.07,
+                ease: "power3.out",
+                clearProps: "transform",
+              }
+            );
+            mobileObs.unobserve(entry.target);
           });
         },
-        { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
+        { threshold: 0.2 }
       );
-      cardObserver.observe(card);
-      observers.push(cardObserver);
-    });
+      mobileObs.observe(el);
+      observers.push(mobileObs);
+    } else {
+      cards.forEach((card, idx) => {
+        const isLeft = idx % 2 === 0;
+        const cardObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                const screenW = window.innerWidth || 800;
+                const dist = Math.min(screenW * 0.95, 550);
+                gsap.fromTo(
+                  card,
+                  {
+                    opacity: 0,
+                    x: isLeft ? -dist : dist,
+                    scale: 0.94,
+                  },
+                  {
+                    opacity: 1,
+                    x: 0,
+                    scale: 1,
+                    duration: 1.1,
+                    ease: "power3.out",
+                    clearProps: "transform",
+                  }
+                );
+                cardObserver.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
+        );
+        cardObserver.observe(card);
+        observers.push(cardObserver);
+      });
+    }
 
     return () => observers.forEach((obs) => obs.disconnect());
+  }, []);
+
+  const scrollToCapability = (index) => {
+    const track = capabilitiesTrackRef.current;
+    if (!track) return;
+    capabilityAutoPauseRef.current = Date.now() + 8000;
+    const card = track.querySelectorAll(".capabilities-card-anim")[index];
+    if (!card) return;
+    const left = card.offsetLeft - (track.clientWidth - card.clientWidth) / 2;
+    track.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    const track = capabilitiesTrackRef.current;
+    if (!track) return;
+
+    const update = () => {
+      if (window.innerWidth >= 640) return;
+      const cards = [...track.querySelectorAll(".capabilities-card-anim")];
+      if (!cards.length) return;
+      const center = track.scrollLeft + track.clientWidth / 2;
+      let closest = 0;
+      let min = Infinity;
+      cards.forEach((card, i) => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const distance = Math.abs(cardCenter - center);
+        if (distance < min) {
+          min = distance;
+          closest = i;
+        }
+      });
+      setActiveCapability(closest);
+    };
+
+    update();
+    track.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      track.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  useEffect(() => {
+    const track = capabilitiesTrackRef.current;
+    const section = capabilitiesSectionRef.current;
+    if (!track || !section) return;
+
+    const mobileQuery = window.matchMedia("(max-width: 639px)");
+    const reduceQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let timerId = 0;
+    let visible = false;
+    let settling = false;
+
+    const advance = () => {
+      if (!mobileQuery.matches || reduceQuery.matches || !visible || settling) return;
+      if (document.hidden || Date.now() < capabilityAutoPauseRef.current) return;
+
+      const cards = [...track.querySelectorAll(".capabilities-card-anim")];
+      if (cards.length < 2) return;
+
+      const center = track.scrollLeft + track.clientWidth / 2;
+      let closest = 0;
+      let min = Infinity;
+      cards.forEach((card, index) => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const distance = Math.abs(cardCenter - center);
+        if (distance < min) {
+          min = distance;
+          closest = index;
+        }
+      });
+
+      const nextCard = cards[(closest + 1) % cards.length];
+      const left = nextCard.offsetLeft - (track.clientWidth - nextCard.clientWidth) / 2;
+      settling = true;
+      track.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+      window.setTimeout(() => {
+        settling = false;
+      }, 900);
+    };
+
+    const stop = () => {
+      window.clearInterval(timerId);
+      timerId = 0;
+    };
+
+    const start = () => {
+      stop();
+      if (!mobileQuery.matches || reduceQuery.matches || !visible) return;
+      timerId = window.setInterval(advance, 2800);
+    };
+
+    const hold = () => {
+      capabilityAutoPauseRef.current = Date.now() + 8000;
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        visible = entries.some((entry) => entry.isIntersecting);
+        if (visible) start();
+        else stop();
+      },
+      { threshold: 0.45 }
+    );
+
+    observer.observe(section);
+    track.addEventListener("pointerdown", hold);
+    document.addEventListener("visibilitychange", start);
+    mobileQuery.addEventListener("change", start);
+
+    return () => {
+      stop();
+      observer.disconnect();
+      track.removeEventListener("pointerdown", hold);
+      document.removeEventListener("visibilitychange", start);
+      mobileQuery.removeEventListener("change", start);
+    };
   }, []);
 
   // Field Proof & Case Studies Scroll Reveal (Card 1 from Left Screen Edge, Card 2 from Right Screen Edge)
@@ -878,6 +1024,81 @@ export const ShopPage = ({ addToCart }) => {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+    http
+      .get("/client-reviews")
+      .then((res) => {
+        if (!isMounted) return;
+        setClientReviews(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setClientReviews([]);
+      })
+      .finally(() => {
+        if (isMounted) setReviewsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSubmitClientReview = async (e) => {
+    e.preventDefault();
+    setReviewSubmitting(true);
+    setReviewFeedback("");
+    try {
+      const res = await http.post("/client-reviews/submit", reviewForm);
+      setReviewFeedback(res.data?.message || "Review submitted for approval.");
+      setReviewForm({ name: "", role: "", company: "", quote: "", rating: 5, email: "", phone: "" });
+      setTimeout(() => {
+        setShowReviewForm(false);
+        setReviewFeedback("");
+      }, 2200);
+    } catch (err) {
+      setReviewFeedback(err?.response?.data?.message || "Could not submit review. Try again.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const reviewsAvgRating = useMemo(() => {
+    if (!clientReviews.length) return "0.0";
+    const sum = clientReviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+    return (sum / clientReviews.length).toFixed(1);
+  }, [clientReviews]);
+
+  const scrollReviewsTo = useCallback((index) => {
+    const track = reviewsTrackRef.current;
+    if (!track) return;
+    const cards = track.querySelectorAll("[data-review-card]");
+    const card = cards[index];
+    if (!card) return;
+    const left = card.offsetLeft - (track.clientWidth - card.clientWidth) / 2;
+    track.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+    setActiveReviewIndex(index);
+  }, []);
+
+  const handleReviewsScroll = useCallback(() => {
+    const track = reviewsTrackRef.current;
+    if (!track) return;
+    const cards = [...track.querySelectorAll("[data-review-card]")];
+    if (!cards.length) return;
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let best = 0;
+    let bestDist = Infinity;
+    cards.forEach((card, idx) => {
+      const mid = card.offsetLeft + card.clientWidth / 2;
+      const dist = Math.abs(mid - center);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = idx;
+      }
+    });
+    setActiveReviewIndex(best);
+  }, []);
+
   // Filtered Products Logic
   const filteredProducts = useMemo(() => {
     if (selectedCategory === "all") return products;
@@ -935,6 +1156,33 @@ export const ShopPage = ({ addToCart }) => {
     return { chemicalKg, primerLiters, drumsCount, title };
   }, [calcArea, calcSurface]);
 
+  useEffect(() => {
+    const track = filtersRef.current;
+    if (!track) return;
+
+    const syncEdges = () => {
+      const max = track.scrollWidth - track.clientWidth;
+      setFilterEdges({
+        left: max > 8 && track.scrollLeft > 6,
+        right: max > 8 && track.scrollLeft < max - 6,
+      });
+    };
+
+    const active = track.querySelector('[data-active="true"]');
+    if (active && track.scrollWidth > track.clientWidth + 8) {
+      const left = active.offsetLeft - (track.clientWidth - active.clientWidth) / 2;
+      track.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+    }
+
+    syncEdges();
+    track.addEventListener("scroll", syncEdges, { passive: true });
+    window.addEventListener("resize", syncEdges);
+    return () => {
+      track.removeEventListener("scroll", syncEdges);
+      window.removeEventListener("resize", syncEdges);
+    };
+  }, [selectedCategory]);
+
   // GSAP ScrollTrigger Smooth Stagger Animation
   useEffect(() => {
     if (loading || filteredProducts.length === 0) return;
@@ -984,115 +1232,168 @@ export const ShopPage = ({ addToCart }) => {
 
 
   return (
-    <div ref={scrollRef} className="pb-16 w-full max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-4 overflow-x-clip">
+    <div ref={scrollRef} className="pb-16 w-full max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-4">
       
       {/* 1. Hero Section */}
       <HeroBanner />
 
-      {/* 2. Enterprise Trust & Metrics Marquee Strip */}
+      {/* 2. Enterprise Trust & Metrics Marquee Strip — full viewport width */}
       <EnterpriseMetricsBar />
 
+      {/* Keep horizontal overflow contained below the full-bleed metrics bar */}
+      <div className="overflow-x-clip">
       {/* 3. Core Industrial Engineering Divisions */}
-      <div ref={capabilitiesSectionRef} className="my-14 sm:my-20 relative overflow-x-clip">
-        {/* Subtle Ambient Radial Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] max-w-full h-[320px] bg-gradient-to-r from-sky-500/10 via-[#0a3d52]/5 to-transparent blur-3xl pointer-events-none rounded-full" />
+      <section
+        ref={capabilitiesSectionRef}
+        aria-labelledby="capabilities-heading"
+        className="relative my-12 sm:my-20"
+      >
+        <div className="pointer-events-none absolute left-1/2 top-8 h-64 w-[min(100%,42rem)] -translate-x-1/2 rounded-full bg-gradient-to-r from-sky-400/15 via-[#0a3d52]/10 to-transparent blur-3xl" />
 
-        {/* Content Header (Animates from TOP) */}
-        <div className="capabilities-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4 relative z-10">
-          <div className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#0a3d52]/10 via-sky-500/10 to-[#0a3d52]/10 dark:from-sky-400/15 dark:to-cyan-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/30 shadow-sm backdrop-blur-sm">
+        <div className="capabilities-header-anim relative z-10 mx-auto mb-6 max-w-3xl px-1 text-center opacity-0 sm:mb-12">
+          <div className="mb-3.5 inline-flex items-center gap-2.5 rounded-full border border-[#0a3d52]/20 bg-white/80 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0a3d52] shadow-sm backdrop-blur-sm dark:border-sky-400/30 dark:bg-[#0c222e]/80 dark:text-sky-300 sm:text-xs">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500" />
             </span>
             <PrecisionManufacturingOutlinedIcon sx={{ fontSize: 16 }} />
             <span>Engineering Disciplines</span>
           </div>
-          <h2 
-            className="text-2xl sm:text-4xl lg:text-[40px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
+          <h2
+            id="capabilities-heading"
+            className="font-heading text-[1.65rem] font-extrabold leading-[1.15] tracking-tight text-[#0a3d52] dark:text-white sm:text-4xl lg:text-[2.6rem]"
           >
             Specialized Chemical & Rubber Capabilities
           </h2>
-          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-3 leading-relaxed font-normal max-w-2xl mx-auto">
+          <p className="mx-auto mt-3 max-w-2xl text-[13px] font-normal leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm">
             Tailored industrial chemical compounds engineered to withstand severe thermal expansion, structural hydrostatic load, and corrosive atmospheric conditions.
+          </p>
+          <p className="mx-auto mt-4 max-w-md text-[11px] font-semibold leading-relaxed tracking-wide text-slate-500 dark:text-slate-400 sm:max-w-none">
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[#0a3d52] dark:text-sky-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+              04 Certified Systems
+            </span>
+            <span className="mx-2 text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+            <span className="whitespace-nowrap">ASTM · DIN · ISO</span>
+            <span className="mx-2 text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+            <span className="whitespace-nowrap">Hydrostatic Rated</span>
           </p>
         </div>
 
-        {/* Cards Grid (Animates from BOTTOM with Stagger) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 px-1 relative z-10">
+        <p className="relative z-10 mb-3 flex items-center justify-between px-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:hidden">
+          <span>Swipe to explore</span>
+          <span className="font-mono normal-case tracking-normal text-[#0a3d52] dark:text-sky-300">
+            {String(activeCapability + 1).padStart(2, "0")}
+            <span className="text-slate-400"> / 04</span>
+          </span>
+        </p>
+
+        <div
+          ref={capabilitiesTrackRef}
+          data-lenis-prevent-touch
+          className="relative z-10 -mx-3 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain scroll-px-3 px-3 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-1 sm:pb-0 sm:snap-none lg:grid-cols-4 lg:gap-6"
+        >
           {industrialDivisions.map((div, i) => {
             const IconComponent = div.icon;
             return (
-              <div
-                key={i}
+              <button
+                key={div.code}
+                type="button"
                 onClick={() => handleSelectDivisionCategory(div.categoryId)}
-                className="capabilities-card-anim opacity-0 group relative bg-white/95 dark:bg-[#0c222e]/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_-4px_rgba(10,61,82,0.06)] hover:shadow-2xl hover:shadow-[#0a3d52]/15 dark:hover:shadow-black/70 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer"
+                className="capabilities-card-anim no-shimmer group relative flex h-full w-[min(86vw,21.5rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[1.6rem] border border-slate-200/90 bg-white text-left opacity-0 shadow-[0_12px_32px_-20px_rgba(10,61,82,0.45)] transition duration-300 hover:border-[#0a3d52]/25 hover:shadow-[0_22px_44px_-24px_rgba(10,61,82,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a3d52]/40 sm:w-auto sm:shrink sm:snap-align-none sm:hover:-translate-y-1.5 dark:border-slate-800 dark:bg-[#0c222e] dark:hover:border-sky-400/35"
               >
-                {/* Top Subtle Hover Sheen Line */}
-                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${div.accentGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm`} />
-                
-                {/* Ambient Card Background Tint on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-b from-sky-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <span className={`h-1 w-full bg-gradient-to-r ${div.accentGradient}`} />
+                <span className={`pointer-events-none absolute inset-x-0 top-1 h-24 bg-gradient-to-b ${div.accentGradient} opacity-[0.08]`} />
 
-                {/* Subtle Background Discipline Code Watermark */}
-                <div className="absolute top-4 right-5 text-3xl font-black font-mono tracking-tighter text-slate-900/[0.04] dark:text-white/[0.05] group-hover:text-slate-900/[0.09] dark:group-hover:text-white/[0.09] transition-colors pointer-events-none select-none">
-                  {div.code}
-                </div>
-
-                <div className="relative z-10">
-                  {/* Card Header: Icon & Badge */}
-                  <div className="flex items-center justify-between mb-5">
-                    <div className={`w-12 h-12 rounded-2xl ${div.accentBg} ${div.accentText} border ${div.accentBorder} flex items-center justify-center group-hover:scale-110 group-hover:shadow-lg transition-all duration-300 relative`}>
-                      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${div.accentGradient} opacity-0 group-hover:opacity-20 blur-md transition-opacity`} />
-                      <div className="relative z-10">
-                        <IconComponent />
-                      </div>
-                    </div>
-                    
-                    <span className={`text-[10px] font-mono font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg ${div.accentBg} ${div.accentText} border ${div.accentBorder} shadow-xs`}>
-                      {div.badge}
+                <span className="relative flex w-full flex-1 flex-col p-5 sm:p-6">
+                  <span className="flex items-start justify-between gap-3">
+                    <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${div.accentBg} ${div.accentText} ${div.accentBorder} transition duration-300 group-hover:scale-105`}>
+                      <IconComponent />
                     </span>
-                  </div>
+                    <span className="flex min-w-0 flex-col items-end gap-1.5">
+                      <span className="font-mono text-[10px] font-bold tracking-[0.18em] text-slate-400">
+                        {div.code}
+                      </span>
+                      <span className={`max-w-[9.2rem] rounded-full border px-2.5 py-1 text-center text-[10px] font-bold uppercase leading-tight tracking-wide ${div.accentBg} ${div.accentText} ${div.accentBorder}`}>
+                        {div.badge}
+                      </span>
+                    </span>
+                  </span>
 
-                  {/* Title & Subtitle */}
-                  <h3 
-                    className="text-lg font-bold text-[#0a3d52] dark:text-white mb-1 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 transition-colors duration-200 tracking-tight"
-                    style={{ fontFamily: "'Poppins', sans-serif" }}
-                  >
+                  <span className="mt-5 font-mono text-[11px] font-semibold tracking-[0.26em] text-slate-400">
+                    SYSTEM {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="mt-1.5 font-heading text-[1.15rem] font-bold leading-tight tracking-tight text-[#0a3d52] dark:text-white">
                     {div.title}
-                  </h3>
-                  
-                  <p className={`text-xs font-semibold ${div.accentText} mb-2.5 transition-colors`}>
+                  </span>
+                  <span className={`mt-1 text-[13px] font-semibold leading-snug ${div.accentText}`}>
                     {div.subtitle}
-                  </p>
-                  
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal mb-4">
+                  </span>
+                  <span className="mt-3 text-[13px] font-normal leading-relaxed text-slate-600 dark:text-slate-300">
                     {div.desc}
-                  </p>
+                  </span>
 
-                  {/* Technical Metrics Strip */}
-                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 mb-2 bg-slate-50/70 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60">
-                    {div.metrics.map((m, mi) => (
-                      <div key={mi} className="flex flex-col">
-                        <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">{m.label}</span>
-                        <span className="text-xs font-extrabold font-mono text-slate-800 dark:text-slate-200">{m.val}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                  <span className="mt-auto flex w-full flex-col pt-5">
+                    <span className="grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50 dark:border-slate-700/80 dark:bg-slate-900/50">
+                      {div.metrics.map((metric, metricIndex) => (
+                        <span
+                          key={metric.label}
+                          className={`px-3 py-2.5 ${metricIndex === 0 ? "border-r border-slate-200/80 dark:border-slate-700/80" : ""}`}
+                        >
+                          <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                            {metric.label}
+                          </span>
+                          <span className="mt-0.5 block font-mono text-sm font-bold text-[#0a3d52] dark:text-slate-100">
+                            {metric.val}
+                          </span>
+                        </span>
+                      ))}
+                    </span>
 
-                {/* Footer Action */}
-                <div className="relative z-10 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 transition-colors duration-200">
-                  <span className="tracking-wide">Explore Formulation</span>
-                  <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-[#0a3d52] dark:group-hover:bg-sky-500 text-slate-600 dark:text-slate-300 group-hover:text-white flex items-center justify-center transition-all duration-200 shadow-xs">
-                    <ArrowForwardRoundedIcon sx={{ fontSize: 15 }} className="group-hover:translate-x-0.5 transition-transform duration-200" />
-                  </div>
-                </div>
-              </div>
+                    <span className="mt-3 flex flex-wrap gap-1.5">
+                      {div.applications.map((application) => (
+                        <span
+                          key={application}
+                          className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                        >
+                          {application}
+                        </span>
+                      ))}
+                    </span>
+
+                    <span className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-[13px] font-bold text-[#0a3d52] dark:border-slate-800 dark:text-sky-100">
+                      <span>Explore Formulation</span>
+                      <span className={`flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br text-white transition duration-300 group-hover:translate-x-0.5 ${div.accentGradient}`}>
+                        <ArrowForwardRoundedIcon sx={{ fontSize: 16 }} />
+                      </span>
+                    </span>
+                  </span>
+                </span>
+              </button>
             );
           })}
         </div>
-      </div>
+
+        <div className="relative z-10 mt-4 flex items-center justify-center gap-2 sm:hidden" role="tablist" aria-label="Capability systems">
+          {industrialDivisions.map((div, index) => (
+            <button
+              key={div.code}
+              type="button"
+              role="tab"
+              aria-selected={activeCapability === index}
+              aria-label={`Show ${div.title}`}
+              onClick={() => scrollToCapability(index)}
+              className="no-shimmer flex h-11 w-8 items-center justify-center"
+            >
+              <span
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  activeCapability === index ? "w-7 bg-[#0a3d52] dark:bg-sky-400" : "w-1.5 bg-slate-300 dark:bg-slate-600"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      </section>
       
       {/* 4. Clean Catalog Page Header */}
       <div 
@@ -1119,27 +1420,41 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       {/* 5. Horizontal Category Filters Bar */}
-      <div ref={filtersRef} className="mb-8 overflow-x-auto no-scrollbar py-1">
-        <div className="flex items-center gap-2 sm:gap-2.5 min-w-max">
-          {categories.map((cat) => {
-            const IconComp = cat.icon;
-            const isActive = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-[13px] font-bold transition-all duration-200 border cursor-pointer ${
+      <div
+        ref={filtersRef}
+        data-lenis-prevent-touch
+        className={`catalog-filters relative -mx-3 mb-8 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-px-3 px-3 py-1 sm:mx-0 sm:snap-none sm:gap-2.5 sm:px-0 ${
+          filterEdges.left ? "is-fade-left" : ""
+        } ${filterEdges.right ? "is-fade-right" : ""}`}
+      >
+        {categories.map((cat) => {
+          const IconComp = cat.icon;
+          const isActive = selectedCategory === cat.id;
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              data-active={isActive ? "true" : "false"}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`no-shimmer inline-flex h-11 shrink-0 snap-start items-center gap-2 rounded-full border pl-1.5 pr-3.5 text-[13px] font-semibold transition duration-200 ${
+                isActive
+                  ? "border-[#0a3d52] bg-[#0a3d52] text-white shadow-[0_10px_18px_-14px_rgba(10,61,82,0.95)] dark:border-[#ff6b4a] dark:bg-[#ff6b4a]"
+                  : "border-slate-200/90 bg-white text-[#0a3d52] shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[#0a3d52]/30 dark:border-slate-700 dark:bg-[#0c222e] dark:text-slate-200 dark:hover:border-sky-400/40"
+              }`}
+            >
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-full ${
                   isActive
-                    ? "bg-[#0a3d52] dark:bg-[#ff6b4a] text-white border-[#0a3d52] dark:border-[#ff6b4a] shadow-sm"
-                    : "bg-white dark:bg-[#0c222e] text-[#0a3d52] dark:text-slate-300 border-[#e0e6ed] dark:border-slate-800 hover:border-[#0a3d52]/50 hover:bg-slate-50 dark:hover:bg-[#0f2a38]"
+                    ? "bg-white/15 text-white"
+                    : "bg-slate-100 text-[#0a3d52] dark:bg-slate-800 dark:text-slate-300"
                 }`}
               >
-                <IconComp sx={{ fontSize: 16 }} className={isActive ? "text-white" : "text-[#0a3d52] dark:text-slate-400"} />
-                <span>{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
+                <IconComp sx={{ fontSize: 16 }} />
+              </span>
+              <span className="whitespace-nowrap">{cat.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* 6. Products Grid (4 Col Desktop, 2 Col Tablet, 1 Col Mobile) */}
@@ -1175,186 +1490,187 @@ export const ShopPage = ({ addToCart }) => {
         )}
       </div>
 
-      {/* 7. Interactive Material Coverage & Quantity Estimator */}
-      <div 
+      </div>{/* end overflow-x-clip (products zone) */}
+
+      {/* 7. Interactive Material Coverage & Quantity Estimator — full bleed */}
+      <section
         ref={calculatorSectionRef}
-        className="mt-20 sm:mt-28 bg-gradient-to-br from-[#0a3d52] via-[#0c475e] to-[#072836] dark:from-[#091f2a] dark:via-[#071922] dark:to-[#041017] rounded-3xl p-6 sm:p-10 lg:p-12 text-white border border-[#1b556e]/50 dark:border-slate-800/90 shadow-2xl shadow-[#0a3d52]/15 dark:shadow-black/60 relative overflow-hidden transition-all duration-300"
+        className="relative left-1/2 mt-16 w-screen max-w-[100vw] -translate-x-1/2 sm:mt-24"
+        aria-labelledby="estimator-heading"
       >
-        {/* Ambient Radial Highlights */}
-        <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-sky-400/15 dark:bg-sky-500/10 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-[#ff6b4a]/10 dark:bg-[#ff6b4a]/5 rounded-full blur-[100px] pointer-events-none" />
-        
-        {/* Subtle Background Blueprint Grid */}
-        <div 
-          className="absolute inset-0 opacity-[0.035] pointer-events-none"
-          style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
-        />
+        <div className="relative overflow-hidden border-y border-[#1b556e]/40 bg-gradient-to-br from-[#0a3d52] via-[#0c475e] to-[#072836] px-4 py-10 text-white sm:px-8 sm:py-14 lg:px-12 lg:py-16 dark:from-[#091f2a] dark:via-[#071922] dark:to-[#041017]">
+          <div className="pointer-events-none absolute -right-20 -top-24 h-[420px] w-[420px] rounded-full bg-sky-400/15 blur-[110px]" />
+          <div className="pointer-events-none absolute -bottom-24 -left-16 h-[360px] w-[360px] rounded-full bg-[#ff6b4a]/10 blur-[100px]" />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.45) 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
+            }}
+          />
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          
-          {/* Left Calculator Inputs */}
-          <div className="calc-left-anim lg:col-span-7 space-y-5 sm:space-y-6">
-            <div className="inline-flex items-center gap-2 bg-white/10 dark:bg-sky-400/10 text-sky-200 dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/15 dark:border-sky-400/20 shadow-xs backdrop-blur-md">
-              <CalculateOutlinedIcon sx={{ fontSize: 16 }} />
-              <span>Project Quantity Estimator</span>
-            </div>
-            
-            <h3 
-              className="text-2xl sm:text-3xl lg:text-[36px] font-extrabold text-white tracking-tight leading-tight"
-              style={{ fontFamily: "'Poppins', sans-serif" }}
-            >
-              Calculate Chemical Coverage For Your Project
-            </h3>
-            
-            <p className="text-xs sm:text-sm text-slate-200/90 dark:text-slate-300 leading-relaxed font-normal max-w-xl">
-              Select your structural application type and enter the surface area in square feet to instantly compute material requirement and estimated drum packaging.
-            </p>
+          <div className="relative z-10 mx-auto grid max-w-[1400px] grid-cols-1 items-stretch gap-8 lg:grid-cols-12 lg:gap-10">
+            {/* Inputs */}
+            <div className="calc-left-anim flex flex-col justify-center space-y-5 lg:col-span-7 lg:space-y-6">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-sky-100 backdrop-blur-md sm:text-xs">
+                <CalculateOutlinedIcon sx={{ fontSize: 15 }} />
+                Project Quantity Estimator
+              </div>
 
-            {/* Inputs Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-200 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <LayersOutlinedIcon sx={{ fontSize: 15 }} className="text-sky-300" />
-                  <span>Surface Application Type</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={calcSurface}
-                    onChange={(e) => setCalcSurface(e.target.value)}
-                    className="w-full bg-[#072431]/85 dark:bg-[#05161f] border border-white/20 dark:border-slate-700/80 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white font-medium outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-400/15 transition-all shadow-inner cursor-pointer appearance-none"
-                  >
-                    <option value="roof" className="bg-[#0c2a38] text-white">Concrete Roof / Terrace Waterproofing</option>
-                    <option value="basement" className="bg-[#0c2a38] text-white">Basement & Sub-Structure Retaining Wall</option>
-                    <option value="flooring" className="bg-[#0c2a38] text-white">Industrial Epoxy Heavy-Traffic Floor</option>
-                    <option value="tank" className="bg-[#0c2a38] text-white">Water Reservoir & Swimming Pool</option>
-                  </select>
-                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300">
-                    ▼
+              <h3
+                id="estimator-heading"
+                className="font-heading max-w-xl text-[1.55rem] font-extrabold leading-[1.15] tracking-tight text-white sm:text-3xl lg:text-[2.15rem]"
+              >
+                Calculate Chemical Coverage For Your Project
+              </h3>
+
+              <p className="max-w-xl text-[13px] leading-relaxed text-slate-200/90 sm:text-sm">
+                Pick the surface type and area — get an instant dual-coat material estimate with primer and drum packaging.
+              </p>
+
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4">
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-200">
+                    <LayersOutlinedIcon sx={{ fontSize: 14 }} className="text-sky-300" />
+                    Surface Application
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={calcSurface}
+                      onChange={(e) => setCalcSurface(e.target.value)}
+                      className="w-full appearance-none rounded-2xl border border-white/20 bg-[#072431]/90 px-4 py-3.5 pr-10 text-[13px] font-medium text-white outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-400/15 sm:text-sm"
+                    >
+                      <option value="roof" className="bg-[#0c2a38]">Concrete Roof / Terrace Waterproofing</option>
+                      <option value="basement" className="bg-[#0c2a38]">Basement & Sub-Structure Retaining Wall</option>
+                      <option value="flooring" className="bg-[#0c2a38]">Industrial Epoxy Heavy-Traffic Floor</option>
+                      <option value="tank" className="bg-[#0c2a38]">Water Reservoir & Swimming Pool</option>
+                    </select>
+                    <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-300">▼</span>
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-200">
+                    <PrecisionManufacturingOutlinedIcon sx={{ fontSize: 14 }} className="text-sky-300" />
+                    Project Area (Sq. Ft)
+                  </label>
+                  <input
+                    type="number"
+                    min={50}
+                    step={50}
+                    value={calcArea}
+                    onChange={(e) => setCalcArea(e.target.value)}
+                    placeholder="e.g. 1500"
+                    className="w-full rounded-2xl border border-white/20 bg-[#072431]/90 px-4 py-3.5 text-[13px] font-medium text-white outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-400/15 sm:text-sm"
+                  />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-200 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <PrecisionManufacturingOutlinedIcon sx={{ fontSize: 15 }} className="text-sky-300" />
-                  <span>Total Project Area (Sq. Ft)</span>
-                </label>
-                <input
-                  type="number"
-                  min={50}
-                  step={50}
-                  value={calcArea}
-                  onChange={(e) => setCalcArea(e.target.value)}
-                  placeholder="e.g. 1500"
-                  className="w-full bg-[#072431]/85 dark:bg-[#05161f] border border-white/20 dark:border-slate-700/80 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white font-medium outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-400/15 transition-all shadow-inner"
-                />
+              <div className="space-y-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Quick Size</span>
+                <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+                  {[500, 1000, 1500, 2500, 5000].map((size) => {
+                    const active = Number(calcArea) === size;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setCalcArea(size)}
+                        className={`no-shimmer shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold transition ${
+                          active
+                            ? "border-sky-300 bg-sky-300 text-[#072431] shadow-md shadow-sky-400/25"
+                            : "border-white/15 bg-white/10 text-slate-200 hover:bg-white/20"
+                        }`}
+                      >
+                        {size.toLocaleString()} sq.ft
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-
             </div>
 
-            {/* Quick Presets Chips */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mr-1">Quick Size:</span>
-              {[500, 1000, 1500, 2500, 5000].map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => setCalcArea(size)}
-                  className={`text-xs px-3 py-1 rounded-lg border font-semibold transition-all duration-200 cursor-pointer ${
-                    Number(calcArea) === size
-                      ? "bg-sky-400 text-[#072431] border-sky-400 font-bold shadow-md shadow-sky-400/20 scale-105"
-                      : "bg-white/10 dark:bg-slate-800/60 text-slate-200 border-white/15 dark:border-slate-700/60 hover:bg-white/20 hover:text-white"
-                  }`}
+            {/* Live result card */}
+            <div className="calc-card-anim lg:col-span-5">
+              <div className="relative flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-white/10 bg-white p-5 text-slate-900 shadow-2xl shadow-black/30 dark:border-slate-700/80 dark:bg-[#0c222f] dark:text-white sm:p-7">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-400 via-emerald-400 to-[#0a3d52]" />
+
+                <div className="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-3.5 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#0a3d52] dark:text-sky-400">
+                      Estimated Specification
+                    </span>
+                  </div>
+                  <span className="rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/50 dark:text-emerald-400">
+                    Dual-Coat
+                  </span>
+                </div>
+
+                <div className="mb-4 rounded-2xl border border-slate-100 bg-slate-50/90 px-3.5 py-3 dark:border-slate-700/50 dark:bg-slate-800/40">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">System Formula</div>
+                  <div className="mt-1 text-sm font-bold text-[#0a3d52] dark:text-slate-100">{calculatedEstimate.title}</div>
+                </div>
+
+                <div className="mb-4 grid grid-cols-2 gap-2.5">
+                  <div className="rounded-2xl border border-sky-100 bg-sky-50/80 p-3 dark:border-sky-800/40 dark:bg-sky-950/30">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-sky-700/80 dark:text-sky-300/80">Chemical</div>
+                    <div className="mt-1 font-heading text-xl font-black tracking-tight text-[#0a3d52] dark:text-sky-300 sm:text-2xl">
+                      {calculatedEstimate.chemicalKg.toLocaleString()}
+                      <span className="ml-1 text-xs font-bold text-slate-500 dark:text-slate-400">Kg</span>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-700/50 dark:bg-slate-800/40">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primer</div>
+                    <div className="mt-1 font-heading text-xl font-black tracking-tight text-slate-800 dark:text-slate-100 sm:text-2xl">
+                      {calculatedEstimate.primerLiters.toLocaleString()}
+                      <span className="ml-1 text-xs font-bold text-slate-500 dark:text-slate-400">L</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 px-3.5 py-3 dark:border-emerald-800/40 dark:bg-emerald-950/30">
+                  <span className="text-[12px] font-semibold text-slate-600 dark:text-slate-300">Packaging</span>
+                  <span className="text-right text-[13px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                    ~{calculatedEstimate.drumsCount} Drums · 20Kg
+                  </span>
+                </div>
+
+                <a
+                  href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20calculated%20my%20project%20area%20as%20${calcArea}%20sq.ft%20for%20${calcSurface}%20application.%20Please%20provide%20official%20quotation.`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-auto flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3.5 text-center text-[11px] font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-600/25 transition hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] sm:text-xs"
                 >
-                  {size.toLocaleString()} sq.ft
-                </button>
-              ))}
+                  <WhatsAppIcon sx={{ fontSize: 18 }} />
+                  <span className="sm:hidden">Get Quote on WhatsApp</span>
+                  <span className="hidden sm:inline">Request Official Quotation On WhatsApp</span>
+                </a>
+              </div>
             </div>
           </div>
-
-          {/* Right Live Computation Card */}
-          <div className="calc-card-anim lg:col-span-5 bg-white dark:bg-[#0c222f] text-slate-900 dark:text-white rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-700/80 shadow-2xl shadow-black/25 space-y-4.5 transition-all duration-300 relative overflow-hidden">
-            {/* Top Subtle Sheen Border */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-400 via-emerald-400 to-[#0a3d52]" />
-
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#0a3d52] dark:text-sky-400">
-                  Estimated Specification
-                </span>
-              </div>
-              <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-md border border-emerald-200/80 dark:border-emerald-800/40">
-                Dual-Coat Standard
-              </span>
-            </div>
-
-            <div className="space-y-3 text-xs sm:text-sm font-semibold">
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/40">
-                <span className="text-slate-600 dark:text-slate-400 font-normal">System Formula:</span>
-                <span className="font-bold text-[#0a3d52] dark:text-slate-100 text-right">{calculatedEstimate.title}</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-xl bg-sky-50/60 dark:bg-sky-950/30 border border-sky-100/80 dark:border-sky-800/30">
-                <span className="text-slate-700 dark:text-slate-300 font-semibold">Total Chemical Volume:</span>
-                <span 
-                  className="font-extrabold text-[#0a3d52] dark:text-sky-400 text-lg sm:text-xl"
-                  style={{ fontFamily: "'Poppins', sans-serif" }}
-                >
-                  {calculatedEstimate.chemicalKg.toLocaleString()} Kg / Liters
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/40">
-                <span className="text-slate-600 dark:text-slate-400 font-normal">Substrate Primer:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">{calculatedEstimate.primerLiters.toLocaleString()} Liters</span>
-              </div>
-
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-100/80 dark:border-emerald-800/30">
-                <span className="text-slate-700 dark:text-slate-300 font-semibold">Standard Packaging:</span>
-                <span className="font-extrabold text-emerald-700 dark:text-emerald-400">~{calculatedEstimate.drumsCount} Industrial Drums (20Kg)</span>
-              </div>
-            </div>
-
-            <a
-              href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20calculated%20my%20project%20area%20as%20${calcArea}%20sq.ft%20for%20${calcSurface}%20application.%20Please%20provide%20official%20quotation.`}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 hover:shadow-xl hover:shadow-emerald-600/35 active:scale-[0.98] transition-all duration-200 cursor-pointer text-center"
-            >
-              <WhatsAppIcon sx={{ fontSize: 18 }} />
-              <span>Request Official Quotation On WhatsApp</span>
-            </a>
-          </div>
-
         </div>
-      </div>
+      </section>
 
-      {/* 8. Before & After Transformation Section (Redesigned & Upgraded) */}
-      <div ref={caseStudiesSectionRef} className="mt-20 sm:mt-28 overflow-hidden">
-        {/* Header (Animates from TOP) */}
-        <div className="case-studies-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4">
-          <div className="inline-flex items-center gap-2 bg-[#0a3d52]/10 dark:bg-sky-400/10 text-[#0a3d52] dark:text-sky-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-sky-400/20 shadow-xs">
-            <CompareArrowsIcon sx={{ fontSize: 16 }} />
-            <span>Field Proof & Case Studies</span>
+      <div className="overflow-x-clip">
+
+      {/* 8. Before & After Transformation Section */}
+      <section ref={caseStudiesSectionRef} className="mt-16 overflow-hidden sm:mt-24">
+        <div className="case-studies-header-anim mx-auto mb-8 max-w-3xl px-1 text-center opacity-0 sm:mb-12">
+          <div className="mb-3.5 inline-flex items-center gap-2 rounded-full border border-[#0a3d52]/20 bg-[#0a3d52]/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0a3d52] dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300 sm:text-xs">
+            <CompareArrowsIcon sx={{ fontSize: 15 }} />
+            Field Proof & Case Studies
           </div>
-          <h3 
-            className="text-2xl sm:text-4xl lg:text-[38px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
-          >
+          <h3 className="font-heading text-[1.55rem] font-extrabold leading-tight tracking-tight text-[#0a3d52] dark:text-white sm:text-4xl lg:text-[2.35rem]">
             Proven Industrial Results
           </h3>
-          <p className="text-slate-600 dark:text-slate-300 font-normal text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed mt-3">
-            Witness how MARBLEX advanced elastomeric coatings and chemical formulations protect concrete infrastructure from severe water ingress and structural degradation.
+          <p className="mx-auto mt-3 max-w-2xl text-[13px] leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm">
+            How MARBLEX elastomeric coatings and chemical systems protect concrete from water ingress and structural degradation.
           </p>
         </div>
 
-        {/* Comparison Cards Grid (Left Card from Left, Right Card from Right) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 px-1">
+        <div className="-mx-3 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-1 sm:pb-0 lg:gap-8">
           {beforeAfterPairs.map((pair, idx) => {
             const isLeft = idx === 0;
             const featureTags = isLeft
@@ -1362,325 +1678,315 @@ export const ShopPage = ({ addToCart }) => {
               : ["Termite & Bug Matrix", "Hydrostatic Retaining", "Deep Substrate Cure"];
 
             return (
-              <div
-                key={idx}
+              <article
+                key={pair.title || idx}
                 className={`${
                   isLeft ? "case-study-left-anim" : "case-study-right-anim"
-                } opacity-0 group relative bg-white dark:bg-[#0c222e] p-5 sm:p-7 rounded-3xl border border-slate-200/85 dark:border-slate-800/90 shadow-sm hover:shadow-2xl hover:shadow-[#0a3d52]/15 dark:hover:shadow-black/70 transition-all duration-300 flex flex-col justify-between overflow-hidden hover:-translate-y-1.5 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40`}
+                } group relative flex w-[min(88vw,24rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[1.5rem] border border-slate-200/90 bg-white opacity-0 shadow-[0_12px_32px_-22px_rgba(10,61,82,0.45)] transition duration-300 hover:-translate-y-1 hover:border-[#0a3d52]/30 hover:shadow-[0_22px_44px_-24px_rgba(10,61,82,0.45)] dark:border-slate-800 dark:bg-[#0c222e] sm:w-auto sm:shrink sm:snap-align-none`}
               >
-                {/* Top Subtle Hover Accent Line */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] dark:via-sky-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
-                {/* Ambient Subtle Card Tint on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0a3d52]/5 dark:from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#0a3d52] to-transparent opacity-0 transition group-hover:opacity-100 dark:via-sky-400" />
 
-                <div className="relative z-10">
-                  {/* Images Comparison Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
-                    
-                    {/* Before Image */}
-                    <div 
+                <div className="relative z-10 flex flex-1 flex-col p-4 sm:p-6">
+                  <div className="mb-4 grid grid-cols-2 gap-2 sm:gap-3">
+                    <button
+                      type="button"
                       onClick={() => setPreviewImage(pair.before)}
-                      className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-inner bg-slate-900 group/img cursor-pointer"
+                      className="no-shimmer group/img relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 dark:border-slate-700"
                     >
                       <img
                         src={pair.before}
                         alt="Unprotected Substrate"
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-[200px] sm:h-[220px] object-cover group-hover/img:scale-105 transition-transform duration-500"
+                        className="h-[140px] w-full object-cover transition duration-500 group-hover/img:scale-105 sm:h-[200px]"
                       />
-                      <div className="absolute top-3 left-3 bg-slate-900/85 backdrop-blur-md text-amber-300 text-[9.5px] font-extrabold px-2.5 py-1 rounded-lg uppercase shadow-md border border-amber-400/25 tracking-wider">
-                        ⚠️ Before: Untreated
-                      </div>
-                      <div className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
-                        <ZoomInOutlinedIcon sx={{ fontSize: 16 }} />
-                      </div>
-                    </div>
+                      <span className="absolute left-2 top-2 rounded-md border border-amber-400/25 bg-slate-900/85 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-amber-300 backdrop-blur-md sm:left-3 sm:top-3 sm:px-2.5 sm:py-1 sm:text-[9.5px]">
+                        Before
+                      </span>
+                      <span className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition group-hover/img:opacity-100">
+                        <ZoomInOutlinedIcon sx={{ fontSize: 15 }} />
+                      </span>
+                    </button>
 
-                    {/* After Image */}
-                    <div 
+                    <button
+                      type="button"
                       onClick={() => setPreviewImage(pair.after)}
-                      className="relative rounded-2xl overflow-hidden border-2 border-emerald-500/50 dark:border-emerald-400/50 shadow-md bg-slate-900 group/img cursor-pointer"
+                      className="no-shimmer group/img relative overflow-hidden rounded-2xl border-2 border-emerald-500/45 bg-slate-900 dark:border-emerald-400/45"
                     >
                       <img
                         src={pair.after}
                         alt="MARBLEX Treated"
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-[200px] sm:h-[220px] object-cover group-hover/img:scale-105 transition-transform duration-500"
+                        className="h-[140px] w-full object-cover transition duration-500 group-hover/img:scale-105 sm:h-[200px]"
                       />
-                      <div className="absolute top-3 right-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[9.5px] font-extrabold px-2.5 py-1 rounded-lg uppercase shadow-lg shadow-emerald-600/30 flex items-center gap-1 tracking-wider">
-                        <CheckCircleRoundedIcon sx={{ fontSize: 13 }} /> After: MARBLEX
-                      </div>
-                      <div className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-emerald-900/60 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
-                        <ZoomInOutlinedIcon sx={{ fontSize: 16 }} />
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Title & Badge */}
-                  <div className="space-y-2 px-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 
-                        className="text-lg sm:text-xl font-bold text-[#0a3d52] dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors tracking-tight"
-                        style={{ fontFamily: "'Poppins', sans-serif" }}
-                      >
-                        {pair.title}
-                      </h4>
-                      <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 dark:border-emerald-800/40 whitespace-nowrap">
-                        +300% Lifespan
+                      <span className="absolute right-2 top-2 inline-flex items-center gap-0.5 rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white shadow-md sm:right-3 sm:top-3 sm:gap-1 sm:px-2.5 sm:py-1 sm:text-[9.5px]">
+                        <CheckCircleRoundedIcon sx={{ fontSize: 12 }} /> After
                       </span>
-                    </div>
+                      <span className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-900/60 text-white opacity-0 backdrop-blur-sm transition group-hover/img:opacity-100">
+                        <ZoomInOutlinedIcon sx={{ fontSize: 15 }} />
+                      </span>
+                    </button>
+                  </div>
 
-                    <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-[13px] leading-relaxed font-normal">
-                      {pair.description}
-                    </p>
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="font-heading text-base font-bold tracking-tight text-[#0a3d52] transition group-hover:text-sky-700 dark:text-white dark:group-hover:text-sky-300 sm:text-xl">
+                      {pair.title}
+                    </h4>
+                    <span className="shrink-0 rounded-full border border-emerald-200/80 bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/50 dark:text-emerald-400">
+                      +300% Life
+                    </span>
+                  </div>
 
-                    {/* Feature Chips */}
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {featureTags.map((tag, tagIdx) => (
-                        <span
-                          key={tagIdx}
-                          className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-700/60"
-                        >
-                          ✓ {tag}
-                        </span>
-                      ))}
-                    </div>
+                  <p className="mt-2 text-[12px] leading-relaxed text-slate-600 dark:text-slate-300 sm:text-[13px]">
+                    {pair.description}
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {featureTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border border-slate-200/80 bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600 dark:border-slate-700/60 dark:bg-slate-800/80 dark:text-slate-300"
+                      >
+                        ✓ {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3.5 dark:border-slate-800/80">
+                    <a
+                      href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20saw%20your%20Case%20Study%20on%20${encodeURIComponent(pair.title)}%20and%20want%20to%20know%20more.`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#0a3d52] hover:underline dark:text-sky-400"
+                    >
+                      Case Study Report
+                      <ArrowForwardRoundedIcon sx={{ fontSize: 14 }} />
+                    </a>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ASTM Certified</span>
                   </div>
                 </div>
-
-                {/* Footer Action */}
-                <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                  <a
-                    href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20saw%20your%20Case%20Study%20on%20${encodeURIComponent(pair.title)}%20and%20want%20to%20know%20more.`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs font-bold text-[#0a3d52] dark:text-sky-400 hover:underline inline-flex items-center gap-1"
-                  >
-                    <span>Request Case Study Report</span>
-                    <ArrowForwardRoundedIcon sx={{ fontSize: 14 }} />
-                  </a>
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                    ASTM Certified
-                  </span>
-                </div>
-
-              </div>
+              </article>
             );
           })}
         </div>
-      </div>
+      </section>
 
       {/* 9. 4-Stage Application Methodology */}
-      <div ref={methodologySectionRef} className="mt-20 sm:mt-28 relative overflow-x-clip">
-        {/* Subtle Ambient Radial Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] max-w-full h-[350px] bg-gradient-to-r from-emerald-500/8 via-[#0a3d52]/5 to-transparent blur-3xl pointer-events-none rounded-full" />
+      <section ref={methodologySectionRef} className="relative mt-16 overflow-x-clip sm:mt-24">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-[min(100%,42rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-emerald-500/10 via-[#0a3d52]/5 to-transparent blur-3xl" />
 
-        {/* Header (Animates from TOP) */}
-        <div className="methodology-header-anim opacity-0 text-center max-w-3xl mx-auto mb-10 sm:mb-14 px-4 relative z-10">
-          <div className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#0a3d52]/10 via-emerald-500/10 to-[#0a3d52]/10 dark:from-emerald-400/15 dark:to-teal-400/10 text-[#0a3d52] dark:text-emerald-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3.5 border border-[#0a3d52]/20 dark:border-emerald-400/30 shadow-sm backdrop-blur-sm">
+        <div className="methodology-header-anim relative z-10 mx-auto mb-7 max-w-3xl px-1 text-center opacity-0 sm:mb-12">
+          <div className="mb-3.5 inline-flex items-center gap-2.5 rounded-full border border-[#0a3d52]/20 bg-gradient-to-r from-[#0a3d52]/10 via-emerald-500/10 to-[#0a3d52]/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0a3d52] dark:border-emerald-400/30 dark:from-emerald-400/15 dark:to-teal-400/10 dark:text-emerald-300 sm:text-xs">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            <FactCheckOutlinedIcon sx={{ fontSize: 16 }} />
-            <span>Standard Operating Procedure</span>
+            <FactCheckOutlinedIcon sx={{ fontSize: 15 }} />
+            Standard Operating Procedure
           </div>
-          <h3 
-            className="text-2xl sm:text-4xl lg:text-[40px] font-extrabold text-[#0a3d52] dark:text-white tracking-tight leading-tight"
-            style={{ fontFamily: "'Poppins', sans-serif" }}
-          >
+          <h3 className="font-heading text-[1.55rem] font-extrabold leading-tight tracking-tight text-[#0a3d52] dark:text-white sm:text-4xl lg:text-[2.4rem]">
             4-Stage Certified Engineering Methodology
           </h3>
-          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-3 leading-relaxed font-normal max-w-2xl mx-auto">
-            Every MARBLEX site application adheres to rigorous laboratory testing, moisture content thresholds, and dual-layer quality audit protocols.
+          <p className="mx-auto mt-3 max-w-2xl text-[13px] leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm">
+            Every site application follows laboratory testing, moisture thresholds, and dual-layer quality audit protocols.
           </p>
         </div>
 
-        {/* Desktop Progress Sequence Track */}
-        <div className="hidden lg:grid grid-cols-4 gap-6 px-1 mb-4 pointer-events-none relative z-10">
+        <div className="relative z-10 mb-3 hidden grid-cols-4 gap-4 px-1 lg:grid">
           {["01 Diagnostic", "02 Consolidation", "03 Formulation", "04 Certification"].map((phaseLabel, sIdx) => (
-            <div key={sIdx} className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-[10px] font-mono font-black shadow-xs">
+            <div key={phaseLabel} className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-50 text-[10px] font-black text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
                 {sIdx + 1}
               </div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                {phaseLabel}
-              </span>
-              <div className="flex-1 h-0.5 bg-gradient-to-r from-emerald-400/50 via-emerald-400/20 to-transparent rounded-full" />
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400">{phaseLabel}</span>
+              <div className="h-0.5 flex-1 rounded-full bg-gradient-to-r from-emerald-400/50 to-transparent" />
             </div>
           ))}
         </div>
 
-        {/* Cards Grid: 1 & 3 from Left, 2 & 4 from Right */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 px-1 relative z-10">
-          {engineeringSteps.map((step, idx) => {
-            const IconComponent = step.icon;
+        <p className="relative z-10 mb-3 flex items-center justify-between px-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:hidden">
+          <span>Swipe stages</span>
+          <span className="font-mono normal-case tracking-normal text-[#0a3d52] dark:text-emerald-300">01 — 04</span>
+        </p>
 
+        <div
+          data-lenis-prevent-touch
+          className="relative z-10 -mx-3 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain scroll-px-3 px-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-1 sm:pb-0 sm:snap-none lg:grid-cols-4 lg:gap-6"
+        >
+          {engineeringSteps.map((step) => {
+            const IconComponent = step.icon;
             return (
               <a
-                key={idx}
+                key={step.step}
                 href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20am%20interested%20in%20learning%20more%20about%20Stage%20${step.step}%3A%20${encodeURIComponent(step.title)}.`}
                 target="_blank"
                 rel="noreferrer"
-                className="methodology-card-item opacity-0 group relative bg-white/95 dark:bg-[#0c222e]/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_-4px_rgba(10,61,82,0.06)] hover:shadow-2xl hover:shadow-[#0a3d52]/15 dark:hover:shadow-black/70 hover:-translate-y-2 hover:border-[#0a3d52]/40 dark:hover:border-sky-500/40 transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer"
+                className="methodology-card-item no-shimmer group relative flex h-full w-[min(86vw,21rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[1.5rem] border border-slate-200/90 bg-white opacity-0 shadow-[0_12px_32px_-20px_rgba(10,61,82,0.4)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0a3d52]/30 hover:shadow-[0_22px_44px_-24px_rgba(10,61,82,0.45)] dark:border-slate-800 dark:bg-[#0c222e] sm:w-auto sm:shrink sm:snap-align-none"
               >
-                {/* Top Subtle Hover Sheen Line */}
-                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${step.accentGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm`} />
-
-                {/* Ambient Card Background Tint on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                <div className="relative z-10">
-                  {/* Step Header: Big Gradient Number & Icon */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-baseline gap-2">
-                      <span 
-                        className="text-4xl sm:text-5xl font-black font-mono tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-[#0a3d52] to-sky-500 dark:from-white dark:to-sky-400 group-hover:scale-105 transition-transform duration-300"
-                      >
+                <span className={`h-1 w-full bg-gradient-to-r ${step.accentGradient}`} />
+                <span className="relative flex flex-1 flex-col p-5 sm:p-6">
+                  <span className="mb-4 flex items-start justify-between gap-3">
+                    <span className="flex items-baseline gap-2">
+                      <span className="bg-gradient-to-br from-[#0a3d52] to-sky-500 bg-clip-text font-mono text-4xl font-black tracking-tighter text-transparent dark:from-white dark:to-sky-400 sm:text-5xl">
                         {step.step}
                       </span>
-                      <span className="text-[9px] font-mono font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500">
-                        {step.phase}
-                      </span>
-                    </div>
-
-                    <div className={`w-12 h-12 rounded-2xl ${step.accentBg} ${step.accentText} border ${step.accentBorder} flex items-center justify-center group-hover:scale-110 group-hover:shadow-lg transition-all duration-300 relative`}>
-                      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${step.accentGradient} opacity-0 group-hover:opacity-20 blur-md transition-opacity`} />
-                      <div className="relative z-10">
-                        <IconComponent />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step Badge */}
-                  <div className="mb-3">
-                    <span className={`text-[10px] font-mono font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-md ${step.accentBg} ${step.accentText} border ${step.accentBorder} inline-block shadow-xs`}>
-                      {step.badge}
+                      <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-400">{step.phase}</span>
                     </span>
-                  </div>
-
-                  {/* Step Title */}
-                  <h4 
-                    className="text-base sm:text-lg font-bold text-[#0a3d52] dark:text-white mb-1 group-hover:text-[#0a3d52] dark:group-hover:text-sky-300 transition-colors duration-200 tracking-tight"
-                    style={{ fontFamily: "'Poppins', sans-serif" }}
-                  >
-                    {step.title}
-                  </h4>
-
-                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                    {step.subtitle}
-                  </p>
-
-                  {/* Step Description */}
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal mb-4">
-                    {step.desc}
-                  </p>
-
-                  {/* Technical Spec Box */}
-                  <div className="bg-slate-50/80 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80 mb-2 flex items-center justify-between text-[11px]">
-                    <span className="font-mono font-semibold text-slate-600 dark:text-slate-300 text-[10px] truncate max-w-[62%]">{step.spec}</span>
-                    <span className="text-[9px] font-bold uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/50 dark:border-emerald-800/40 shrink-0">{step.qcGate}</span>
-                  </div>
-                </div>
-
-                {/* Card Footer: Verified Badge */}
-                <div className="relative z-10 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    <span className={`flex h-11 w-11 items-center justify-center rounded-2xl border sm:h-12 sm:w-12 ${step.accentBg} ${step.accentText} ${step.accentBorder} transition group-hover:scale-105`}>
+                      <IconComponent />
                     </span>
-                    <span>Quality Verified</span>
-                  </div>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded">
-                    {step.iso}
                   </span>
-                </div>
+
+                  <span className={`mb-3 inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider ${step.accentBg} ${step.accentText} ${step.accentBorder}`}>
+                    {step.badge}
+                  </span>
+
+                  <span className="font-heading text-base font-bold tracking-tight text-[#0a3d52] dark:text-white sm:text-lg">
+                    {step.title}
+                  </span>
+                  <span className="mt-1 text-[12px] font-semibold text-slate-500 dark:text-slate-400">{step.subtitle}</span>
+                  <span className="mt-2.5 text-[12px] leading-relaxed text-slate-600 dark:text-slate-300 sm:text-xs">
+                    {step.desc}
+                  </span>
+
+                  <span className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/90 px-2.5 py-2 dark:border-slate-800/80 dark:bg-slate-900/50">
+                    <span className="truncate font-mono text-[10px] font-semibold text-slate-600 dark:text-slate-300">{step.spec}</span>
+                    <span className="shrink-0 rounded border border-emerald-200/50 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold uppercase text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      {step.qcGate}
+                    </span>
+                  </span>
+
+                  <span className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3.5 dark:border-slate-800/80">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      Quality Verified
+                    </span>
+                    <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-slate-800/80 dark:text-slate-500">
+                      {step.iso}
+                    </span>
+                  </span>
+                </span>
               </a>
             );
           })}
         </div>
-      </div>
+      </section>
 
       {/* 10. Work Showcase Gallery */}
-      <div className="mt-20 sm:mt-28 scroll-reveal">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-5">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-[#ff6b4a]/10 text-[#ff6b4a] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-2 border border-[#ff6b4a]/20">
-              <PhotoLibraryIcon sx={{ fontSize: 16 }} /> On-Site Installations
-            </div>
-            <h3 className="text-2xl sm:text-4xl font-black text-[#0a3d52] dark:text-white font-heading">
-              Project Gallery & Deployments
-            </h3>
-            <p className="text-[#565e69] dark:text-slate-300 font-normal text-xs sm:text-sm mt-1">
-              Critical infrastructure, commercial high-rises, and industrial facilities engineered with MARBLEX. Click any photo to preview.
-            </p>
-          </div>
+      <section className="relative mt-16 overflow-hidden scroll-reveal sm:mt-24">
+        <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[min(100%,36rem)] -translate-x-1/2 rounded-full bg-gradient-to-b from-[#0a3d52]/8 to-transparent blur-3xl dark:from-sky-400/10" />
 
-          <div className="flex items-center gap-2 text-[#0a3d52] dark:text-[#ff8c73] bg-white dark:bg-[#0c222e] px-4 py-2.5 rounded-xl border border-[#e0e6ed] dark:border-slate-700 font-bold text-xs sm:text-sm shadow-sm shrink-0">
-            <WorkspacePremiumOutlinedIcon fontSize="small" />
-            <span className="uppercase tracking-wide">500+ Sites Protected</span>
+        <div className="relative z-10 mx-auto mb-7 max-w-3xl px-1 text-center sm:mb-12">
+          <div className="mb-3.5 inline-flex items-center gap-2 rounded-full border border-[#0a3d52]/20 bg-[#0a3d52]/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0a3d52] dark:border-sky-400/25 dark:bg-sky-400/10 dark:text-sky-300 sm:text-xs">
+            <PhotoLibraryIcon sx={{ fontSize: 15 }} />
+            On-Site Installations
+          </div>
+          <h3 className="font-heading text-[1.55rem] font-extrabold leading-tight tracking-tight text-[#0a3d52] dark:text-white sm:text-4xl lg:text-[2.35rem]">
+            Project Gallery & Deployments
+          </h3>
+          <p className="mx-auto mt-3 max-w-2xl text-[13px] leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm">
+            Critical infrastructure, commercial towers, and industrial facilities protected with MARBLEX systems. Tap any photo to inspect.
+          </p>
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-700/40 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <WorkspacePremiumOutlinedIcon sx={{ fontSize: 15 }} />
+            500+ Sites Protected
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
-          {galleryImages.map((img, idx) => (
-            <div 
-              key={idx} 
-              onClick={() => setPreviewImage(img)}
-              className={`relative rounded-3xl overflow-hidden group border border-[#e0e6ed] dark:border-slate-800 shadow-sm cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${idx === 0 || idx === 5 ? 'md:col-span-2 md:row-span-2' : ''}`}
-            >
-              <img 
-                src={img} 
-                alt={`Showcase ${idx}`} 
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover min-h-[190px] transition-transform duration-700 group-hover:scale-108" 
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a3d52]/90 via-[#0a3d52]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#ff8c73] block">Site Verification</span>
-                    <span className="font-extrabold text-sm sm:text-base font-heading">MARBLEX Industrial Project #{idx + 101}</span>
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                    <ZoomInOutlinedIcon sx={{ fontSize: 18 }} />
+        <p className="relative z-10 mb-3 flex items-center justify-between px-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:hidden">
+          <span>Swipe gallery</span>
+          <span className="font-mono normal-case tracking-normal text-[#0a3d52] dark:text-sky-300">
+            01 — {String(galleryImages.length).padStart(2, "0")}
+          </span>
+        </p>
+
+        <div
+          data-lenis-prevent-touch
+          className="relative z-10 -mx-3 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain scroll-px-3 px-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-1 sm:pb-0 sm:snap-none lg:grid-cols-3 lg:gap-5"
+        >
+          {[
+            { title: "PU Waterproofing", tag: "Roof Deck", site: "Industrial Project #101" },
+            { title: "Membrane Install", tag: "Terrace Seal", site: "Industrial Project #102" },
+            { title: "Waterstop Profile", tag: "Joint System", site: "Industrial Project #103" },
+            { title: "Foundation Barrier", tag: "Below Grade", site: "Industrial Project #104" },
+            { title: "Protective Coating", tag: "Structural", site: "Industrial Project #105" },
+            { title: "Field Deployment", tag: "Multi-Site", site: "Industrial Project #106" },
+          ].map((meta, idx) => {
+            const img = galleryImages[idx];
+            if (!img) return null;
+
+            return (
+              <button
+                key={img}
+                type="button"
+                onClick={() => setPreviewImage(img)}
+                className="no-shimmer group relative flex w-[min(86vw,22rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[1.5rem] border border-slate-200/90 bg-white text-left shadow-[0_12px_32px_-20px_rgba(10,61,82,0.4)] transition duration-300 hover:-translate-y-1 hover:border-[#0a3d52]/30 hover:shadow-[0_22px_44px_-24px_rgba(10,61,82,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a3d52]/35 dark:border-slate-800 dark:bg-[#0c222e] sm:w-auto sm:shrink sm:snap-align-none"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden bg-slate-900 sm:aspect-[5/4]">
+                  <img
+                    src={img}
+                    alt={meta.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#061820]/95 via-[#061820]/35 to-transparent" />
+
+                  <span className="absolute left-3 top-3 rounded-md border border-white/15 bg-black/45 px-2.5 py-1 text-[9.5px] font-extrabold uppercase tracking-wider text-white backdrop-blur-md sm:left-4 sm:top-4">
+                    {meta.tag}
+                  </span>
+
+                  <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/15 text-white opacity-90 backdrop-blur-md transition group-hover:bg-white/25 sm:right-4 sm:top-4">
+                    <ZoomInOutlinedIcon sx={{ fontSize: 16 }} />
+                  </span>
+
+                  <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300/90">
+                      {meta.site}
+                    </p>
+                    <h4 className="mt-1 font-heading text-base font-extrabold tracking-tight text-white sm:text-lg">
+                      {meta.title}
+                    </h4>
+                    <p className="mt-1.5 text-[11px] font-medium text-white/65 sm:text-xs">
+                      MARBLEX Construction Chemical · Field verified
+                    </p>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </button>
+            );
+          })}
         </div>
-      </div>
+      </section>
 
       {/* Lightbox Modal for Gallery Images */}
       {previewImage && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-fadeIn"
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md animate-fadeIn sm:p-8"
           onClick={() => setPreviewImage(null)}
         >
-          <div 
-            className="relative max-w-4xl w-full max-h-[90vh] bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-white/20 flex flex-col"
+          <div
+            className="relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[1.5rem] border border-white/15 bg-slate-950 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-950/80 border-b border-white/10 text-white">
-              <span className="font-bold text-sm tracking-wide">MARBLEX Project Inspection & Proof</span>
-              <button 
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3.5 text-white sm:px-6 sm:py-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300/90">Site Inspection</p>
+                <span className="text-sm font-bold tracking-wide">MARBLEX Project Proof</span>
+              </div>
+              <button
+                type="button"
                 onClick={() => setPreviewImage(null)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-white"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
               >
                 <CloseRoundedIcon sx={{ fontSize: 20 }} />
               </button>
             </div>
-            <div className="p-2 sm:p-4 flex items-center justify-center bg-black/40 overflow-auto">
-              <img 
-                src={previewImage} 
-                alt="Enlarged Project Preview" 
-                className="max-h-[75vh] w-auto object-contain rounded-2xl shadow-lg"
+            <div className="flex items-center justify-center overflow-auto bg-black/50 p-2 sm:p-4">
+              <img
+                src={previewImage}
+                alt="Enlarged Project Preview"
+                className="max-h-[75vh] w-auto rounded-2xl object-contain shadow-lg"
               />
             </div>
           </div>
@@ -1688,50 +1994,232 @@ export const ShopPage = ({ addToCart }) => {
       )}
 
       {/* 11. Contractor & Engineer Testimonials */}
-      <div className="mt-20 sm:mt-28">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 bg-[#ff6b4a]/10 text-[#ff6b4a] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-3 border border-[#ff6b4a]/20">
-            <BusinessOutlinedIcon sx={{ fontSize: 16 }} /> Client Endorsements
+      <section className="relative mt-16 overflow-hidden sm:mt-24">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_at_top,_rgba(10,61,82,0.08),_transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,_rgba(56,189,248,0.08),_transparent_60%)]" />
+
+        <div className="relative z-10 mx-auto mb-6 max-w-3xl px-1 text-center sm:mb-10">
+          <div className="mb-3.5 inline-flex items-center gap-2 rounded-full border border-[#0a3d52]/15 bg-gradient-to-r from-[#0a3d52]/10 via-white to-[#ff6b4a]/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0a3d52] dark:border-sky-400/25 dark:from-sky-400/10 dark:via-transparent dark:to-[#ff6b4a]/10 dark:text-sky-300 sm:text-xs">
+            <BusinessOutlinedIcon sx={{ fontSize: 15 }} />
+            Client Endorsements
           </div>
-          <h3 className="text-2xl sm:text-4xl font-black text-[#0a3d52] dark:text-white font-heading tracking-tight">
-            Trusted by Pakistan's Leading Contractors
+          <h3 className="font-heading text-[1.55rem] font-extrabold leading-tight tracking-tight text-[#0a3d52] dark:text-white sm:text-4xl lg:text-[2.35rem]">
+            Trusted by Pakistan&apos;s Leading Contractors
           </h3>
-          <p className="text-[#565e69] dark:text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed">
-            Real feedback from project directors, structural consultants, and industrial engineers on site performance.
+          <p className="mx-auto mt-3 max-w-2xl text-[13px] leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm">
+            Verified field feedback from directors, consultants, and plant engineers — live from the MARBLEX review database.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {contractorTestimonials.map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-white dark:bg-[#0c222e] p-6 sm:p-7 rounded-3xl border border-[#e0e6ed] dark:border-slate-800 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"
+        {!reviewsLoading && clientReviews.length > 0 && (
+          <div className="relative z-10 mb-5 flex flex-wrap items-center justify-center gap-2.5 sm:mb-7 sm:gap-3">
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2 shadow-sm dark:border-slate-700 dark:bg-[#0c222e]">
+              <StarRoundedIcon sx={{ fontSize: 18, color: "#ff6b4a" }} />
+              <span className="font-heading text-sm font-extrabold text-[#0a3d52] dark:text-white">{reviewsAvgRating}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Avg rating</span>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2 shadow-sm dark:border-slate-700 dark:bg-[#0c222e]">
+              <span className="font-heading text-sm font-extrabold text-[#0a3d52] dark:text-white">{clientReviews.length}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Verified reviews</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowReviewForm((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-2xl border border-[#0a3d52]/20 bg-[#0a3d52] px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-[#0c4a63] dark:border-sky-400/30 dark:bg-sky-600"
             >
-              <div className="space-y-3">
-                <div className="flex items-center gap-1 text-[#ff6b4a]">
-                  {[...Array(item.rating)].map((_, r) => (
-                    <StarRoundedIcon key={r} sx={{ fontSize: 20 }} />
-                  ))}
-                </div>
-                <p className="text-xs sm:text-[13px] text-[#565e69] dark:text-slate-300 leading-relaxed italic font-normal">
-                  "{item.quote}"
-                </p>
-              </div>
+              <StarRoundedIcon sx={{ fontSize: 15 }} />
+              {showReviewForm ? "Close form" : "Share review"}
+            </button>
+          </div>
+        )}
 
-              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] text-white flex items-center justify-center font-black text-sm shrink-0">
-                  {item.name.charAt(0)}
-                </div>
-                <div>
-                  <h5 className="text-xs font-extrabold text-[#0a3d52] dark:text-white font-heading">{item.name}</h5>
-                  <p className="text-[10.5px] text-[#ff6b4a] font-bold">{item.role}</p>
-                  <p className="text-[10px] text-slate-400 font-medium">{item.company}</p>
+        {showReviewForm && (
+          <form
+            onSubmit={handleSubmitClientReview}
+            className="relative z-10 mx-auto mb-8 max-w-2xl rounded-[1.5rem] border border-slate-200/90 bg-white p-4 shadow-[0_12px_32px_-20px_rgba(10,61,82,0.35)] dark:border-slate-800 dark:bg-[#0c222e] sm:p-6"
+          >
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+              Submit review · Admin approval required before publish
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                ["name", "Full name", true],
+                ["role", "Role / Title", true],
+                ["company", "Company / Project", true],
+                ["email", "Email (optional)", false],
+                ["phone", "Phone (optional)", false],
+              ].map(([key, label, required]) => (
+                <input
+                  key={key}
+                  value={reviewForm[key]}
+                  onChange={(e) => setReviewForm((f) => ({ ...f, [key]: e.target.value }))}
+                  placeholder={label}
+                  required={required}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#0a3d52] dark:border-slate-700 dark:bg-slate-900/50 dark:text-white"
+                />
+              ))}
+              <select
+                value={reviewForm.rating}
+                onChange={(e) => setReviewForm((f) => ({ ...f, rating: Number(e.target.value) }))}
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#0a3d52] dark:border-slate-700 dark:bg-slate-900/50 dark:text-white"
+              >
+                {[5, 4, 3, 2, 1].map((n) => (
+                  <option key={n} value={n}>
+                    {n} Star{n > 1 ? "s" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <textarea
+              value={reviewForm.quote}
+              onChange={(e) => setReviewForm((f) => ({ ...f, quote: e.target.value }))}
+              placeholder="Share your on-site experience with MARBLEX systems..."
+              required
+              rows={4}
+              maxLength={800}
+              className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#0a3d52] dark:border-slate-700 dark:bg-slate-900/50 dark:text-white"
+            />
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[11px] text-slate-400">
+                {reviewFeedback || "Reviews appear on this page after admin approval."}
+              </p>
+              <button
+                type="submit"
+                disabled={reviewSubmitting}
+                className="rounded-xl bg-[#0a3d52] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-60 dark:bg-sky-600"
+              >
+                {reviewSubmitting ? "Submitting..." : "Submit Review"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {reviewsLoading ? (
+          <div className="-mx-3 flex gap-3.5 overflow-hidden px-3 sm:mx-0 sm:px-1">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-64 w-[min(86vw,22rem)] shrink-0 animate-pulse rounded-[1.5rem] bg-slate-100 dark:bg-slate-800/60 sm:w-[calc((100%-2.5rem)/3)]" />
+            ))}
+          </div>
+        ) : clientReviews.length ? (
+          <div className="relative z-10">
+            <div className="mb-3 flex items-center justify-between gap-3 px-0.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <span className="sm:hidden">Swipe reviews</span>
+                <span className="hidden sm:inline">Contractor voice</span>
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[11px] font-bold text-[#0a3d52] dark:text-sky-300">
+                  {String(activeReviewIndex + 1).padStart(2, "0")} / {String(clientReviews.length).padStart(2, "0")}
+                </span>
+                <div className="hidden items-center gap-1.5 sm:flex">
+                  <button
+                    type="button"
+                    aria-label="Previous review"
+                    onClick={() => scrollReviewsTo(Math.max(0, activeReviewIndex - 1))}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-[#0a3d52] transition hover:border-[#0a3d52]/40 dark:border-slate-700 dark:bg-[#0c222e] dark:text-sky-300"
+                  >
+                    <ArrowBackRoundedIcon sx={{ fontSize: 16 }} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next review"
+                    onClick={() => scrollReviewsTo(Math.min(clientReviews.length - 1, activeReviewIndex + 1))}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-[#0a3d52] transition hover:border-[#0a3d52]/40 dark:border-slate-700 dark:bg-[#0c222e] dark:text-sky-300"
+                  >
+                    <ArrowForwardRoundedIcon sx={{ fontSize: 16 }} />
+                  </button>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+
+            <div
+              ref={reviewsTrackRef}
+              data-lenis-prevent-touch
+              onScroll={handleReviewsScroll}
+              className="-mx-3 flex snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain scroll-px-3 px-3 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:scroll-px-1 sm:px-1 lg:gap-5"
+            >
+              {clientReviews.map((item, idx) => {
+                const accent =
+                  idx % 3 === 0
+                    ? "from-[#0a3d52] to-[#1a6b88]"
+                    : idx % 3 === 1
+                      ? "from-[#ff6b4a] to-[#e04520]"
+                      : "from-emerald-600 to-teal-600";
+                return (
+                  <article
+                    key={item._id}
+                    data-review-card
+                    className="no-shimmer group relative flex w-[min(88vw,22.5rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[1.6rem] border border-slate-200/90 bg-white p-5 shadow-[0_14px_36px_-22px_rgba(10,61,82,0.45)] transition duration-300 hover:-translate-y-1 hover:border-[#0a3d52]/25 hover:shadow-[0_24px_48px_-24px_rgba(10,61,82,0.5)] dark:border-slate-800 dark:bg-[#0c222e] sm:w-[min(48%,22rem)] lg:w-[calc((100%-2.5rem)/3)]"
+                  >
+                    <div className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${accent}`} />
+                    <FormatQuoteRoundedIcon
+                      className="pointer-events-none absolute -right-1 top-3 text-slate-100 dark:text-slate-800/80"
+                      sx={{ fontSize: 64 }}
+                    />
+
+                    <div className="relative mb-4 flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-0.5 text-[#ff6b4a]">
+                        {Array.from({ length: Math.max(1, Math.min(5, Number(item.rating) || 5)) }).map((_, r) => (
+                          <StarRoundedIcon key={r} sx={{ fontSize: 17 }} />
+                        ))}
+                      </div>
+                      <span className="rounded-full border border-emerald-200/80 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-700/40 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        Verified
+                      </span>
+                    </div>
+
+                    <p className="relative flex-1 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300 sm:text-[13.5px]">
+                      &ldquo;{item.quote}&rdquo;
+                    </p>
+
+                    <div className="relative mt-5 flex items-center gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+                      <div
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${accent} text-sm font-black text-white shadow-md`}
+                      >
+                        {(item.name || "M").charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <h5 className="truncate font-heading text-[13px] font-extrabold text-[#0a3d52] dark:text-white">
+                          {item.name}
+                        </h5>
+                        <p className="truncate text-[11px] font-bold text-[#ff6b4a]">{item.role}</p>
+                        <p className="truncate text-[10px] font-medium text-slate-400">{item.company}</p>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex items-center justify-center gap-1.5">
+              {clientReviews.map((item, idx) => (
+                <button
+                  key={item._id}
+                  type="button"
+                  aria-label={`Go to review ${idx + 1}`}
+                  onClick={() => scrollReviewsTo(idx)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    idx === activeReviewIndex
+                      ? "w-6 bg-[#0a3d52] dark:bg-sky-400"
+                      : "w-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="relative z-10 rounded-[1.5rem] border border-dashed border-slate-200 bg-white/70 px-6 py-12 text-center dark:border-slate-700 dark:bg-[#0c222e]/70">
+            <p className="text-sm font-semibold text-[#0a3d52] dark:text-white">No published reviews yet</p>
+            <p className="mt-1 text-xs text-slate-500">Be the first contractor to share field performance feedback.</p>
+            <button
+              type="button"
+              onClick={() => setShowReviewForm(true)}
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#0a3d52] px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-white"
+            >
+              Share review
+            </button>
+          </div>
+        )}
+      </section>
 
       {/* 12. Direct Technical Hotline & Instant Consultation CTA Banner */}
       <div className="mt-20 sm:mt-28 bg-gradient-to-br from-[#0a3d52] via-[#0b4860] to-[#082a38] rounded-3xl p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 border border-white/10">
@@ -1780,6 +2268,7 @@ export const ShopPage = ({ addToCart }) => {
         <span className="text-[11px] font-bold text-[#565e69] dark:text-slate-400 tracking-[0.25em] uppercase">
           QUALITY PRODUCTS &nbsp;/&nbsp; CERTIFIED FORMULATIONS &nbsp;/&nbsp; BUILT TO LAST
         </span>
+      </div>
       </div>
 
     </div>

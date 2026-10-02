@@ -9,6 +9,7 @@ const chatRoutes = require("./chatRoutes");
 const productReviewRoutes = require("./productReviewRoutes");
 const contactRoutes = require("./contact");
 const portalRoutes = require("./portalRoutes");
+const clientReviewRoutes = require("./clientReviewRoutes");
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use("/chat", chatRoutes);
 router.use("/product-reviews", productReviewRoutes);
 router.use("/contact", contactRoutes);
 router.use("/portal", portalRoutes);
+router.use("/client-reviews", clientReviewRoutes);
 
 module.exports = router;

@@ -218,7 +218,7 @@ export const HeroBanner = () => {
       const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
 
       tl.from(".hero-card", {
-        clipPath: "inset(0 0 100% 0 round 28px)",
+        clipPath: "inset(0 0 100% 0)",
         duration: 1.1,
         ease: "power4.inOut",
       })
@@ -230,7 +230,7 @@ export const HeroBanner = () => {
       const st = { trigger: hero, start: "top top", end: "bottom top", scrub: true };
       gsap.to(".hero-bgwrap", { yPercent: 4, ease: "none", scrollTrigger: st });
       gsap.to(".hero-inner", { y: -30, opacity: 0, ease: "none", scrollTrigger: { ...st, end: "bottom 40%" } });
-      gsap.to(".hero-card", { scale: 0.99, ease: "none", scrollTrigger: st });
+      gsap.to(".hero-card", { opacity: 0.98, ease: "none", scrollTrigger: st });
     }, hero);
 
     return () => ctx.revert();
@@ -256,10 +256,10 @@ export const HeroBanner = () => {
   const current = SLIDES[activeSlide];
 
   return (
-    <div ref={heroRef} className="w-full">
+    <div ref={heroRef} className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2">
 
-      {/* ==================== Cinema Hero Card ==================== */}
-      <section className="hero-card relative w-full h-[clamp(440px,66vh,540px)] sm:h-[clamp(480px,62vh,620px)] lg:h-[clamp(520px,68vh,660px)] rounded-[22px] sm:rounded-[28px] overflow-hidden text-white shadow-2xl isolation-isolate select-none">
+      {/* ==================== Cinema Hero — full viewport width ==================== */}
+      <section className="hero-card relative w-full h-[clamp(460px,72vh,580px)] sm:h-[clamp(500px,66vh,640px)] lg:h-[clamp(540px,70vh,700px)] overflow-hidden text-white shadow-[0_18px_40px_-24px_rgba(5,17,25,0.65)] isolation-isolate select-none">
 
         {/* Background Wrap with High-Definition Construction Video */}
         <div ref={bgWrapRef} className="hero-bgwrap absolute inset-0 -z-20 overflow-hidden bg-[#071822]">
@@ -292,7 +292,7 @@ export const HeroBanner = () => {
         {/* Inner Content on Left (Anchored at bottom on mobile, vertically centered on desktop) */}
         <div
           ref={innerRef}
-          className="hero-inner absolute left-5 right-5 sm:right-auto sm:left-12 lg:left-16 bottom-6 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 max-w-[580px] z-10 space-y-3 sm:space-y-4.5"
+          className="hero-inner absolute left-4 right-4 sm:right-auto sm:left-10 lg:left-14 bottom-7 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 max-w-[580px] z-10 space-y-3 sm:space-y-4.5"
         >
           {/* Eyebrow */}
           <div className="hero-eyebrow inline-flex items-center gap-2 text-[10.5px] sm:text-xs font-bold tracking-[0.14em] uppercase text-[#ff8c73] drop-shadow-sm">

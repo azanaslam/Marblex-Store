@@ -300,39 +300,38 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
         </div>
 
         {/* 3. Price & Add to Cart Footer (Clean, balanced layout) */}
-        <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-[#e0e6ed] dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between gap-1.5 lg:gap-1 pt-2 border-t border-[#e0e6ed] dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
           
           {/* Ultra-Modern Luxury Price Display */}
           <div className="flex items-center gap-1.5 shrink-0 min-w-0">
             <span className="text-[9px] sm:text-[9.5px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md bg-[#ff6b4a]/10 text-[#ff6b4a] border border-[#ff6b4a]/20 leading-none">
               PKR
             </span>
-            <span className="text-[17px] sm:text-[18.5px] font-black text-[#0a3d52] dark:text-white font-heading tracking-tight leading-none">
+            <span className="text-[17px] sm:text-[18.5px] lg:text-[15px] xl:text-[16.5px] font-black text-[#0a3d52] dark:text-white font-heading tracking-tight leading-none">
               {priceLabel}
             </span>
           </div>
 
-          {/* Action Controls: Quantity Stepper + Add to Cart */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Quantity Stepper */}
-            <div className="flex items-center h-7 rounded-lg border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/80 px-0.5 overflow-hidden shrink-0">
+          {/* Action Controls: mobile/tablet base unchanged; compact only on lg 4-col cards */}
+          <div className="flex items-center gap-1.5 lg:gap-1 shrink-0">
+            <div className="flex items-center h-7 lg:h-6 rounded-lg border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/80 px-0.5 overflow-hidden shrink-0">
               <button
                 type="button"
                 onClick={handleDecrement}
                 disabled={quantity <= 1}
-                className="w-5 h-full flex items-center justify-center text-slate-500 hover:text-[#ff6b4a] dark:text-slate-400 dark:hover:text-[#ff6b4a] disabled:opacity-25 disabled:hover:text-slate-500 transition-colors font-bold text-xs"
+                className="w-5 lg:w-4 h-full flex items-center justify-center text-slate-500 hover:text-[#ff6b4a] dark:text-slate-400 dark:hover:text-[#ff6b4a] disabled:opacity-25 disabled:hover:text-slate-500 transition-colors font-bold text-xs"
                 title="Decrease quantity"
                 aria-label="Decrease quantity"
               >
                 −
               </button>
-              <span className="w-5 text-center text-[11px] font-bold text-[#0a3d52] dark:text-slate-200 select-none">
+              <span className="w-5 lg:w-4 text-center text-[11px] lg:text-[10px] font-bold text-[#0a3d52] dark:text-slate-200 select-none">
                 {quantity}
               </span>
               <button
                 type="button"
                 onClick={handleIncrement}
-                className="w-5 h-full flex items-center justify-center text-slate-500 hover:text-[#ff6b4a] dark:text-slate-400 dark:hover:text-[#ff6b4a] transition-colors font-bold text-xs"
+                className="w-5 lg:w-4 h-full flex items-center justify-center text-slate-500 hover:text-[#ff6b4a] dark:text-slate-400 dark:hover:text-[#ff6b4a] transition-colors font-bold text-xs"
                 title="Increase quantity"
                 aria-label="Increase quantity"
               >
@@ -340,13 +339,13 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
               </button>
             </div>
 
-            {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
-              className="shimmer-btn h-7 px-2.5 sm:px-3 rounded-lg bg-[#0a3d52] hover:bg-[#0d4e68] active:bg-[#082a38] text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95 shrink-0 whitespace-nowrap"
+              className="shimmer-btn h-7 lg:h-6 px-2.5 sm:px-3 lg:px-2 xl:px-2.5 rounded-lg bg-[#0a3d52] hover:bg-[#0d4e68] active:bg-[#082a38] text-white font-bold text-[11px] lg:text-[10px] xl:text-[11px] flex items-center gap-1 lg:gap-0.5 shadow-sm transition active:scale-95 shrink-0 whitespace-nowrap"
             >
-              <ShoppingCartOutlinedIcon sx={{ fontSize: 13 }} />
-              <span>Add to Cart</span>
+              <ShoppingCartOutlinedIcon sx={{ fontSize: { xs: 13, lg: 11, xl: 13 } }} />
+              <span className="lg:hidden">Add to Cart</span>
+              <span className="hidden lg:inline">Add</span>
             </button>
           </div>
 

@@ -12,6 +12,15 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import WorkspacePremiumOutlinedIcon from "@mui/icons-material/WorkspacePremiumOutlined";
 import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import ConstructionOutlinedIcon from "@mui/icons-material/ConstructionOutlined";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
+import EastRoundedIcon from "@mui/icons-material/EastRounded";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
@@ -39,6 +48,8 @@ export const AppLayout = ({ cartCount, children }) => {
   const logoRef = useRef(null);
   const navPillsRef = useRef(null);
   const actionsRef = useRef(null);
+  const mobileMenuPanelRef = useRef(null);
+  const mobileMenuItemsRef = useRef(null);
   const hasNavAnimatedRef = useRef(false);
 
   let tokenPayload = null;
@@ -96,6 +107,29 @@ export const AppLayout = ({ cartCount, children }) => {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!isMenuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (!isMenuOpen || !mobileMenuItemsRef.current) return;
+    const items = mobileMenuItemsRef.current.querySelectorAll("[data-mobile-nav-item]");
+    const footer = mobileMenuItemsRef.current.querySelectorAll("[data-mobile-nav-footer]");
+    gsap.fromTo(
+      items,
+      { opacity: 0, y: 8 },
+      { opacity: 1, y: 0, duration: 0.28, stagger: 0.035, ease: "power2.out" }
+    );
+    if (footer.length) {
+      gsap.fromTo(footer, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, delay: 0.12, ease: "power2.out" });
+    }
+  }, [isMenuOpen]);
+
+  useEffect(() => {
     const syncAuth = () => {
       setAuthUserFromStorage(getAuthUser());
       setToken(getAuthToken());
@@ -137,73 +171,84 @@ export const AppLayout = ({ cartCount, children }) => {
     if (announcementRef.current) {
       tl.fromTo(
         announcementRef.current,
-        { y: -30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7 }
+        { y: -36, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.65 },
+        0
       );
     }
 
     if (headerRef.current) {
       tl.fromTo(
         headerRef.current,
-        { y: -30, opacity: 0, filter: "blur(8px)" },
-        { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.9 },
-        "-=0.45"
+        { y: -28, opacity: 0, filter: "blur(10px)" },
+        { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.85 },
+        0.12
       );
     }
 
     if (logoRef.current) {
       tl.fromTo(
         logoRef.current,
-        { opacity: 0, scale: 0.9, x: -15 },
+        { opacity: 0, scale: 0.88, x: -18 },
         { opacity: 1, scale: 1, x: 0, duration: 0.7 },
-        "-=0.6"
+        0.28
       );
     }
 
     if (navPillsRef.current) {
       tl.fromTo(
         navPillsRef.current.children,
-        { opacity: 0, y: -10 },
-        { opacity: 1, y: 0, duration: 0.6, stagger: 0.04 },
-        "-=0.5"
+        { opacity: 0, y: -12 },
+        { opacity: 1, y: 0, duration: 0.55, stagger: 0.045 },
+        0.35
       );
     }
 
     if (actionsRef.current) {
       tl.fromTo(
         actionsRef.current.children,
-        { opacity: 0, scale: 0.92, y: -8 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.6, stagger: 0.06 },
-        "-=0.45"
+        { opacity: 0, scale: 0.9, y: -10 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.55, stagger: 0.05 },
+        0.4
       );
     }
   }, []);
 
-  // Synchronize navbar entrance with splash reveal or safety timeout
+  // Keep navbar hidden until MARBLEX splash finishes, then animate in
   useEffect(() => {
+    if (announcementRef.current) gsap.set(announcementRef.current, { opacity: 0, y: -36 });
+    if (headerRef.current) gsap.set(headerRef.current, { opacity: 0, y: -28, filter: "blur(10px)" });
+    if (logoRef.current) gsap.set(logoRef.current, { opacity: 0 });
+    if (navPillsRef.current) gsap.set(navPillsRef.current.children, { opacity: 0 });
+    if (actionsRef.current) gsap.set(actionsRef.current.children, { opacity: 0 });
+
+    let delayedCall = null;
     const handleIntroReveal = () => {
-      runNavEntrance();
+      // Wait until MARBLEX splash curtain has mostly exited
+      delayedCall = gsap.delayedCall(0.9, runNavEntrance);
     };
 
     window.addEventListener("marblex:intro_reveal", handleIntroReveal);
 
+    // Fallback only if splash event never fires (e.g. hard navigation edge case)
     const safetyTimer = setTimeout(() => {
       runNavEntrance();
-    }, 400);
+    }, 4800);
 
     return () => {
       window.removeEventListener("marblex:intro_reveal", handleIntroReveal);
       clearTimeout(safetyTimer);
+      if (delayedCall) delayedCall.kill();
     };
   }, [runNavEntrance]);
 
   const navLinks = [
-    { label: "Home", path: "/" },
-    { label: "About Us", path: "/about" },
-    { label: "Services", path: "/services" },
-    { label: "Contact", path: "/contact" },
-    { label: "Blogs", path: "/blogs" },
-    { label: "Catalogs", path: "/catalogs" },
+    { label: "Home", path: "/", icon: HomeOutlinedIcon, desc: "Products & industrial catalog" },
+    { label: "About Us", path: "/about", icon: InfoOutlinedIcon, desc: "Company legacy & mission" },
+    { label: "Services", path: "/services", icon: ConstructionOutlinedIcon, desc: "Site systems & applications" },
+    { label: "Contact", path: "/contact", icon: EmailOutlinedIcon, desc: "Engineering desk & support" },
+    { label: "Blogs", path: "/blogs", icon: ArticleOutlinedIcon, desc: "Field guides & insights" },
+    { label: "Catalogs", path: "/catalogs", icon: MenuBookOutlinedIcon, desc: "TDS packs & brochures" },
   ];
 
   const isAdminRoute = location.pathname.startsWith("/admin");
@@ -299,7 +344,7 @@ export const AppLayout = ({ cartCount, children }) => {
       {/* 2. Sleek Compact Main Navbar */}
       <header
         ref={headerRef}
-        className={`sticky top-0 z-40 transition-all duration-200 ease-in-out w-full border-b ${isDark
+        className={`sticky top-0 z-40 transition-all duration-200 ease-in-out w-full border-b ${isMenuOpen ? "z-[70]" : "z-40"} ${isDark
             ? scrolled || isMenuOpen
               ? "bg-[#0c222f]/95 backdrop-blur-md border-slate-800 shadow-md shadow-black/20 py-2"
               : "bg-[#091b24] border-slate-800/80 py-2.5"
@@ -482,65 +527,148 @@ export const AppLayout = ({ cartCount, children }) => {
 
               {/* Mobile Menu Toggle */}
               <button
-                className={`lg:hidden p-2 rounded-lg transition-colors ${isDark ? "hover:bg-slate-800 text-white" : "hover:bg-slate-100 text-[#08222e]"
+                type="button"
+                className={`lg:hidden relative z-[70] flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${isMenuOpen
+                    ? isDark
+                      ? "border-[#ff6b4a]/50 bg-[#ff6b4a]/15 text-[#ff8c73] rotate-90"
+                      : "border-[#ff6b4a]/40 bg-[#ff6b4a]/10 text-[#ff6b4a] rotate-90"
+                    : isDark
+                      ? "border-slate-700 bg-[#0e2735] text-white hover:bg-slate-800"
+                      : "border-slate-200 bg-[#f8fafc] text-[#08222e] hover:bg-slate-100"
                   }`}
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                aria-label="Open Navigation Menu"
+                onClick={() => setIsMenuOpen((open) => !open)}
+                aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
+                aria-expanded={isMenuOpen}
               >
-                {isMenuOpen ? <CloseIcon sx={{ fontSize: 22 }} /> : <MenuIcon sx={{ fontSize: 22 }} />}
+                {isMenuOpen ? <CloseIcon sx={{ fontSize: 20 }} /> : <MenuIcon sx={{ fontSize: 20 }} />}
               </button>
             </div>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Navigation Menu */}
+      {/* Mobile Navigation — simple professional drawer */}
+      <div
+        className={`lg:hidden fixed inset-0 z-[60] transition-[opacity,visibility] duration-300 ${
+          isMenuOpen ? "pointer-events-auto visible opacity-100" : "pointer-events-none invisible opacity-0"
+        }`}
+        aria-hidden={!isMenuOpen}
+      >
+        <button
+          type="button"
+          aria-label="Close menu backdrop"
+          className="absolute inset-0 bg-black/40"
+          onClick={() => setIsMenuOpen(false)}
+        />
+
         <div
-          className={`lg:hidden absolute top-full left-0 w-full border-b transition-all duration-200 ease-in-out overflow-hidden ${isDark ? "bg-[#0c222f] border-slate-800" : "bg-white border-[#e0e6ed]"
-            } ${isMenuOpen ? "max-h-[480px] opacity-100 py-5" : "max-h-0 opacity-0 py-0"}`}
+          ref={mobileMenuPanelRef}
+          className={`absolute inset-x-3 top-[4.6rem] max-h-[min(78dvh,520px)] overflow-hidden rounded-2xl border shadow-xl transition-all duration-300 ease-out sm:inset-x-4 ${
+            isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200 bg-white"
+          } ${isMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}
         >
-          <div className="flex flex-col px-6 gap-2.5">
-            {navLinks.map((link) => (
-              <RouterLink
-                key={link.label}
-                to={link.path}
-                className={`text-sm font-bold font-subheading transition-colors py-2 border-b ${isDark
-                    ? "text-slate-200 hover:text-[#ff6b4a] border-slate-800"
-                    : "text-[#0a3d52] hover:text-[#ff6b4a] border-slate-100"
-                  }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.label}
-              </RouterLink>
-            ))}
+          <div ref={mobileMenuItemsRef} className="overflow-y-auto overscroll-contain px-3 py-3.5 sm:px-4">
+            <div data-mobile-nav-brand className="mb-3 flex items-center justify-between px-1">
+              <p className={`text-[11px] font-bold uppercase tracking-[0.16em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                Menu
+              </p>
+              <span className={`text-[10px] font-semibold ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                Quick links
+              </span>
+            </div>
 
-            <div className="pt-2 flex flex-col gap-2">
+            <nav className="flex flex-col gap-1">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                const isActive = location.pathname === link.path;
+                return (
+                  <RouterLink
+                    key={link.label}
+                    to={link.path}
+                    data-mobile-nav-item
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition active:scale-[0.99] ${
+                      isActive
+                        ? isDark
+                          ? "bg-[#ff6b4a]/15 text-[#ff8c73]"
+                          : "bg-[#0a3d52]/8 text-[#0a3d52]"
+                        : isDark
+                          ? "text-slate-200 hover:bg-white/5"
+                          : "text-[#0a3d52] hover:bg-slate-50"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                        isActive
+                          ? isDark
+                            ? "bg-[#ff6b4a]/20 text-[#ff8c73]"
+                            : "bg-[#0a3d52] text-white"
+                          : isDark
+                            ? "bg-slate-800 text-slate-300"
+                            : "bg-slate-100 text-[#0a3d52]"
+                      }`}
+                    >
+                      <Icon sx={{ fontSize: 18 }} />
+                    </span>
+                    <span className="flex-1 text-[14px] font-semibold tracking-tight">{link.label}</span>
+                    <EastRoundedIcon
+                      sx={{ fontSize: 16 }}
+                      className={isActive ? "opacity-80" : "opacity-30"}
+                    />
+                  </RouterLink>
+                );
+              })}
+            </nav>
+
+            <div data-mobile-nav-footer className="mt-3 space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href="https://wa.me/923481116611"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white"
+                >
+                  <WhatsAppIcon sx={{ fontSize: 16 }} />
+                  WhatsApp
+                </a>
+                <a
+                  href="tel:03481116611"
+                  className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider ${
+                    isDark ? "bg-slate-800 text-slate-100" : "bg-[#0a3d52] text-white"
+                  }`}
+                >
+                  <LocalPhoneOutlinedIcon sx={{ fontSize: 16 }} />
+                  Call
+                </a>
+              </div>
+
               {!isUserLoggedIn ? (
                 <RouterLink
                   to="/login"
-                  className="shimmer-btn bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl font-bold text-xs uppercase text-white shadow-md cursor-pointer"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff6b4a] py-2.5 text-xs font-bold uppercase tracking-wider text-white"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <PersonOutlinedIcon sx={{ fontSize: 16 }} />
-                  <span>LOGIN</span>
-                  <ArrowForwardIcon sx={{ fontSize: 14 }} />
+                  <span>Login</span>
                 </RouterLink>
               ) : (
-                <>
+                <div className="space-y-1.5">
                   {isAdmin && (
                     <RouterLink
                       to="/admin"
-                      className="shimmer-btn bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] flex items-center justify-between w-full py-2.5 px-4 rounded-xl text-white font-bold text-xs uppercase shadow-md cursor-pointer"
+                      className="flex w-full items-center justify-between rounded-xl bg-[#ff6b4a] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <span>ADMIN PORTAL</span>
+                      <span>Admin Portal</span>
                       <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
                     </RouterLink>
                   )}
                   {isCustomer && (
                     <RouterLink
                       to="/dashboard"
-                      className={`flex items-center justify-between w-full py-2.5 px-4 rounded-xl font-bold text-xs ${isDark ? "bg-slate-800 text-white" : "bg-slate-50 text-[#0a3d52]"
-                        }`}
+                      className={`flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold ${
+                        isDark ? "bg-slate-800 text-white" : "bg-slate-100 text-[#0a3d52]"
+                      }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {customerLabel}
@@ -548,17 +676,18 @@ export const AppLayout = ({ cartCount, children }) => {
                     </RouterLink>
                   )}
                   <button
+                    type="button"
                     onClick={logout}
-                    className="w-full py-2 text-center font-bold text-xs text-[#565e69] hover:text-[#ff6b4a]"
+                    className="w-full py-1.5 text-center text-xs font-semibold text-slate-500 hover:text-[#ff6b4a]"
                   >
                     Logout
                   </button>
-                </>
+                </div>
               )}
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content Area */}
       <main className="flex-grow flex flex-col relative z-10 w-full">

@@ -217,6 +217,29 @@
   transform: translateY(0);
 }
 
+/* Catalog filter scroller: hide the native bar and fade the clipped edge */
+.catalog-filters {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.catalog-filters::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.catalog-filters.is-fade-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+.catalog-filters.is-fade-left {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 18px);
+  mask-image: linear-gradient(to right, transparent, #000 18px);
+}
+.catalog-filters.is-fade-left.is-fade-right {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 36px), transparent);
+}
+
 /* ── Custom scrollbar ── */
 ::-webkit-scrollbar {
   width: 8px;

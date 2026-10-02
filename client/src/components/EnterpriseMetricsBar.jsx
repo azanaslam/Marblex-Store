@@ -74,45 +74,44 @@ export const enterpriseMetrics = [
   },
 ];
 
+/** Full-viewport metrics marquee — edge-to-edge on every page */
 export const EnterpriseMetricsBar = ({ className = "my-6 sm:my-8" }) => {
   return (
-    <div className={`${className} bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] rounded-3xl py-6 sm:py-7 text-white shadow-xl shadow-[#0a3d52]/15 border border-[#1b556e]/50 relative overflow-hidden group select-none`}>
-      
-      {/* Soft Ambient Glows */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6b4a]/15 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#0ea5e9]/15 rounded-full blur-[90px] pointer-events-none" />
+    <div className={`relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 ${className}`}>
+      <div className="relative overflow-hidden border-y border-[#1b556e]/50 bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] py-6 text-white shadow-xl shadow-[#0a3d52]/15 select-none group sm:py-7">
+        <div className="pointer-events-none absolute top-0 right-0 h-96 w-96 rounded-full bg-[#ff6b4a]/15 blur-[100px]" />
+        <div className="pointer-events-none absolute bottom-0 left-0 h-80 w-80 rounded-full bg-[#0ea5e9]/15 blur-[90px]" />
 
-      {/* Left & Right Gradient Fade Masks for Cinema Look */}
-      <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-r from-[#0a3d52] to-transparent z-20 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-l from-[#082a38] to-transparent z-20 pointer-events-none" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-16 bg-gradient-to-r from-[#0a3d52] to-transparent sm:w-28" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-16 bg-gradient-to-l from-[#082a38] to-transparent sm:w-28" />
 
-      {/* Continuous Infinite Marquee Track (Right to Left) */}
-      <div className="animate-marquee-left flex items-center">
-        {[...enterpriseMetrics, ...enterpriseMetrics].map((metric, idx) => (
-          <div
-            key={idx}
-            className="flex items-center gap-4 sm:gap-6 px-6 sm:px-10 shrink-0 border-r border-white/10"
-          >
-            <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center shrink-0 shadow-inner">
-              {metric.icon}
+        <div className="animate-marquee-left flex items-center">
+          {[...enterpriseMetrics, ...enterpriseMetrics].map((metric, idx) => (
+            <div
+              key={idx}
+              className="flex shrink-0 items-center gap-4 border-r border-white/10 px-6 sm:gap-6 sm:px-10"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 shadow-inner backdrop-blur-md">
+                {metric.icon}
+              </div>
+              <div className="flex flex-col text-left">
+                <span
+                  className="font-heading text-2xl font-black leading-none tracking-tight text-white drop-shadow-sm sm:text-3xl md:text-4xl"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                >
+                  {metric.value}
+                  <span className="text-[#ff6b4a]">{metric.suffix}</span>
+                </span>
+                <span className="mt-1 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-slate-100 sm:text-[13px]">
+                  {metric.title}
+                </span>
+                <span className="mt-0.5 whitespace-nowrap text-[10.5px] font-normal text-slate-300">
+                  {metric.subtitle}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col text-left">
-              <span
-                className="text-2xl sm:text-3xl md:text-4xl font-black text-white font-heading tracking-tight drop-shadow-sm leading-none"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                {metric.value}
-                <span className="text-[#ff6b4a]">{metric.suffix}</span>
-              </span>
-              <span className="text-xs sm:text-[13px] font-bold text-slate-100 mt-1 uppercase tracking-wider whitespace-nowrap">
-                {metric.title}
-              </span>
-              <span className="text-[10.5px] text-slate-300 font-normal mt-0.5 whitespace-nowrap">
-                {metric.subtitle}
-              </span>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
