@@ -21,6 +21,9 @@ import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 import EastRoundedIcon from "@mui/icons-material/EastRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
@@ -39,6 +42,7 @@ export const AppLayout = ({ cartCount, children }) => {
   const [chatUnreadNav, setChatUnreadNav] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem("marblex_theme") || "light";
   });
@@ -50,6 +54,7 @@ export const AppLayout = ({ cartCount, children }) => {
   const actionsRef = useRef(null);
   const mobileMenuPanelRef = useRef(null);
   const mobileMenuItemsRef = useRef(null);
+  const accountMenuRef = useRef(null);
   const hasNavAnimatedRef = useRef(false);
 
   let tokenPayload = null;
@@ -67,7 +72,8 @@ export const AppLayout = ({ cartCount, children }) => {
   const isUserLoggedIn = Boolean(authUser);
   const isCustomer = Boolean(authUser) && authUser?.role !== "admin";
   const isAdmin = authUser?.role === "admin";
-  const customerLabel = authUser?.name ? `${authUser.name.split(" ")[0]}'s Portal` : "Client Portal";
+  const displayFirstName = authUser?.name ? authUser.name.split(" ")[0] : "Client";
+  const accountInitial = (displayFirstName || "M").charAt(0).toUpperCase();
 
   const toggleTheme = () => {
     const newTheme = themeMode === "light" ? "dark" : "light";
@@ -91,6 +97,7 @@ export const AppLayout = ({ cartCount, children }) => {
   const logout = () => {
     clearAuthSession();
     setIsMenuOpen(false);
+    setAccountMenuOpen(false);
     navigate("/login", { replace: true });
   };
 
@@ -104,7 +111,26 @@ export const AppLayout = ({ cartCount, children }) => {
 
   useEffect(() => {
     setIsMenuOpen(false);
+    setAccountMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const onDocClick = (e) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    const onEsc = (e) => {
+      if (e.key === "Escape") setAccountMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [accountMenuOpen]);
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -489,39 +515,102 @@ export const AppLayout = ({ cartCount, children }) => {
                   </div>
                 </div>
               ) : (
-                <div className="hidden lg:flex items-center gap-2">
-                  {isAdmin && (
-                    <div className="hidden lg:inline-flex glowing-border-wrap">
-                      <div className="glowing-border-beam" />
-                      <div className="glowing-border-body">
-                        <RouterLink
-                          to="/admin"
-                          className="shimmer-btn bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] text-white px-4 py-2 text-xs font-bold rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-[#ff6b4a]/30"
+                <div className="relative" ref={accountMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setAccountMenuOpen((o) => !o);
+                    }}
+                    aria-expanded={accountMenuOpen}
+                    aria-haspopup="menu"
+                    aria-label="Account menu"
+                    className={`flex items-center gap-1.5 rounded-full border transition-all lg:gap-2 lg:pl-1.5 lg:pr-2.5 lg:py-1.5 ${
+                      accountMenuOpen
+                        ? isDark
+                          ? "border-[#ff6b4a]/40 bg-[#ff6b4a]/10"
+                          : "border-[#0a3d52]/25 bg-[#0a3d52]/5"
+                        : isDark
+                          ? "border-slate-700 bg-[#0e2735] hover:border-slate-600"
+                          : "border-slate-200 bg-[#f8fafc] hover:border-slate-300"
+                    } p-0.5 lg:p-0`}
+                  >
+                    <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] text-[12px] font-extrabold text-white shadow-sm lg:h-8 lg:w-8">
+                      {accountInitial}
+                      {chatUnreadNav > 0 && (
+                        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#ff6b4a] dark:border-[#0c222f]" />
+                      )}
+                    </span>
+                    <span className="hidden min-w-0 text-left lg:block">
+                      <span className={`block max-w-[7.5rem] truncate text-[12px] font-bold leading-tight ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
+                        {displayFirstName}
+                      </span>
+                      <span className="block text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                        {isAdmin ? "Admin" : "Account"}
+                      </span>
+                    </span>
+                    <KeyboardArrowDownIcon
+                      sx={{ fontSize: 18 }}
+                      className={`mr-1 hidden text-slate-400 transition-transform lg:inline ${accountMenuOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {accountMenuOpen && (
+                    <div
+                      role="menu"
+                      className={`absolute right-0 top-[calc(100%+8px)] z-[80] w-[min(16.5rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border shadow-xl ${
+                        isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      <div className={`border-b px-3.5 py-3 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+                        <p className={`truncate text-[13px] font-bold ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
+                          {authUser?.name || displayFirstName}
+                        </p>
+                        <p className="truncate text-[11px] text-slate-400">
+                          {authUser?.email || (isAdmin ? "Administrator" : "Client account")}
+                        </p>
+                      </div>
+                      <div className="p-1.5">
+                        {isAdmin && (
+                          <RouterLink
+                            to="/admin"
+                            role="menuitem"
+                            onClick={() => setAccountMenuOpen(false)}
+                            className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                              isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
+                            }`}
+                          >
+                            <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18 }} />
+                            <span className="flex-1">Admin console</span>
+                            <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
+                          </RouterLink>
+                        )}
+                        {isCustomer && (
+                          <RouterLink
+                            to="/dashboard"
+                            role="menuitem"
+                            onClick={() => setAccountMenuOpen(false)}
+                            className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                              isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
+                            }`}
+                          >
+                            <DashboardOutlinedIcon sx={{ fontSize: 18 }} />
+                            <span className="flex-1">Client portal</span>
+                            <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
+                          </RouterLink>
+                        )}
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={logout}
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                         >
-                          <PersonOutlinedIcon sx={{ fontSize: 15 }} />
-                          <span>ADMIN PORTAL</span>
-                          <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
-                        </RouterLink>
+                          <LogoutRoundedIcon sx={{ fontSize: 18 }} />
+                          Sign out
+                        </button>
                       </div>
                     </div>
                   )}
-                  {isCustomer && (
-                    <RouterLink
-                      to="/dashboard"
-                      className={`px-3.5 py-2 text-xs font-semibold rounded-full transition-colors font-subheading ${isDark ? "text-slate-200 hover:bg-slate-800" : "text-[#08222e] hover:bg-slate-100"
-                        }`}
-                    >
-                      <Badge color="error" variant="dot" invisible={chatUnreadNav === 0}>
-                        {customerLabel}
-                      </Badge>
-                    </RouterLink>
-                  )}
-                  <button
-                    onClick={logout}
-                    className="px-2.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-[#ff6b4a] transition-colors font-subheading"
-                  >
-                    Logout
-                  </button>
                 </div>
               )}
 
@@ -536,7 +625,10 @@ export const AppLayout = ({ cartCount, children }) => {
                       ? "border-slate-700 bg-[#0e2735] text-white hover:bg-slate-800"
                       : "border-slate-200 bg-[#f8fafc] text-[#08222e] hover:bg-slate-100"
                   }`}
-                onClick={() => setIsMenuOpen((open) => !open)}
+                onClick={() => {
+                  setAccountMenuOpen(false);
+                  setIsMenuOpen((open) => !open);
+                }}
                 aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
                 aria-expanded={isMenuOpen}
               >
@@ -651,39 +743,7 @@ export const AppLayout = ({ cartCount, children }) => {
                   <PersonOutlinedIcon sx={{ fontSize: 16 }} />
                   <span>Login</span>
                 </RouterLink>
-              ) : (
-                <div className="space-y-1.5">
-                  {isAdmin && (
-                    <RouterLink
-                      to="/admin"
-                      className="flex w-full items-center justify-between rounded-xl bg-[#ff6b4a] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <span>Admin Portal</span>
-                      <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
-                    </RouterLink>
-                  )}
-                  {isCustomer && (
-                    <RouterLink
-                      to="/dashboard"
-                      className={`flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold ${
-                        isDark ? "bg-slate-800 text-white" : "bg-slate-100 text-[#0a3d52]"
-                      }`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {customerLabel}
-                      <Badge color="error" variant="dot" invisible={chatUnreadNav === 0} />
-                    </RouterLink>
-                  )}
-                  <button
-                    type="button"
-                    onClick={logout}
-                    className="w-full py-1.5 text-center text-xs font-semibold text-slate-500 hover:text-[#ff6b4a]"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
