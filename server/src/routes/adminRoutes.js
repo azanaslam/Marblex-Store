@@ -9,6 +9,7 @@ const {
   getAllOrders,
   getUsers,
   getUserById,
+  getAllProductsAdmin,
   toggleUserBlockStatus,
   toggleUserAccess,
   updateUserRole,
@@ -21,18 +22,20 @@ const {
   sendAdminReply,
   createBroadcast,
 } = require("../controllers/chatController");
-const { updateOrderStatus, updatePaymentStatus } = require("../controllers/orderController");
+const { updateOrderStatus, updatePaymentStatus, updateOrderFulfillment } = require("../controllers/orderController");
 
 const router = express.Router();
 
 router.get("/overview", auth, adminOnly, getOverview);
 router.get("/blogs", auth, adminOnly, getAllBlogs);
+router.get("/products", auth, adminOnly, getAllProductsAdmin);
 router.get("/orders/paid", auth, adminOnly, getPaidOrders);
 router.get("/orders/website", auth, adminOnly, getWebsiteOrders);
 router.get("/orders/whatsapp", auth, adminOnly, getWhatsappOrders);
 router.get("/orders/all", auth, adminOnly, getAllOrders);
 router.patch("/orders/:id/status", auth, adminOnly, updateOrderStatus);
 router.patch("/orders/:id/payment", auth, adminOnly, updatePaymentStatus);
+router.patch("/orders/:id/fulfillment", auth, adminOnly, updateOrderFulfillment);
 router.get("/users", auth, adminOnly, getUsers);
 router.get("/users/:id", auth, staffOnly, getUserById);
 router.patch("/users/:id/block", auth, adminOnly, toggleUserBlockStatus);

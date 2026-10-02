@@ -117,6 +117,21 @@ const orderSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    dispatchNote: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    courierName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    trackingRef: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     stripeSessionId: {
       type: String,
       default: "",

@@ -7,7 +7,6 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
 import CreditCardOutlinedIcon from "@mui/icons-material/CreditCardOutlined";
 import PhoneAndroidOutlinedIcon from "@mui/icons-material/PhoneAndroidOutlined";
@@ -31,14 +30,15 @@ import {
   JazzCashIcon,
   BankTransferIcon,
   CodTruckIcon,
+  OnlinePaymentIcon,
   PaymentHeaderBadge,
+  SelectedProductsIcon,
+  DeliveryContactIcon,
 } from "../assets/PaymentBrandIcons";
-import payOnlineImg from "../assets/pay-online.png";
-import codBadgeImg from "../assets/cod-badge.jpg";
-import onlinePaymentBgImg from "../assets/online-payment-bg.png";
-import deliveryInfoBgImg from "../assets/delivery-info-bg.png";
 import selectedProductsBgImg from "../assets/selected-products-bg.jpg";
 import orderSummaryBgImg from "../assets/order-summary-bg.jpg";
+import onlinePaymentBgImg from "../assets/online-payment-bg.jpg";
+import deliveryInfoBgImg from "../assets/delivery-info-bg.jpg";
 import gsap from "gsap";
 
 export const CartPage = ({ cart = [], setCart }) => {
@@ -470,7 +470,7 @@ export const CartPage = ({ cart = [], setCart }) => {
                 className="text-sm sm:text-base md:text-[17px] font-bold m-0 text-[#0a3d52] dark:text-white flex items-center gap-2"
                 style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
               >
-                <ShoppingCartOutlinedIcon sx={{ fontSize: 20, color: "#ff6b4a" }} />
+                <SelectedProductsIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                 <span>Selected Products</span>
               </h2>
               <span className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 font-medium">
@@ -618,9 +618,9 @@ export const CartPage = ({ cart = [], setCart }) => {
                 : "border-slate-200/90 dark:border-[#1f3d4a] shadow-md shadow-slate-900/5"
             }`}
           >
-            {/* Background Image (Responsive Mobile & Desktop) */}
+            {/* Background Image — construction chemicals / membranes (right-weighted) */}
             <div
-              className="absolute inset-0 bg-cover pointer-events-none transition-all duration-700 ease-out opacity-25 sm:opacity-45 scale-100 bg-[position:right_bottom] md:bg-[position:right_30%]"
+              className="absolute inset-0 bg-cover pointer-events-none transition-all duration-700 ease-out opacity-[0.18] sm:opacity-[0.32] scale-100 bg-[position:right_center] md:bg-[position:85%_center]"
               style={{
                 backgroundImage: `url(${onlinePaymentBgImg})`,
               }}
@@ -628,10 +628,10 @@ export const CartPage = ({ cart = [], setCart }) => {
 
             {/* Premium Directional Gradient */}
             <div
-              className={`absolute inset-0 pointer-events-none transition-all duration-500 backdrop-blur-[0.5px] ${
+              className={`absolute inset-0 pointer-events-none transition-all duration-500 ${
                 mainPaymentMethod === "online"
-                  ? "bg-gradient-to-b sm:bg-gradient-to-r from-white/98 via-white/90 to-white/60 dark:from-[#112832]/98 dark:via-[#112832]/90 dark:to-[#0e222b]/60"
-                  : "bg-gradient-to-b sm:bg-gradient-to-r from-white/98 via-white/90 to-white/65 dark:from-[#112832]/98 dark:via-[#112832]/90 dark:to-[#0e222b]/65"
+                  ? "bg-gradient-to-b sm:bg-gradient-to-r from-white via-white/95 to-white/72 dark:from-[#112832] dark:via-[#112832]/95 dark:to-[#0e222b]/72"
+                  : "bg-gradient-to-b sm:bg-gradient-to-r from-white via-white/95 to-white/75 dark:from-[#112832] dark:via-[#112832]/95 dark:to-[#0e222b]/75"
               }`}
             />
 
@@ -641,7 +641,7 @@ export const CartPage = ({ cart = [], setCart }) => {
                 className="text-sm sm:text-base md:text-[17px] font-bold m-0 text-[#0a3d52] dark:text-white flex items-center gap-2"
                 style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
               >
-                <PaymentHeaderBadge className="w-5 h-5" />
+                <PaymentHeaderBadge className="w-6 h-6 sm:w-7 sm:h-7" />
                 <span>Payment Method</span>
               </h2>
               <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/40">
@@ -678,12 +678,8 @@ export const CartPage = ({ cart = [], setCart }) => {
                     {mainPaymentMethod === "cod" && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
 
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white dark:bg-slate-800 p-0 flex items-center justify-center shrink-0 border border-slate-200/90 dark:border-slate-700 shadow-sm overflow-hidden relative">
-                    <img
-                      src={codBadgeImg}
-                      alt="Cash on Delivery"
-                      className="w-full h-full object-cover scale-[1.75] object-center transform"
-                    />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl shrink-0 shadow-sm overflow-hidden ring-1 ring-black/5">
+                    <CodTruckIcon className="w-full h-full" />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -724,12 +720,8 @@ export const CartPage = ({ cart = [], setCart }) => {
                     {mainPaymentMethod === "online" && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
 
-                  <div className="w-14 h-11 sm:w-16 sm:h-12 rounded-xl bg-white dark:bg-slate-800 p-1 flex items-center justify-center shrink-0 border border-slate-200/90 dark:border-slate-700 shadow-sm overflow-hidden relative">
-                    <img
-                      src={payOnlineImg}
-                      alt="Pay Online"
-                      className="w-full h-full object-contain scale-[1.35] object-center transform"
-                    />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl shrink-0 shadow-sm overflow-hidden ring-1 ring-black/5">
+                    <OnlinePaymentIcon className="w-full h-full" />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -1037,23 +1029,23 @@ export const CartPage = ({ cart = [], setCart }) => {
 
           {/* Card 3: Your Details Form */}
           <div className="cart-anim-details relative bg-white/95 dark:bg-[#112832]/95 border border-slate-200/90 dark:border-[#1f3d4a] rounded-2xl sm:rounded-[24px] shadow-sm shadow-slate-900/5 overflow-hidden transition-colors">
-            {/* Background Delivery Logistics Graphic (Responsive Mobile & Desktop) */}
+            {/* Background — site delivery / membrane logistics (right-weighted) */}
             <div
-              className="absolute inset-0 bg-cover pointer-events-none opacity-25 sm:opacity-50 transition-all duration-700 bg-[position:right_bottom] sm:bg-[position:right_35%]"
+              className="absolute inset-0 bg-cover pointer-events-none opacity-[0.16] sm:opacity-[0.30] transition-all duration-700 bg-[position:right_center] sm:bg-[position:88%_center]"
               style={{
                 backgroundImage: `url(${deliveryInfoBgImg})`,
               }}
             />
 
             {/* Directional Glass Gradient for Crystal Clear Form Readability */}
-            <div className="absolute inset-0 bg-gradient-to-b sm:bg-gradient-to-r from-white/98 via-white/90 to-white/65 dark:from-[#112832]/98 dark:via-[#112832]/90 dark:to-[#0e222b]/65 backdrop-blur-[0.5px] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b sm:bg-gradient-to-r from-white via-white/95 to-white/75 dark:from-[#112832] dark:via-[#112832]/95 dark:to-[#0e222b]/75 pointer-events-none" />
 
             <div className="relative z-10 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100/90 dark:border-[#1f3d4a]/80 flex items-center justify-between">
               <h2
                 className="text-sm sm:text-base md:text-[17px] font-bold m-0 text-[#0a3d52] dark:text-white flex items-center gap-2"
                 style={{ fontFamily: "'Space Grotesk', 'Poppins', sans-serif" }}
               >
-                <LocalShippingOutlinedIcon sx={{ fontSize: 20, color: "#0a3d52" }} className="dark:text-sky-400" />
+                <DeliveryContactIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                 <span>Delivery & Contact Information</span>
               </h2>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-100/80 dark:bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60 shadow-2xs backdrop-blur-xs">

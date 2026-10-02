@@ -18,7 +18,10 @@ import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
-import { http } from "../api/http";
+import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
+import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
+import { authHeaders, http } from "../api/http";
+import { getAuthToken } from "../auth/session";
 import { ProductDetailSkeleton } from "../components/LoaderSkeleton";
 import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 import gsap from "gsap";
@@ -36,6 +39,8 @@ export const ProductDetailPage = ({ addToCart }) => {
   const [specsOpen, setSpecsOpen] = useState(false);
   const [loading, setLoading] = useState(!location.state?.product);
   const [addedToast, setAddedToast] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favBusy, setFavBusy] = useState(false);
   const containerRef = useRef(null);
 
   // High-res gallery images
@@ -132,6 +137,41 @@ export const ProductDetailPage = ({ addToCart }) => {
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 2500);
   };
+
+  const toggleFavorite = async () => {
+    const token = getAuthToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    if (!product?._id || favBusy) return;
+    setFavBusy(true);
+    try {
+      if (isFavorite) {
+        await http.delete(`/portal/favorites/${product._id}`, authHeaders(token));
+        setIsFavorite(false);
+      } else {
+        await http.post("/portal/favorites", { productId: product._id }, authHeaders(token));
+        setIsFavorite(true);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setFavBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token || !id) return;
+    http
+      .get("/portal/favorites", authHeaders(token))
+      .then((res) => {
+        const list = res.data || [];
+        setIsFavorite(list.some((f) => String(f.productId?._id || f.productId) === String(id)));
+      })
+      .catch(() => {});
+  }, [id]);
 
   const handleWhatsAppInquiry = () => {
     const text = encodeURIComponent(
@@ -451,7 +491,7 @@ export const ProductDetailPage = ({ addToCart }) => {
                 </div>
               </div>
 
-              <div className="sm:col-span-7 glowing-border-wrap-rounded w-full">
+              <div className="sm:col-span-5 glowing-border-wrap-rounded w-full">
                 <div className="glowing-border-beam" />
                 <div className="glowing-border-body w-full">
                   <button
@@ -465,6 +505,23 @@ export const ProductDetailPage = ({ addToCart }) => {
                     </div>
                   </button>
                 </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  onClick={toggleFavorite}
+                  disabled={favBusy}
+                  className={`w-full h-full min-h-[52px] rounded-2xl border font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    isFavorite
+                      ? "bg-rose-50 border-rose-200 text-rose-600"
+                      : "bg-white border-slate-200 text-slate-700 hover:border-[#ff6b4a] hover:text-[#ff6b4a]"
+                  }`}
+                  title={isFavorite ? "Remove from favorites" : "Save to favorites"}
+                >
+                  {isFavorite ? <FavoriteRoundedIcon sx={{ fontSize: 20 }} /> : <FavoriteBorderRoundedIcon sx={{ fontSize: 20 }} />}
+                  <span className="hidden xl:inline">{isFavorite ? "Saved" : "Save"}</span>
+                </button>
               </div>
             </div>
 

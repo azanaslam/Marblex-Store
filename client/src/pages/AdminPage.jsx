@@ -27,11 +27,16 @@ import SparklesIcon from "@mui/icons-material/AutoAwesome";
 
 import { AdminBroadcastTab } from "../components/AdminBroadcastTab";
 import { AdminMessengerTab } from "../components/AdminMessengerTab";
+import { AdminQuotesTab } from "../components/AdminQuotesTab";
+import { AdminTicketsTab } from "../components/AdminTicketsTab";
+import { AdminPaymentQueueTab } from "../components/AdminPaymentQueueTab";
+import { AdminDocumentsTab } from "../components/AdminDocumentsTab";
+import { AdminCustomersTab } from "../components/AdminCustomersTab";
+import { AdminCommandCenter } from "../components/AdminCommandCenter";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser } from "../auth/session";
 import { TiltCard3D } from "../components/admin3d/TiltCard3D";
 import { StatCard3D } from "../components/admin3d/StatCard3D";
-import { AmbientMesh3D } from "../components/admin3d/AmbientMesh3D";
 import { TabWrapper3D } from "../components/admin3d/TabWrapper3D";
 
 export const AdminPage = () => {
@@ -45,7 +50,17 @@ export const AdminPage = () => {
   const [whatsappData, setWhatsappData] = useState({ totalOrders: 0, totalAmount: 0, orders: [] });
   const [usersData, setUsersData] = useState({ totalUsers: 0, users: [] });
   const [products, setProducts] = useState([]);
-  const [product, setProduct] = useState({ name: "", imageUrl: "", extraImages: ["", "", ""], description: "", price: 0, stock: 0 });
+  const [product, setProduct] = useState({
+    name: "",
+    imageUrl: "",
+    extraImages: ["", "", ""],
+    description: "",
+    price: 0,
+    stock: 0,
+    category: "General",
+    featured: false,
+    active: true,
+  });
   const [editingProductId, setEditingProductId] = useState("");
   const [blogs, setBlogs] = useState([]);
   const [blog, setBlog] = useState({ title: "", coverImage: "", content: "", tags: "", published: true });
@@ -85,7 +100,7 @@ export const AdminPage = () => {
         http.get("/admin/orders/website", headers),
         http.get("/admin/orders/whatsapp", headers),
         http.get("/admin/users", headers),
-        http.get("/products"),
+        http.get("/admin/products", headers),
         http.get("/product-reviews/admin/list", headers),
         http.get("/admin/orders/all", headers),
         http.get("/contact", headers),
@@ -154,7 +169,17 @@ export const AdminPage = () => {
 
   // Product Handlers
   const resetProductForm = () => {
-    setProduct({ name: "", imageUrl: "", extraImages: ["", "", ""], description: "", price: 0, stock: 0 });
+    setProduct({
+      name: "",
+      imageUrl: "",
+      extraImages: ["", "", ""],
+      description: "",
+      price: 0,
+      stock: 0,
+      category: "General",
+      featured: false,
+      active: true,
+    });
     setEditingProductId("");
   };
 
@@ -201,10 +226,15 @@ export const AdminPage = () => {
     setProduct({
       name: item.name || "",
       imageUrl: item.imageUrl || "",
-      extraImages: item.extraImages?.length === 3 ? item.extraImages : ["", "", ""],
+      extraImages: Array.isArray(item.extraImages) && item.extraImages.length
+        ? [...item.extraImages, "", "", ""].slice(0, 3)
+        : ["", "", ""],
       description: item.description || "",
       price: Number(item.price) || 0,
       stock: Number(item.stock) || 0,
+      category: item.category || "General",
+      featured: Boolean(item.featured),
+      active: item.active !== false,
     });
     setActiveTab(4);
   };
@@ -413,27 +443,43 @@ export const AdminPage = () => {
   const pendingAccessCount = usersData.users.filter((u) => u.role === "user" && u.isAccessGranted === false).length;
   const reviewQueue = reviewItems.filter((item) => item.status !== "published");
   const adminUnreadReviews = reviewQueue.filter((item) => item.hasAdminUnread).length;
+  const paymentQueueCount = (orderLookup.all || []).filter(
+    (o) =>
+      ["pending_verification", "pending"].includes(o.paymentStatus) &&
+      ["easypaisa", "jazzcash", "bank_transfer", "stripe"].includes(o.paymentMethod)
+  ).length;
 
-  const visualBars = [
-    { label: "Mon", value: 45, height: "65%" },
-    { label: "Tue", value: 62, height: "85%" },
-    { label: "Wed", value: 38, height: "50%" },
-    { label: "Thu", value: 71, height: "92%" },
-    { label: "Fri", value: 52, height: "70%" },
-    { label: "Sat", value: 84, height: "100%" },
-    { label: "Sun", value: 66, height: "78%" },
-  ];
+  const visualBars = (overview?.weeklyBars || []).length
+    ? overview.weeklyBars.map((b) => ({
+        label: b.label,
+        value: b.orders || 0,
+        height: b.height || "8%",
+        revenue: b.revenue || 0,
+      }))
+    : [
+        { label: "Mon", value: 0, height: "8%", revenue: 0 },
+        { label: "Tue", value: 0, height: "8%", revenue: 0 },
+        { label: "Wed", value: 0, height: "8%", revenue: 0 },
+        { label: "Thu", value: 0, height: "8%", revenue: 0 },
+        { label: "Fri", value: 0, height: "8%", revenue: 0 },
+        { label: "Sat", value: 0, height: "8%", revenue: 0 },
+        { label: "Sun", value: 0, height: "8%", revenue: 0 },
+      ];
 
   const navItems = [
     { id: 0, label: "Command Center", icon: "⚡" },
     { id: 1, label: "Web Orders", icon: "🌐", badge: websiteOrders },
     { id: 2, label: "WhatsApp Orders", icon: "📱", badge: whatsappOrders },
-    { id: 3, label: "User Access", icon: "👥", badge: pendingAccessCount },
+    { id: 12, label: "Payment Queue", icon: "💳", badge: paymentQueueCount || overview?.pendingVerification || 0 },
+    { id: 13, label: "Quotes / RFQ", icon: "📋", badge: overview?.openQuotes || 0 },
+    { id: 3, label: "Customers", icon: "👥", badge: pendingAccessCount },
     { id: 4, label: "Products Catalog", icon: "🛍️", badge: products.length },
+    { id: 15, label: "Documents", icon: "📄" },
     { id: 5, label: "Blogs & Stories", icon: "📝", badge: blogs.length },
     { id: 6, label: "Support Chats", icon: "💬", badge: chatUnreadTotal },
+    { id: 14, label: "Tickets", icon: "🎫", badge: overview?.openTickets || 0 },
     { id: 7, label: "Global Broadcast", icon: "📢" },
-    { id: 8, label: "Product Reviews", icon: "⭐", badge: adminUnreadReviews },
+    { id: 8, label: "Partner Submissions", icon: "🤝", badge: adminUnreadReviews },
     { id: 9, label: "Order Lookup", icon: "🔍" },
     { id: 10, label: "Client Inquiries", icon: "📧", badge: contactRequests.filter((c) => c.status === "unread").length },
     { id: 11, label: "SMTP Settings", icon: "⚙️" },
@@ -441,10 +487,10 @@ export const AdminPage = () => {
 
   const navGroups = [
     { title: "Core Operations", items: [0] },
-    { title: "Revenue & Sales", items: [1, 2, 9] },
-    { title: "Inventory & Content", items: [4, 5, 8] },
-    { title: "Communications", items: [6, 7, 10] },
-    { title: "Security & System", items: [3, 11] },
+    { title: "Revenue & Sales", items: [1, 2, 12, 13, 9] },
+    { title: "Catalog & Docs", items: [4, 15, 5, 8] },
+    { title: "Customers & Support", items: [3, 6, 14, 7, 10] },
+    { title: "System", items: [11] },
   ];
 
   const render3DOrderCard = (order) => {
@@ -575,6 +621,13 @@ export const AdminPage = () => {
           {order.notes && (
             <div className="text-[11px] text-slate-500 italic pt-0.5">
               <strong>Notes:</strong> {order.notes}
+            </div>
+          )}
+          {(order.courierName || order.trackingRef || order.dispatchNote) && (
+            <div className="text-[11px] text-slate-700 pt-0.5">
+              {order.courierName ? <span><strong>Courier:</strong> {order.courierName} </span> : null}
+              {order.trackingRef ? <span><strong>Track:</strong> {order.trackingRef} </span> : null}
+              {order.dispatchNote ? <span className="block italic">{order.dispatchNote}</span> : null}
             </div>
           )}
         </div>
@@ -769,266 +822,19 @@ export const AdminPage = () => {
             {/* ================= TAB 0: COMMAND CENTER / OVERVIEW ================= */}
             {activeTab === 0 && (
               <TabWrapper3D tabKey={0}>
-                <div className="space-y-6">
-                  {/* Hero Brand Banner */}
-                  <TiltCard3D
-                    maxTilt={2}
-                    scale={1.01}
-                    className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0a3d52]/8 via-[#ff6b4a]/6 to-white p-6 sm:p-8 border border-[#e0e6ed] shadow-sm"
-                  >
-                    <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                      <div>
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0a3d52]/10 text-[#0a3d52] text-[11px] font-bold uppercase tracking-wider font-subheading mb-2.5">
-                          <SparklesIcon sx={{ fontSize: 13 }} /> Construction Chemical Intelligence
-                        </div>
-                        <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0a3d52] font-heading tracking-tight">
-                          MARBLEX <span className="text-[#ff6b4a]">Command Center</span>
-                        </h2>
-                        <p className="text-[#565e69] text-xs sm:text-sm mt-1 max-w-lg font-medium">
-                          Real-time industrial orders, rubber solutions inventory, and live client inquiries.
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <button
-                          onClick={() => setActiveTab(4)}
-                          className="btn-3d-accent px-5 py-2.5 rounded-xl text-white font-bold text-xs uppercase tracking-wider"
-                        >
-                          + Add Chemical / Product
-                        </button>
-                        <button
-                          onClick={() => setActiveTab(7)}
-                          className="btn-3d-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider"
-                        >
-                          📢 Send Broadcast
-                        </button>
-                      </div>
-                    </div>
-                  </TiltCard3D>
-
-                  {/* 6x Clean Metric Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                    <StatCard3D
-                      title="Total Sales"
-                      value={overview?.totalRevenue || 0}
-                      prefix="PKR "
-                      subtext="Gross store revenue"
-                      icon="💰"
-                      gradient="from-emerald-500/10 to-teal-500/5"
-                      glowColor="rgba(16, 185, 129, 0.1)"
-                      iconBg="bg-emerald-50 text-emerald-700 border-emerald-200"
-                      trend={`${paidShare}% Paid`}
-                      trendPositive={true}
-                    />
-                    <StatCard3D
-                      title="Total Orders"
-                      value={overview?.orderCount || 0}
-                      subtext="Across all channels"
-                      icon="📦"
-                      gradient="from-[#0a3d52]/10 to-[#ff6b4a]/5"
-                      glowColor="rgba(10, 61, 82, 0.1)"
-                      iconBg="bg-[#0a3d52]/5 text-[#0a3d52] border-[#0a3d52]/20"
-                      trend="100% active"
-                      trendPositive={true}
-                    />
-                    <StatCard3D
-                      title="Website Orders"
-                      value={overview?.websiteOrders || 0}
-                      subtext={`${websiteShare}% of volume`}
-                      icon="🌐"
-                      gradient="from-blue-500/10 to-indigo-500/5"
-                      glowColor="rgba(37, 99, 235, 0.1)"
-                      iconBg="bg-blue-50 text-blue-700 border-blue-200"
-                      trend={`${websiteShare}% share`}
-                      trendPositive={true}
-                    />
-                    <StatCard3D
-                      title="WhatsApp Inquiries"
-                      value={overview?.whatsappOrders || 0}
-                      subtext={`${whatsappShare}% direct inquiries`}
-                      icon="📱"
-                      gradient="from-green-500/10 to-emerald-500/5"
-                      glowColor="rgba(34, 197, 94, 0.1)"
-                      iconBg="bg-green-50 text-green-700 border-green-200"
-                      trend={`${whatsappShare}% share`}
-                      trendPositive={true}
-                    />
-                    <StatCard3D
-                      title="Paid Orders"
-                      value={overview?.paidOrdersCount || 0}
-                      subtext="Cleared payments"
-                      icon="✅"
-                      gradient="from-[#ff6b4a]/10 to-[#ff8c73]/5"
-                      glowColor="rgba(255, 107, 74, 0.1)"
-                      iconBg="bg-[#ff6b4a]/10 text-[#ff6b4a] border-[#ff6b4a]/20"
-                      trend={`${paidShare}% collected`}
-                      trendPositive={true}
-                    />
-                    <StatCard3D
-                      title="Registered Clients"
-                      value={usersData?.totalUsers || 0}
-                      subtext={`${pendingAccessCount} pending approval`}
-                      icon="👥"
-                      gradient="from-amber-500/10 to-orange-500/5"
-                      glowColor="rgba(245, 158, 11, 0.1)"
-                      iconBg="bg-amber-50 text-amber-700 border-amber-200"
-                      trend={pendingAccessCount > 0 ? `${pendingAccessCount} Pending` : "Verified"}
-                      trendPositive={pendingAccessCount === 0}
-                      onClick={() => setActiveTab(3)}
-                    />
-                  </div>
-
-                  {/* 3D Charts & Distribution */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                    {/* Weekly Trajectory */}
-                    <TiltCard3D
-                      maxTilt={2}
-                      scale={1.01}
-                      className="lg:col-span-2 rounded-2xl bg-white border border-[#e0e6ed] p-6 shadow-sm"
-                    >
-                      <div className="flex justify-between items-center mb-6">
-                        <div>
-                          <h3 className="text-base font-bold text-[#0a3d52] font-heading">Weekly Demand Trajectory</h3>
-                          <p className="text-xs text-[#565e69] mt-0.5">Construction chemical orders per weekday</p>
-                        </div>
-                        <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-[#0a3d52]/5 text-[#0a3d52] border border-[#0a3d52]/20 font-subheading">
-                          Active Flow
-                        </span>
-                      </div>
-
-                      <div className="h-48 flex items-end justify-between gap-3 pt-4 px-2">
-                        {visualBars.map((bar, i) => (
-                          <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                            <div className="text-[10px] font-mono font-bold text-[#565e69] opacity-0 group-hover:opacity-100 transition-opacity">
-                              {bar.value}%
-                            </div>
-                            <div className="w-full max-w-[36px] h-28 bg-[#f5f7fa] rounded-xl overflow-hidden p-0.5 flex items-end">
-                              <div
-                                style={{ height: bar.height }}
-                                className="w-full rounded-lg bg-gradient-to-t from-[#0a3d52] to-[#ff6b4a] shadow-sm transition-all duration-500 group-hover:scale-105"
-                              />
-                            </div>
-                            <span className="text-xs font-semibold text-[#565e69] group-hover:text-[#ff6b4a] font-subheading">
-                              {bar.label}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </TiltCard3D>
-
-                    {/* Channel Share */}
-                    <TiltCard3D
-                      maxTilt={2}
-                      scale={1.01}
-                      className="rounded-2xl bg-white border border-[#e0e6ed] p-6 shadow-sm flex flex-col justify-between"
-                    >
-                      <div>
-                        <h3 className="text-base font-bold text-[#0a3d52] font-heading">Channel Distribution</h3>
-                        <p className="text-xs text-[#565e69] mt-0.5">Breakdown by order origin</p>
-
-                        <div className="space-y-4 mt-5">
-                          <div>
-                            <div className="flex justify-between text-xs font-bold text-[#0f1929] mb-1 font-subheading">
-                              <span>Website Direct</span>
-                              <span className="text-[#0a3d52] font-mono">{websiteShare}%</span>
-                            </div>
-                            <div className="h-2 rounded-full bg-[#f5f7fa] overflow-hidden">
-                              <div style={{ width: `${websiteShare}%` }} className="h-full rounded-full bg-[#0a3d52]" />
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="flex justify-between text-xs font-bold text-[#0f1929] mb-1 font-subheading">
-                              <span>WhatsApp Direct</span>
-                              <span className="text-emerald-700 font-mono">{whatsappShare}%</span>
-                            </div>
-                            <div className="h-2 rounded-full bg-[#f5f7fa] overflow-hidden">
-                              <div style={{ width: `${whatsappShare}%` }} className="h-full rounded-full bg-emerald-600" />
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="flex justify-between text-xs font-bold text-[#0f1929] mb-1 font-subheading">
-                              <span>Payment Cleared</span>
-                              <span className="text-[#ff6b4a] font-mono">{paidShare}%</span>
-                            </div>
-                            <div className="h-2 rounded-full bg-[#f5f7fa] overflow-hidden">
-                              <div style={{ width: `${paidShare}%` }} className="h-full rounded-full bg-[#ff6b4a]" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-5 pt-3 border-t border-[#e0e6ed] flex justify-between items-center text-xs font-medium text-[#565e69]">
-                        <span>Catalog Total:</span>
-                        <span className="font-bold text-[#ff6b4a] font-subheading">{products.length} Products Active</span>
-                      </div>
-                    </TiltCard3D>
-                  </div>
-
-                  {/* Recent Orders Compact Table */}
-                  <div className="rounded-2xl bg-white border border-[#e0e6ed] p-6 shadow-sm">
-                    <div className="flex justify-between items-center mb-5">
-                      <div>
-                        <h3 className="text-base font-bold text-[#0a3d52] font-heading">Recent Transactions</h3>
-                        <p className="text-xs text-[#565e69]">Live incoming client orders</p>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab(1)}
-                        className="text-xs font-bold text-[#ff6b4a] hover:underline font-subheading"
-                      >
-                        View All →
-                      </button>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="border-b border-[#e0e6ed]">
-                            <th className="py-2.5 px-3 text-[10px] font-bold text-[#565e69] uppercase tracking-wider font-subheading">ID</th>
-                            <th className="py-2.5 px-3 text-[10px] font-bold text-[#565e69] uppercase tracking-wider font-subheading">Customer</th>
-                            <th className="py-2.5 px-3 text-[10px] font-bold text-[#565e69] uppercase tracking-wider font-subheading">Amount</th>
-                            <th className="py-2.5 px-3 text-[10px] font-bold text-[#565e69] uppercase tracking-wider text-center font-subheading">Payment</th>
-                            <th className="py-2.5 px-3 text-[10px] font-bold text-[#565e69] uppercase tracking-wider text-right font-subheading">Channel</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderLookup.all.slice(0, 5).map((order) => (
-                            <tr key={order._id} className="border-b border-[#e0e6ed]/40 hover:bg-[#f5f7fa] transition-colors">
-                              <td className="py-2.5 px-3 font-mono text-xs text-[#ff6b4a] font-bold">
-                                #{String(order._id).slice(-6).toUpperCase()}
-                              </td>
-                              <td className="py-2.5 px-3">
-                                <div className="text-xs font-bold text-[#0a3d52]">{order.customerName}</div>
-                                <div className="text-[10px] text-[#565e69]">{order.phone}</div>
-                              </td>
-                              <td className="py-2.5 px-3 text-xs font-bold text-[#0a3d52]">
-                                PKR {order.subtotal?.toLocaleString()}
-                              </td>
-                              <td className="py-2.5 px-3 text-center">
-                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                                  order.paymentStatus === "paid" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200"
-                                }`}>
-                                  {order.paymentStatus || "pending"}
-                                </span>
-                              </td>
-                              <td className="py-2.5 px-3 text-right text-[10px] font-bold uppercase text-[#565e69]">
-                                {order.channel}
-                              </td>
-                            </tr>
-                          ))}
-                          {!orderLookup.all.length && (
-                            <tr>
-                              <td colSpan={5} className="py-6 text-center text-[#565e69] text-xs">
-                                No orders in database yet.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
+                <AdminCommandCenter
+                  overview={overview}
+                  usersData={usersData}
+                  products={products}
+                  orders={orderLookup.all || []}
+                  websiteShare={websiteShare}
+                  whatsappShare={whatsappShare}
+                  paidShare={paidShare}
+                  paymentQueueCount={paymentQueueCount}
+                  pendingAccessCount={pendingAccessCount}
+                  visualBars={visualBars}
+                  onNavigate={setActiveTab}
+                />
               </TabWrapper3D>
             )}
 
@@ -1084,91 +890,18 @@ export const AdminPage = () => {
               </TabWrapper3D>
             )}
 
-            {/* ================= TAB 3: USER ACCESS CONTROL ================= */}
+            {/* ================= TAB 3: CUSTOMERS ================= */}
             {activeTab === 3 && (
               <TabWrapper3D tabKey={3}>
-                <div className="space-y-5">
-                  <div>
-                    <h2 className="text-xl font-bold text-[#0a3d52] font-heading">Client Access & Security</h2>
-                    <p className="text-xs text-[#565e69]">Manage client login permissions and security roles</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {usersData.users.map((user) => {
-                      const canLogin = userCanLogin(user);
-                      const isAdmin = user.role === "admin";
-                      return (
-                        <TiltCard3D
-                          key={user._id}
-                          maxTilt={3}
-                          scale={1.01}
-                          className="rounded-2xl bg-white border border-[#e0e6ed] p-5 shadow-sm flex flex-col justify-between space-y-4"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <Avatar sx={{ bgcolor: isAdmin ? "#0a3d52" : "#ff6b4a", fontWeight: 800, width: 38, height: 38 }}>
-                                {user.name?.[0]?.toUpperCase() || "U"}
-                              </Avatar>
-                              <div>
-                                <h4 className="text-sm font-bold text-[#0a3d52] font-heading">{user.name}</h4>
-                                <p className="text-[11px] text-[#565e69] truncate max-w-[150px]">{user.email}</p>
-                              </div>
-                            </div>
-                            <span
-                              className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded font-subheading ${
-                                isAdmin
-                                  ? "bg-[#0a3d52]/10 text-[#0a3d52] border border-[#0a3d52]/20"
-                                  : "bg-[#ff6b4a]/10 text-[#ff6b4a] border border-[#ff6b4a]/20"
-                              }`}
-                            >
-                              {user.role}
-                            </span>
-                          </div>
-
-                          <div className="space-y-1.5 pt-2 border-t border-[#e0e6ed] text-xs">
-                            <div className="flex justify-between">
-                              <span className="text-[#565e69]">Login Access:</span>
-                              <span className={`font-bold ${canLogin ? "text-emerald-700" : "text-amber-600"}`}>
-                                {canLogin ? "Approved" : "Pending"}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-[#565e69]">Account Status:</span>
-                              <span className={`font-bold ${user.isBlocked ? "text-rose-600" : "text-emerald-700"}`}>
-                                {user.isBlocked ? "Blocked" : "Active"}
-                              </span>
-                            </div>
-                          </div>
-
-                          {!isAdmin && (
-                            <div className="grid grid-cols-2 gap-2 pt-2">
-                              <button
-                                onClick={() => handleToggleUserAccess(user)}
-                                className={`py-1.5 rounded-lg text-xs font-bold transition-all font-subheading ${
-                                  canLogin
-                                    ? "bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200"
-                                    : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                }`}
-                              >
-                                {canLogin ? "Revoke" : "Approve"}
-                              </button>
-                              <button
-                                onClick={() => handleToggleBlockUser(user)}
-                                className={`py-1.5 rounded-lg text-xs font-bold transition-all font-subheading ${
-                                  user.isBlocked
-                                    ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                    : "bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200"
-                                }`}
-                              >
-                                {user.isBlocked ? "Unblock" : "Block"}
-                              </button>
-                            </div>
-                          )}
-                        </TiltCard3D>
-                      );
-                    })}
-                  </div>
-                </div>
+                <AdminCustomersTab
+                  token={token}
+                  users={usersData.users || []}
+                  pendingAccessCount={pendingAccessCount}
+                  showToast={showToast}
+                  onToggleAccess={handleToggleUserAccess}
+                  onToggleBlock={handleToggleBlockUser}
+                  onReload={loadDashboardData}
+                />
               </TabWrapper3D>
             )}
 
@@ -1251,7 +984,50 @@ export const AdminPage = () => {
                           </div>
                         </div>
 
-                        <div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Category</label>
+                            <input
+                              type="text"
+                              value={product.category || "General"}
+                              onChange={(e) => setProduct({ ...product, category: e.target.value })}
+                              className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
+                            />
+                          </div>
+                          <div className="flex items-end">
+                            <label className="flex items-center gap-2 text-xs font-bold text-[#0a3d52] pb-2 cursor-pointer">
+                              <input type="checkbox" checked={Boolean(product.featured)} onChange={(e) => setProduct({ ...product, featured: e.target.checked })} />
+                              Featured
+                            </label>
+                          </div>
+                          <div className="flex items-end">
+                            <label className="flex items-center gap-2 text-xs font-bold text-[#0a3d52] pb-2 cursor-pointer">
+                              <input type="checkbox" checked={product.active !== false} onChange={(e) => setProduct({ ...product, active: e.target.checked })} />
+                              Active / Visible
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {[0, 1, 2].map((idx) => (
+                            <div key={idx}>
+                              <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Extra image {idx + 1}</label>
+                              <input
+                                type="text"
+                                value={(product.extraImages && product.extraImages[idx]) || ""}
+                                onChange={(e) => {
+                                  const extra = [...(product.extraImages || ["", "", ""])];
+                                  extra[idx] = e.target.value;
+                                  setProduct({ ...product, extraImages: extra });
+                                }}
+                                placeholder="Image URL"
+                                className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+<div>
                           <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Technical Description</label>
                           <textarea
                             rows={3}
@@ -1502,15 +1278,14 @@ export const AdminPage = () => {
               </TabWrapper3D>
             )}
 
-            {/* ================= TAB 8: PRODUCT REVIEWS ================= */}
+            {/* ================= TAB 8: PARTNER SUBMISSIONS ================= */}
             {activeTab === 8 && (
               <TabWrapper3D tabKey={8}>
                 <div className="space-y-5">
                   <div>
-                    <h2 className="text-xl font-bold text-[#0a3d52] font-heading">Product Reviews & Feedback</h2>
-                    <p className="text-xs text-[#565e69]">Client satisfaction submissions</p>
+                    <h2 className="text-xl font-bold text-[#0a3d52] font-heading">Partner Product Submissions</h2>
+                    <p className="text-xs text-[#565e69]">Subowner catalog submissions awaiting admin review / publish</p>
                   </div>
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {reviewItems.map((item) => (
                       <TiltCard3D
@@ -1520,26 +1295,31 @@ export const AdminPage = () => {
                         className="rounded-2xl bg-white border border-[#e0e6ed] p-4 shadow-sm flex flex-col justify-between space-y-3"
                       >
                         <div>
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className="text-[#ff6b4a] font-bold text-xs">
-                              {"★".repeat(item.rating || 5)}
-                            </span>
+                          <div className="flex justify-between items-center mb-1.5 gap-2">
                             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#f5f7fa] text-[#565e69] font-subheading">
                               {item.status}
                             </span>
+                            {item.hasAdminUnread ? (
+                              <span className="text-[10px] font-black uppercase text-rose-600">Unread</span>
+                            ) : null}
                           </div>
-                          <h4 className="text-xs font-bold text-[#0a3d52] font-heading">{item.productName || "Product"}</h4>
-                          <p className="text-xs text-[#565e69] mt-1">{item.reviewText}</p>
+                          <h4 className="text-sm font-bold text-[#0a3d52] font-heading">{item.name || "Untitled product"}</h4>
+                          <p className="text-xs text-[#565e69] mt-1 line-clamp-3">{item.description || item.comment || "No description"}</p>
+                          <p className="text-xs font-bold text-[#0a3d52] mt-2">PKR {Number(item.price || 0).toLocaleString()} · Stock {item.stock ?? 0}</p>
                         </div>
-
-                        <div className="pt-2 border-t border-[#e0e6ed] text-[11px] text-[#565e69]">
-                          By: <span className="text-[#0a3d52] font-bold">{item.submittedBy?.name || "Client"}</span>
+                        <div className="pt-2 border-t border-[#e0e6ed] flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-[#565e69]">
+                            By: <span className="text-[#0a3d52] font-bold">{item.submittedBy?.name || item.userId?.name || "Partner"}</span>
+                          </span>
+                          <Link to={`/admin/review/${item._id}`} className="text-xs font-bold text-[#ff6b4a] hover:underline">
+                            Open review
+                          </Link>
                         </div>
                       </TiltCard3D>
                     ))}
                     {!reviewItems.length && (
                       <div className="col-span-full py-12 text-center text-[#565e69] font-bold border border-dashed border-[#e0e6ed] rounded-2xl bg-white">
-                        No product reviews recorded.
+                        No partner submissions yet.
                       </div>
                     )}
                   </div>
@@ -1631,6 +1411,36 @@ export const AdminPage = () => {
                     )}
                   </div>
                 </div>
+              </TabWrapper3D>
+            )}
+
+            {activeTab === 12 && (
+              <TabWrapper3D tabKey={12}>
+                <AdminPaymentQueueTab
+                  token={token}
+                  orders={orderLookup.all || []}
+                  showToast={showToast}
+                  onUpdated={loadDashboardData}
+                  renderOrderCard={render3DOrderCard}
+                />
+              </TabWrapper3D>
+            )}
+
+            {activeTab === 13 && (
+              <TabWrapper3D tabKey={13}>
+                <AdminQuotesTab token={token} showToast={showToast} />
+              </TabWrapper3D>
+            )}
+
+            {activeTab === 14 && (
+              <TabWrapper3D tabKey={14}>
+                <AdminTicketsTab token={token} showToast={showToast} />
+              </TabWrapper3D>
+            )}
+
+            {activeTab === 15 && (
+              <TabWrapper3D tabKey={15}>
+                <AdminDocumentsTab token={token} showToast={showToast} />
               </TabWrapper3D>
             )}
 

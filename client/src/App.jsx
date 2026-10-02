@@ -16,7 +16,6 @@ const BlogsPage = named(() => import("./pages/BlogsPage"), "BlogsPage");
 const AdminPage = named(() => import("./pages/AdminPage"), "AdminPage");
 const PaymentResultPage = named(() => import("./pages/PaymentResultPage"), "PaymentResultPage");
 const LoginPage = named(() => import("./pages/LoginPage"), "LoginPage");
-const UserDashboardPage = named(() => import("./pages/UserDashboardPage"), "UserDashboardPage");
 const UserReviewDetailPage = named(() => import("./pages/UserReviewDetailPage"), "UserReviewDetailPage");
 const AdminReviewDetailPage = named(() => import("./pages/AdminReviewDetailPage"), "AdminReviewDetailPage");
 const ProductDetailPage = named(() => import("./pages/ProductDetailPage"), "ProductDetailPage");
@@ -25,6 +24,16 @@ const ServicesPage = named(() => import("./pages/ServicesPage"), "ServicesPage")
 const ContactPage = named(() => import("./pages/ContactPage"), "ContactPage");
 const AboutPage = named(() => import("./pages/AboutPage"), "AboutPage");
 const BlogDetailsPage = named(() => import("./pages/BlogDetailsPage"), "BlogDetailsPage");
+const PortalLayout = named(() => import("./pages/portal/PortalLayout"), "PortalLayout");
+const PortalOverview = named(() => import("./pages/portal/PortalOverview"), "PortalOverview");
+const PortalOrders = named(() => import("./pages/portal/PortalOrders"), "PortalOrders");
+const PortalOrderDetail = named(() => import("./pages/portal/PortalOrderDetail"), "PortalOrderDetail");
+const PortalQuotes = named(() => import("./pages/portal/PortalQuotes"), "PortalQuotes");
+const PortalDocuments = named(() => import("./pages/portal/PortalDocuments"), "PortalDocuments");
+const PortalSupport = named(() => import("./pages/portal/PortalSupport"), "PortalSupport");
+const PortalFavorites = named(() => import("./pages/portal/PortalFavorites"), "PortalFavorites");
+const PortalAccount = named(() => import("./pages/portal/PortalAccount"), "PortalAccount");
+const PortalPartner = named(() => import("./pages/portal/PortalPartner"), "PortalPartner");
 
 function RouteFallback() {
   return (
@@ -69,7 +78,17 @@ function App() {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/admin" element={<AdminPage />} />
                   <Route path="/admin/review/:id" element={<AdminReviewDetailPage />} />
-                  <Route path="/dashboard" element={<UserDashboardPage />} />
+                  <Route path="/dashboard" element={<PortalLayout />}>
+                    <Route index element={<PortalOverview />} />
+                    <Route path="orders" element={<PortalOrders />} />
+                    <Route path="orders/:id" element={<PortalOrderDetail />} />
+                    <Route path="quotes" element={<PortalQuotes />} />
+                    <Route path="documents" element={<PortalDocuments />} />
+                    <Route path="support" element={<PortalSupport />} />
+                    <Route path="favorites" element={<PortalFavorites />} />
+                    <Route path="account" element={<PortalAccount />} />
+                    <Route path="partner" element={<PortalPartner />} />
+                  </Route>
                   <Route path="/dashboard/review/:id" element={<UserReviewDetailPage />} />
                   <Route path="/payment/success" element={<PaymentResultPage success />} />
                   <Route path="/payment/cancel" element={<PaymentResultPage success={false} />} />
@@ -85,4 +104,3 @@ function App() {
 }
 
 export default App;
-

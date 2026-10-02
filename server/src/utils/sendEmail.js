@@ -1,5 +1,4 @@
 const nodemailer = require("nodemailer");
-const dns = require("dns");
 const Config = require("../models/Config");
 const env = require("../config/env");
 
@@ -46,6 +45,11 @@ const getEmailConfig = async () => {
     senderEmail = senderEmail.slice(0, -4);
   }
 
+  const senderName =
+    dbConfig?.value?.senderName ||
+    process.env.SENDER_NAME ||
+    "MARBLEX Security";
+
   const smtpUser =
     dbConfig?.value?.smtpUser ||
     dbConfig?.value?.user ||
@@ -64,23 +68,63 @@ const getEmailConfig = async () => {
 
   const smtpPass = rawPass ? String(rawPass).replace(/\s+/g, "").trim() : "";
 
-  return { senderEmail, smtpUser, smtpPass };
+  return { brevoApiKey, senderEmail, senderName, smtpUser, smtpPass };
 };
 
 /**
- * Direct Nodemailer Gmail SMTP Transporter with Port 465 SSL & IPv4
+ * Brevo (Sendinblue) HTTPS API — works on Render free tier (port 443, SMTP not required).
+ * Docs: https://developers.brevo.com/reference/sendtransacemail
+ */
+const sendViaBrevoApi = async ({ brevoApiKey, senderEmail, senderName, to, subject, html, text }) => {
+  if (!brevoApiKey) {
+    throw new Error("BREVO_API_KEY is not configured.");
+  }
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": brevoApiKey,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: senderName || "MARBLEX Security", email: senderEmail },
+      to: [{ email: to }],
+      replyTo: { email: senderEmail },
+      subject,
+      htmlContent: html,
+      textContent: text || "",
+    }),
+  });
+
+  const body = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const detail = body?.message || body?.error || JSON.stringify(body) || response.statusText;
+    throw new Error(`Brevo API ${response.status}: ${detail}`);
+  }
+
+  return {
+    success: true,
+    provider: "Brevo HTTPS API",
+    messageId: body?.messageId || null,
+  };
+};
+
+/**
+ * Direct Nodemailer Gmail SMTP — for local/dev only.
+ * Render free tier blocks outbound SMTP ports 25/465/587 → Connection timeout.
  */
 const sendViaNodemailerSmtp = async ({ senderEmail, smtpUser, smtpPass, to, subject, html, text }) => {
   if (!smtpPass) {
     throw new Error("SMTP App Password is not configured in EMAIL_PASS or SMTP_PASS.");
   }
 
-  // Primary: Port 465 SSL with direct IPv4 family
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
     secure: true,
-    family: 4, // Force IPv4 to prevent ENETUNREACH on Render
+    family: 4,
     auth: {
       user: smtpUser,
       pass: smtpPass,
@@ -102,7 +146,7 @@ const sendViaNodemailerSmtp = async ({ senderEmail, smtpUser, smtpPass, to, subj
     html,
     headers: {
       "X-Priority": "1",
-      "Importance": "high",
+      Importance: "high",
       "X-Auto-Response-Suppress": "OOF, AutoReply",
     },
   });
@@ -111,10 +155,42 @@ const sendViaNodemailerSmtp = async ({ senderEmail, smtpUser, smtpPass, to, subj
 };
 
 /**
- * Single Unified SendEmail Helper
+ * Unified send: Brevo HTTPS first (Render-safe), then Gmail SMTP (local).
  */
 const sendEmail = async ({ to, subject, html, text }) => {
   const config = await getEmailConfig();
+
+  // 1) Prefer Brevo HTTPS — not blocked on Render free tier
+  if (config.brevoApiKey) {
+    try {
+      const result = await sendViaBrevoApi({
+        brevoApiKey: config.brevoApiKey,
+        senderEmail: config.senderEmail,
+        senderName: config.senderName,
+        to,
+        subject,
+        html,
+        text,
+      });
+      console.log(`[Mailer] Email sent via Brevo to ${to}`);
+      return result;
+    } catch (brevoErr) {
+      console.error(`[Mailer] Brevo API failed: ${brevoErr.message}`);
+      // Fall through to SMTP only if credentials exist (local / paid hosts)
+      if (!config.smtpPass) {
+        return { success: false, error: brevoErr.message };
+      }
+      console.log(`[Mailer] Falling back to Gmail SMTP...`);
+    }
+  }
+
+  // 2) Gmail SMTP — works locally; times out on Render free (SMTP ports blocked)
+  if (!config.smtpPass) {
+    const msg =
+      "No email provider configured. Set BREVO_API_KEY on Render (recommended), or EMAIL_PASS for local SMTP.";
+    console.error(`[Mailer] ${msg}`);
+    return { success: false, error: msg };
+  }
 
   try {
     const result = await sendViaNodemailerSmtp({
@@ -126,43 +202,16 @@ const sendEmail = async ({ to, subject, html, text }) => {
       html,
       text,
     });
-    console.log(`[Mailer] Email sent successfully to ${to}`);
+    console.log(`[Mailer] Email sent via Gmail SMTP to ${to}`);
     return result;
   } catch (smtpErr) {
     console.error(`[Mailer] Email delivery failed: ${smtpErr.message}`);
-
-    // If port 465 has a socket timeout, attempt fallback with service: 'gmail'
-    if (!config.smtpPass) {
-      return { success: false, error: smtpErr.message, simulated: true };
+    if (/timeout|ETIMEDOUT|ECONNREFUSED|ENETUNREACH/i.test(smtpErr.message || "")) {
+      console.error(
+        "[Mailer] Hint: Render free tier blocks SMTP ports 25/465/587. Add BREVO_API_KEY and verify sender at https://app.brevo.com"
+      );
     }
-
-    try {
-      console.log(`[Mailer] Attempting fallback to Gmail service transporter...`);
-      const fallbackTransporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: config.smtpUser,
-          pass: config.smtpPass,
-        },
-        family: 4,
-        tls: { rejectUnauthorized: false },
-      });
-
-      const fallbackInfo = await fallbackTransporter.sendMail({
-        from: `"MARBLEX Security" <${config.senderEmail}>`,
-        to,
-        replyTo: config.senderEmail,
-        subject,
-        text: text || "",
-        html,
-      });
-
-      console.log(`[Mailer] Email sent successfully via Gmail service fallback`);
-      return { success: true, provider: "Gmail Service Fallback", messageId: fallbackInfo?.messageId };
-    } catch (fallbackErr) {
-      console.error(`[Mailer] Gmail service fallback also failed: ${fallbackErr.message}`);
-      return { success: false, error: fallbackErr.message };
-    }
+    return { success: false, error: smtpErr.message };
   }
 };
 
@@ -197,20 +246,20 @@ const buildMasterShell = ({ title, preheader, centerContent, senderEmail }) => {
 <table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #dbe4ea;box-shadow:0 10px 30px rgba(11,47,60,0.06);">
 
 <!-- top accent -->
-<tr><td style="height:5px;background:#ff6b47;background-image:linear-gradient(90deg,#0b2f3c,#ff6b47);font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr><td style="height:4px;background:#0b2f3c;background-image:linear-gradient(90deg,#0b2f3c 0%,#0f7c8f 45%,#ff6b47 100%);font-size:0;line-height:0;">&nbsp;</td></tr>
 
 <!-- header -->
-<tr><td align="center" class="pad" style="padding:34px 40px 8px;">
+<tr><td align="center" class="pad" style="padding:30px 40px 6px;">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
     <td style="padding-right:12px;vertical-align:middle;">
-      <img src="${ICONS.logo}" alt="MARBLEX" width="44" height="38" style="display:block;border:0;outline:none;text-decoration:none;object-fit:contain;vertical-align:middle;" />
+      <img src="${ICONS.logo}" alt="MARBLEX" width="42" height="36" style="display:block;border:0;outline:none;text-decoration:none;object-fit:contain;vertical-align:middle;" />
     </td>
-    <td style="font-size:30px;font-weight:800;letter-spacing:5px;color:#0b2f3c;vertical-align:middle;">MAR<span style="color:#ff6b47;">BLEX</span></td>
+    <td style="font-size:28px;font-weight:800;letter-spacing:4px;color:#0b2f3c;vertical-align:middle;">MAR<span style="color:#ff6b47;">BLEX</span></td>
   </tr></table>
-  <div style="font-size:10.5px;letter-spacing:3px;color:#7a8c99;margin-top:6px;font-weight:700;">CONSTRUCTION CHEMICAL &amp; RUBBER INDUSTRY</div>
+  <div style="font-size:10px;letter-spacing:2.8px;color:#7a8c99;margin-top:8px;font-weight:700;">CONSTRUCTION CHEMICAL &amp; RUBBER INDUSTRY</div>
 </td></tr>
 
-<tr><td class="pad" style="padding:20px 40px 0;"><div style="height:1px;background:#e6edf1;"></div></td></tr>
+<tr><td class="pad" style="padding:16px 40px 0;"><div style="height:1px;background:#e6edf1;"></div></td></tr>
 
 <!-- Center Content (Dynamic) -->
 ${centerContent}
@@ -256,64 +305,133 @@ ${centerContent}
 };
 
 /**
- * 1. OTP / 2FA Email Template Generator
+ * Shared OTP digit boxes (email-client safe)
  */
-const otpEmailTemplate = ({ name, code, purpose = "Account 2FA Verification", requestedAt, expiresMinutes = 10, senderEmail }) => {
-  const safeName = name || "Valued Client";
-  const safeDate = requestedAt || new Date().toLocaleString("en-US", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }) + " (PKT)";
-  const supportEmail = senderEmail || "Marblexpak@gmail.com";
-
-  // Generate 6 individual digit boxes
-  const digitBoxes = String(code)
+const renderOtpDigitBoxes = (code) =>
+  String(code || "")
     .split("")
     .map(
       (digit) =>
-        `<td style="padding:0 4px;"><div class="dg" style="width:46px;height:58px;line-height:58px;text-align:center;font-size:30px;font-weight:700;font-family:Consolas,'Courier New',monospace;color:#0b2f3c;background:#ffffff;border-radius:10px;border-bottom:3px solid #ff6b47;">${digit}</div></td>`
+        `<td style="padding:0 3px;"><div class="dg" style="width:44px;height:56px;line-height:56px;text-align:center;font-size:28px;font-weight:700;font-family:Consolas,'SF Mono','Courier New',monospace;color:#0b2f3c;background:#ffffff;border-radius:10px;border:1px solid #e8eef2;border-bottom:3px solid #ff6b47;box-shadow:0 2px 0 rgba(11,47,60,0.04);">${digit}</div></td>`
     )
     .join("");
 
+/**
+ * 1. OTP / 2FA Email Template Generator
+ */
+const otpEmailTemplate = ({ name, code, purpose = "Account Sign-in 2FA", requestedAt, expiresMinutes = 10, senderEmail }) => {
+  const safeName = name || "Valued Client";
+  const safeDate =
+    requestedAt ||
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }) + " (PKT)";
+  const supportEmail = senderEmail || "Marblexpak@gmail.com";
+  const refId = `MX-${Date.now().toString(36).toUpperCase()}`;
+  const digitBoxes = renderOtpDigitBoxes(code);
+
   const centerContent = `
-<!-- title -->
-<tr><td align="center" class="pad" style="padding:28px 40px 0;">
-  <div style="display:inline-block;background:#eaf7f0;color:#1a8a55;font-size:11px;font-weight:700;letter-spacing:1px;padding:6px 14px;border-radius:999px;">SECURE SIGN-IN</div>
-  <h1 style="margin:16px 0 10px;font-size:26px;line-height:1.25;color:#0b2f3c;font-weight:800;">Verify your identity</h1>
-  <p style="margin:0;font-size:15px;line-height:1.65;color:#5a6b79;">Hello <strong style="color:#0b2f3c;">${safeName}</strong>, use the code below to complete your sign-in to the <a href="${PORTAL_LOGIN_URL}" target="_blank" style="color:#0b2f3c;font-weight:700;text-decoration:underline;">MARBLEX Client Portal</a>.</p>
+<!-- badge + title -->
+<tr><td align="center" class="pad" style="padding:32px 40px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 18px auto;">
+    <tr>
+      <td style="width:52px;height:52px;border-radius:14px;background:linear-gradient(145deg,#0d4150,#0b2f3c);text-align:center;vertical-align:middle;box-shadow:0 8px 20px rgba(11,47,60,0.22);">
+        <span style="font-size:22px;line-height:52px;color:#ffffff;">&#128274;</span>
+      </td>
+    </tr>
+  </table>
+  <div style="display:inline-block;background:#eaf7f0;color:#147a4c;font-size:10px;font-weight:800;letter-spacing:1.4px;padding:6px 14px;border-radius:999px;text-transform:uppercase;">Encrypted verification</div>
+  <h1 style="margin:14px 0 8px;font-size:28px;line-height:1.2;color:#0b2f3c;font-weight:800;letter-spacing:-0.3px;">Verify your identity</h1>
+  <p style="margin:0 auto;max-width:440px;font-size:15px;line-height:1.7;color:#5a6b79;">
+    Hello <strong style="color:#0b2f3c;">${safeName}</strong>, enter this one-time code on the
+    <a href="${PORTAL_LOGIN_URL}" target="_blank" style="color:#0b2f3c;font-weight:700;text-decoration:underline;">MARBLEX Client Portal</a>
+    to finish signing in securely.
+  </p>
 </td></tr>
 
-<!-- code -->
-<tr><td class="pad" style="padding:26px 40px 0;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b2f3c;border-radius:16px;">
-  <tr><td align="center" style="padding:26px 12px 8px;font-size:11px;letter-spacing:3px;color:#8fb3c0;font-weight:700;">ONE-TIME PASSCODE</td></tr>
-  <tr><td align="center" style="padding:6px 8px 4px;">
-    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-      ${digitBoxes}
-    </tr></table>
-  </td></tr>
-  <tr><td align="center" style="padding:14px 12px 24px;font-size:13px;color:#cfe2ea;">Expires in <strong style="color:#ff8a6b;">${expiresMinutes} minutes</strong> &nbsp;·&nbsp; Single use only</td></tr>
+<!-- code card -->
+<tr><td class="pad" style="padding:28px 40px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b2f3c;border-radius:18px;overflow:hidden;">
+    <tr><td style="height:3px;background:linear-gradient(90deg,#ff6b47,#ff9a7a,#0f7c8f);font-size:0;line-height:0;">&nbsp;</td></tr>
+    <tr><td align="center" style="padding:22px 16px 6px;font-size:10px;letter-spacing:2.5px;color:#8fb3c0;font-weight:800;text-transform:uppercase;">One-time passcode</td></tr>
+    <tr><td align="center" style="padding:10px 10px 6px;">
+      <table role="presentation" cellpadding="0" cellspacing="0"><tr>${digitBoxes}</tr></table>
+    </td></tr>
+    <tr><td align="center" style="padding:12px 20px 8px;font-size:13px;color:#cfe2ea;line-height:1.5;">
+      Expires in <strong style="color:#ff8a6b;">${expiresMinutes} minutes</strong>
+      &nbsp;&middot;&nbsp; Single use only
+      &nbsp;&middot;&nbsp; Do not forward
+    </td></tr>
+    <tr><td align="center" style="padding:6px 20px 24px;">
+      <a href="${PORTAL_LOGIN_URL}" target="_blank" style="display:inline-block;background:#ff6b47;color:#ffffff;padding:12px 28px;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;box-shadow:0 8px 18px rgba(255,107,71,0.35);">
+        Open Client Portal &rarr;
+      </a>
+    </td></tr>
+  </table>
+</td></tr>
+
+<!-- how to use -->
+<tr><td class="pad" style="padding:22px 40px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7fafc;border:1px solid #e6edf1;border-radius:14px;">
+    <tr><td style="padding:16px 18px 6px;font-size:11px;font-weight:800;letter-spacing:1.2px;color:#7a8c99;text-transform:uppercase;">How to use this code</td></tr>
+    <tr><td style="padding:4px 18px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;color:#3d5260;line-height:1.55;">
+        <tr>
+          <td style="width:28px;vertical-align:top;padding:6px 0;font-weight:800;color:#ff6b47;">1</td>
+          <td style="padding:6px 0;">Return to the MARBLEX verification screen in your browser.</td>
+        </tr>
+        <tr>
+          <td style="width:28px;vertical-align:top;padding:6px 0;font-weight:800;color:#ff6b47;">2</td>
+          <td style="padding:6px 0;">Enter the 6-digit passcode exactly as shown above.</td>
+        </tr>
+        <tr>
+          <td style="width:28px;vertical-align:top;padding:6px 0;font-weight:800;color:#ff6b47;">3</td>
+          <td style="padding:6px 0;">Continue to your portal — the code expires automatically after use.</td>
+        </tr>
+      </table>
+    </td></tr>
   </table>
 </td></tr>
 
 <!-- details -->
-<tr><td class="pad" style="padding:22px 40px 0;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e3ebef;border-radius:12px;font-size:13px;">
-    <tr><td style="padding:12px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;">Purpose</td><td align="right" style="padding:12px 16px;color:#1c2b36;font-weight:600;border-bottom:1px solid #eef3f5;">${purpose}</td></tr>
-    <tr><td style="padding:12px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;">Requested at</td><td align="right" style="padding:12px 16px;color:#1c2b36;font-weight:600;border-bottom:1px solid #eef3f5;">${safeDate}</td></tr>
-    <tr><td style="padding:12px 16px;color:#7a8c99;">Status</td><td align="right" style="padding:12px 16px;color:#1a8a55;font-weight:700;">● Active</td></tr>
+<tr><td class="pad" style="padding:18px 40px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e3ebef;border-radius:14px;font-size:13px;overflow:hidden;">
+    <tr>
+      <td style="padding:13px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;width:42%;">Purpose</td>
+      <td align="right" style="padding:13px 16px;color:#1c2b36;font-weight:700;border-bottom:1px solid #eef3f5;">${purpose}</td>
+    </tr>
+    <tr>
+      <td style="padding:13px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;">Requested at</td>
+      <td align="right" style="padding:13px 16px;color:#1c2b36;font-weight:600;border-bottom:1px solid #eef3f5;">${safeDate}</td>
+    </tr>
+    <tr>
+      <td style="padding:13px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;">Validity</td>
+      <td align="right" style="padding:13px 16px;color:#1c2b36;font-weight:600;border-bottom:1px solid #eef3f5;">${expiresMinutes} minutes</td>
+    </tr>
+    <tr>
+      <td style="padding:13px 16px;color:#7a8c99;">Reference</td>
+      <td align="right" style="padding:13px 16px;color:#0f7c8f;font-weight:700;font-family:Consolas,'Courier New',monospace;">${refId}</td>
+    </tr>
   </table>
 </td></tr>
 
-<!-- warning -->
-<tr><td class="pad" style="padding:20px 40px 34px;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff6f2;border-radius:12px;border-left:4px solid #ff6b47;">
-  <tr><td style="padding:14px 16px;font-size:13px;line-height:1.6;color:#7a3a25;">
-    <strong>Never share this code.</strong> MARBLEX staff will never ask for it. If you didn't request it, contact <a href="mailto:${supportEmail}" style="color:#d94a25;font-weight:700;">${supportEmail}</a> right away.
-  </td></tr></table>
+<!-- security notice -->
+<tr><td class="pad" style="padding:18px 40px 36px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff7f4;border-radius:14px;border:1px solid #ffe0d6;">
+    <tr>
+      <td style="width:4px;background:#ff6b47;border-radius:14px 0 0 14px;font-size:0;line-height:0;">&nbsp;</td>
+      <td style="padding:14px 16px;font-size:13px;line-height:1.65;color:#7a3a25;">
+        <strong style="color:#0b2f3c;">Security notice</strong><br>
+        Never share this code with anyone. MARBLEX staff will never ask for it by phone, WhatsApp, or email.
+        If you did not request this sign-in, ignore this message and contact
+        <a href="mailto:${supportEmail}" style="color:#d94a25;font-weight:700;text-decoration:underline;">${supportEmail}</a> immediately.
+      </td>
+    </tr>
+  </table>
 </td></tr>
   `;
 
   return buildMasterShell({
-    title: `MARBLEX – Verification Code: ${code}`,
-    preheader: `Your MARBLEX verification code is ${code}. It expires in ${expiresMinutes} minutes.`,
+    title: "MARBLEX · Verify your identity",
+    preheader: `Your MARBLEX verification code is ${code}. Expires in ${expiresMinutes} minutes. Do not share this code.`,
     centerContent,
     senderEmail: supportEmail,
   });
@@ -419,59 +537,111 @@ const loginAlertEmailTemplate = ({ name, userAgent, requestedAt, senderEmail }) 
  */
 const passwordResetEmailTemplate = ({ name, code, requestedAt, expiresMinutes = 10, senderEmail }) => {
   const safeName = name || "Valued Client";
-  const safeDate = requestedAt || new Date().toLocaleString("en-US", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }) + " (PKT)";
+  const safeDate =
+    requestedAt ||
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }) + " (PKT)";
   const supportEmail = senderEmail || "Marblexpak@gmail.com";
-
-  const digitBoxes = String(code)
-    .split("")
-    .map(
-      (digit) =>
-        `<td style="padding:0 4px;"><div class="dg" style="width:46px;height:58px;line-height:58px;text-align:center;font-size:30px;font-weight:700;font-family:Consolas,'Courier New',monospace;color:#0b2f3c;background:#ffffff;border-radius:10px;border-bottom:3px solid #ff6b47;">${digit}</div></td>`
-    )
-    .join("");
+  const refId = `MXR-${Date.now().toString(36).toUpperCase()}`;
+  const digitBoxes = renderOtpDigitBoxes(code);
 
   const centerContent = `
-<!-- title -->
-<tr><td align="center" class="pad" style="padding:28px 40px 0;">
-  <div style="display:inline-block;background:#fff1f2;color:#e11d48;font-size:11px;font-weight:700;letter-spacing:1px;padding:6px 14px;border-radius:999px;">PASSWORD RESET</div>
-  <h1 style="margin:16px 0 10px;font-size:26px;line-height:1.25;color:#0b2f3c;font-weight:800;">Reset your password</h1>
-  <p style="margin:0;font-size:15px;line-height:1.65;color:#5a6b79;">Hello <strong style="color:#0b2f3c;">${safeName}</strong>, use the single-use recovery code below to reset your password on the <a href="${PORTAL_LOGIN_URL}" target="_blank" style="color:#0b2f3c;font-weight:700;text-decoration:underline;">MARBLEX Client Portal</a>.</p>
+<tr><td align="center" class="pad" style="padding:32px 40px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 18px auto;">
+    <tr>
+      <td style="width:52px;height:52px;border-radius:14px;background:linear-gradient(145deg,#ff6b47,#d94a25);text-align:center;vertical-align:middle;box-shadow:0 8px 20px rgba(255,107,71,0.28);">
+        <span style="font-size:22px;line-height:52px;color:#ffffff;">&#128273;</span>
+      </td>
+    </tr>
+  </table>
+  <div style="display:inline-block;background:#fff1f2;color:#be123c;font-size:10px;font-weight:800;letter-spacing:1.4px;padding:6px 14px;border-radius:999px;text-transform:uppercase;">Password recovery</div>
+  <h1 style="margin:14px 0 8px;font-size:28px;line-height:1.2;color:#0b2f3c;font-weight:800;letter-spacing:-0.3px;">Reset your password</h1>
+  <p style="margin:0 auto;max-width:440px;font-size:15px;line-height:1.7;color:#5a6b79;">
+    Hello <strong style="color:#0b2f3c;">${safeName}</strong>, we received a request to reset your
+    <a href="${PORTAL_LOGIN_URL}" target="_blank" style="color:#0b2f3c;font-weight:700;text-decoration:underline;">MARBLEX Client Portal</a>
+    password. Use the recovery code below to continue.
+  </p>
 </td></tr>
 
-<!-- code -->
-<tr><td class="pad" style="padding:26px 40px 0;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b2f3c;border-radius:16px;">
-  <tr><td align="center" style="padding:26px 12px 8px;font-size:11px;letter-spacing:3px;color:#8fb3c0;font-weight:700;">PASSWORD RESET CODE</td></tr>
-  <tr><td align="center" style="padding:6px 8px 4px;">
-    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-      ${digitBoxes}
-    </tr></table>
-  </td></tr>
-  <tr><td align="center" style="padding:14px 12px 24px;font-size:13px;color:#cfe2ea;">Expires in <strong style="color:#ff8a6b;">${expiresMinutes} minutes</strong> &nbsp;·&nbsp; Single use only</td></tr>
+<tr><td class="pad" style="padding:28px 40px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b2f3c;border-radius:18px;overflow:hidden;">
+    <tr><td style="height:3px;background:linear-gradient(90deg,#ff6b47,#ff9a7a,#0f7c8f);font-size:0;line-height:0;">&nbsp;</td></tr>
+    <tr><td align="center" style="padding:22px 16px 6px;font-size:10px;letter-spacing:2.5px;color:#8fb3c0;font-weight:800;text-transform:uppercase;">Password reset code</td></tr>
+    <tr><td align="center" style="padding:10px 10px 6px;">
+      <table role="presentation" cellpadding="0" cellspacing="0"><tr>${digitBoxes}</tr></table>
+    </td></tr>
+    <tr><td align="center" style="padding:12px 20px 8px;font-size:13px;color:#cfe2ea;line-height:1.5;">
+      Expires in <strong style="color:#ff8a6b;">${expiresMinutes} minutes</strong>
+      &nbsp;&middot;&nbsp; Single use only
+    </td></tr>
+    <tr><td align="center" style="padding:6px 20px 24px;">
+      <a href="${PORTAL_LOGIN_URL}" target="_blank" style="display:inline-block;background:#ff6b47;color:#ffffff;padding:12px 28px;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;box-shadow:0 8px 18px rgba(255,107,71,0.35);">
+        Continue password reset &rarr;
+      </a>
+    </td></tr>
   </table>
 </td></tr>
 
-<!-- details -->
 <tr><td class="pad" style="padding:22px 40px 0;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e3ebef;border-radius:12px;font-size:13px;">
-    <tr><td style="padding:12px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;">Purpose</td><td align="right" style="padding:12px 16px;color:#1c2b36;font-weight:600;border-bottom:1px solid #eef3f5;">Password Reset Request</td></tr>
-    <tr><td style="padding:12px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;">Requested at</td><td align="right" style="padding:12px 16px;color:#1c2b36;font-weight:600;border-bottom:1px solid #eef3f5;">${safeDate}</td></tr>
-    <tr><td style="padding:12px 16px;color:#7a8c99;">Status</td><td align="right" style="padding:12px 16px;color:#1a8a55;font-weight:700;">● Active</td></tr>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7fafc;border:1px solid #e6edf1;border-radius:14px;">
+    <tr><td style="padding:16px 18px 6px;font-size:11px;font-weight:800;letter-spacing:1.2px;color:#7a8c99;text-transform:uppercase;">Next steps</td></tr>
+    <tr><td style="padding:4px 18px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;color:#3d5260;line-height:1.55;">
+        <tr>
+          <td style="width:28px;vertical-align:top;padding:6px 0;font-weight:800;color:#ff6b47;">1</td>
+          <td style="padding:6px 0;">Open the forgot-password screen on the Client Portal.</td>
+        </tr>
+        <tr>
+          <td style="width:28px;vertical-align:top;padding:6px 0;font-weight:800;color:#ff6b47;">2</td>
+          <td style="padding:6px 0;">Enter this 6-digit recovery code to verify ownership.</td>
+        </tr>
+        <tr>
+          <td style="width:28px;vertical-align:top;padding:6px 0;font-weight:800;color:#ff6b47;">3</td>
+          <td style="padding:6px 0;">Create a new strong password and sign in again.</td>
+        </tr>
+      </table>
+    </td></tr>
   </table>
 </td></tr>
 
-<!-- warning -->
-<tr><td class="pad" style="padding:20px 40px 34px;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff6f2;border-radius:12px;border-left:4px solid #ff6b47;">
-  <tr><td style="padding:14px 16px;font-size:13px;line-height:1.6;color:#7a3a25;">
-    <strong>Didn't request a password reset?</strong> Please ignore this message. Your password will remain unchanged, or contact <a href="mailto:${supportEmail}" style="color:#d94a25;font-weight:700;">${supportEmail}</a> immediately.
-  </td></tr></table>
+<tr><td class="pad" style="padding:18px 40px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e3ebef;border-radius:14px;font-size:13px;overflow:hidden;">
+    <tr>
+      <td style="padding:13px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;width:42%;">Purpose</td>
+      <td align="right" style="padding:13px 16px;color:#1c2b36;font-weight:700;border-bottom:1px solid #eef3f5;">Password Reset Request</td>
+    </tr>
+    <tr>
+      <td style="padding:13px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;">Requested at</td>
+      <td align="right" style="padding:13px 16px;color:#1c2b36;font-weight:600;border-bottom:1px solid #eef3f5;">${safeDate}</td>
+    </tr>
+    <tr>
+      <td style="padding:13px 16px;color:#7a8c99;border-bottom:1px solid #eef3f5;">Validity</td>
+      <td align="right" style="padding:13px 16px;color:#1c2b36;font-weight:600;border-bottom:1px solid #eef3f5;">${expiresMinutes} minutes</td>
+    </tr>
+    <tr>
+      <td style="padding:13px 16px;color:#7a8c99;">Reference</td>
+      <td align="right" style="padding:13px 16px;color:#0f7c8f;font-weight:700;font-family:Consolas,'Courier New',monospace;">${refId}</td>
+    </tr>
+  </table>
+</td></tr>
+
+<tr><td class="pad" style="padding:18px 40px 36px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff7f4;border-radius:14px;border:1px solid #ffe0d6;">
+    <tr>
+      <td style="width:4px;background:#ff6b47;border-radius:14px 0 0 14px;font-size:0;line-height:0;">&nbsp;</td>
+      <td style="padding:14px 16px;font-size:13px;line-height:1.65;color:#7a3a25;">
+        <strong style="color:#0b2f3c;">Didn't request this?</strong><br>
+        You can safely ignore this email — your password will not change.
+        If you suspect unauthorized access, contact
+        <a href="mailto:${supportEmail}" style="color:#d94a25;font-weight:700;text-decoration:underline;">${supportEmail}</a> right away.
+      </td>
+    </tr>
+  </table>
 </td></tr>
   `;
 
   return buildMasterShell({
-    title: `MARBLEX – Password Reset Code: ${code}`,
-    preheader: `Your MARBLEX password reset code is ${code}. It expires in ${expiresMinutes} minutes.`,
+    title: "MARBLEX · Password reset code",
+    preheader: `Your MARBLEX password reset code is ${code}. Expires in ${expiresMinutes} minutes.`,
     centerContent,
     senderEmail: supportEmail,
   });
@@ -552,7 +722,7 @@ Support: ${config.senderEmail}
 
   return sendEmail({
     to: toEmail,
-    subject: `MARBLEX Verification Code: ${code}`,
+    subject: `MARBLEX · Your verification code`,
     html,
     text,
   });
@@ -610,9 +780,9 @@ const sendPasswordResetEmail = async (toEmail, code, userName = "Valued Client")
 
   return sendEmail({
     to: toEmail,
-    subject: `MARBLEX Password Reset: ${code}`,
+    subject: `MARBLEX · Password reset code`,
     html,
-    text: `Your password reset code is: ${code}. Valid for 10 minutes.`,
+    text: `Your password reset code is: ${code}. Valid for 10 minutes. Do not share this code.`,
   });
 };
 

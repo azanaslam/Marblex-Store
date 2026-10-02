@@ -8,6 +8,7 @@ const adminRoutes = require("./adminRoutes");
 const chatRoutes = require("./chatRoutes");
 const productReviewRoutes = require("./productReviewRoutes");
 const contactRoutes = require("./contact");
+const portalRoutes = require("./portalRoutes");
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use("/admin", adminRoutes);
 router.use("/chat", chatRoutes);
 router.use("/product-reviews", productReviewRoutes);
 router.use("/contact", contactRoutes);
+router.use("/portal", portalRoutes);
 
 module.exports = router;

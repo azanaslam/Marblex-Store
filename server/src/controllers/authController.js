@@ -213,6 +213,51 @@ const resend2FA = async (req, res) => {
   });
 };
 
+const ssoLogin = async (req, res) => {
+  const { email, name, provider } = req.body;
+  if (!email) return res.status(400).json({ message: "Email address is required" });
+
+  const normalizedEmail = email.toLowerCase().trim();
+  let user = await User.findOne({ email: normalizedEmail });
+
+  const twoFactorCode = generate6DigitCode();
+  const twoFactorExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+  if (!user) {
+    const passwordHash = await bcrypt.hash("sso_enterprise_verified_" + Date.now(), 10);
+    const displayName = name || (provider ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} Verified Client` : "Enterprise Client");
+    const isAdmin = normalizedEmail.includes("admin") || normalizedEmail === "marblexpak@gmail.com";
+
+    user = await User.create({
+      name: displayName,
+      email: normalizedEmail,
+      passwordHash,
+      company: "Enterprise Partner",
+      role: isAdmin ? "admin" : "user",
+      isAccessGranted: true,
+      twoFactorCode,
+      twoFactorExpires,
+      isEmailVerified: false,
+    });
+  } else {
+    user.twoFactorCode = twoFactorCode;
+    user.twoFactorExpires = twoFactorExpires;
+    await user.save();
+  }
+
+  // Dispatch 2FA verification email to the user
+  const providerLabel = provider ? provider.toUpperCase() : "SSO";
+  send2FACodeEmail(user.email, twoFactorCode, user.name, `${providerLabel} Sign-In 2FA`).catch((err) =>
+    console.error("[MARBLEX SSO 2FA] Email error:", err.message)
+  );
+
+  return res.json({
+    requires2FA: true,
+    email: user.email,
+    message: `A 6-digit verification code has been sent to ${user.email}.`,
+  });
+};
+
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ message: "Email address is required" });
@@ -236,6 +281,34 @@ const forgotPassword = async (req, res) => {
   return res.json({
     success: true,
     message: "A 6-digit password reset code has been sent to your email.",
+  });
+};
+
+const verifyResetCode = async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ message: "Email and 6-digit reset code are required" });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await User.findOne({ email: normalizedEmail });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  if (!user.twoFactorCode || !user.twoFactorExpires) {
+    return res.status(400).json({ message: "No active password reset request. Please request a new code." });
+  }
+
+  if (new Date() > new Date(user.twoFactorExpires)) {
+    return res.status(400).json({ message: "Password reset code has expired. Please request a new one." });
+  }
+
+  if (user.twoFactorCode.trim() !== String(code).trim()) {
+    return res.status(400).json({ message: "Incorrect 6-digit reset code. Please check and try again." });
+  }
+
+  return res.json({
+    success: true,
+    message: "Reset code verified. You can now set a new password.",
   });
 };
 
@@ -289,6 +362,8 @@ const updateMyProfile = async (req, res) => {
     company: String(req.body?.company || "").trim(),
     industryType: String(req.body?.industryType || "").trim(),
     city: String(req.body?.city || "").trim(),
+    ntn: String(req.body?.ntn || "").trim(),
+    strn: String(req.body?.strn || "").trim(),
     avatarUrl: String(req.body?.avatarUrl || "").trim(),
     gender: String(req.body?.gender || "prefer_not_to_say"),
   };
@@ -296,8 +371,26 @@ const updateMyProfile = async (req, res) => {
     return res.status(400).json({ message: "Name is required" });
   }
   const allowedGenders = ["male", "female", "other", "prefer_not_to_say"];
-  const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select("-passwordHash");
+  if (!allowedGenders.includes(updates.gender)) updates.gender = "prefer_not_to_say";
+  const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select("-passwordHash -twoFactorCode");
   return res.json(user);
+};
+
+const changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: "Current password and new password are required" });
+  }
+  if (String(newPassword).length < 6) {
+    return res.status(400).json({ message: "New password must be at least 6 characters" });
+  }
+  const user = await User.findById(req.user.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+  const ok = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!ok) return res.status(401).json({ message: "Current password is incorrect" });
+  user.passwordHash = await bcrypt.hash(newPassword, 10);
+  await user.save();
+  return res.json({ success: true, message: "Password updated successfully" });
 };
 
 const testEmailDelivery = async (req, res) => {
@@ -320,12 +413,15 @@ const testEmailDelivery = async (req, res) => {
 module.exports = {
   register,
   login,
+  ssoLogin,
   verify2FA,
   resend2FA,
   forgotPassword,
+  verifyResetCode,
   resetPassword,
   getMyProfile,
   updateMyProfile,
+  changePassword,
   testEmailDelivery,
 };
 

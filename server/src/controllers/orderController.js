@@ -356,10 +356,123 @@ const stripeWebhook = async (req, res) => {
 
 const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const { status, paymentStatus, q } = req.query;
+    const filter = { userId: req.user.id };
+    if (status) filter.orderStatus = status;
+    if (paymentStatus) filter.paymentStatus = paymentStatus;
+    if (q) {
+      const rx = new RegExp(String(q).trim(), "i");
+      filter.$or = [{ orderNumber: rx }, { customerName: rx }, { city: rx }];
+    }
+    const orders = await Order.find(filter).sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+const getMyOrderById = async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    return res.json(order);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const cancelMyOrder = async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.orderStatus !== "pending") {
+      return res.status(400).json({
+        message: "Only pending orders can be cancelled. Contact support for in-progress orders.",
+      });
+    }
+    order.orderStatus = "cancelled";
+    await order.save();
+    return res.json({ success: true, order });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const getMyOrderInvoice = async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const orderNo = order.orderNumber || String(order._id).slice(-6).toUpperCase();
+    const dateStr = new Date(order.createdAt).toLocaleString("en-PK", {
+      timeZone: "Asia/Karachi",
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    const rows = (order.items || [])
+      .map(
+        (item) => `
+      <tr>
+        <td>${escapeHtml(item.name)}</td>
+        <td style="text-align:center">${item.quantity}</td>
+        <td style="text-align:right">PKR ${Number(item.price || 0).toLocaleString()}</td>
+        <td style="text-align:right">PKR ${Number((item.price || 0) * (item.quantity || 0)).toLocaleString()}</td>
+      </tr>`
+      )
+      .join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Invoice ${escapeHtml(orderNo)}</title>
+<style>
+  body{font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#0b2f3c;margin:40px;background:#fff}
+  h1{margin:0;font-size:28px;letter-spacing:2px} .accent{color:#ff6b47}
+  .meta{margin-top:24px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  table{width:100%;border-collapse:collapse;margin-top:28px}
+  th,td{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;text-align:left}
+  th{background:#0b2f3c;color:#fff}
+  .total{margin-top:16px;text-align:right;font-size:18px;font-weight:700}
+  .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#eaf7f0;color:#1a8a55;font-size:12px;font-weight:700}
+  @media print{.no-print{display:none}}
+</style></head><body>
+  <div class="no-print" style="margin-bottom:20px">
+    <button onclick="window.print()" style="background:#0b2f3c;color:#fff;border:0;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700">Print / Save PDF</button>
+  </div>
+  <h1>MAR<span class="accent">BLEX</span></h1>
+  <div style="color:#7a8c99;font-size:12px;letter-spacing:2px;font-weight:700;margin-top:4px">CONSTRUCTION CHEMICAL & RUBBER INDUSTRY</div>
+  <div class="meta">
+    <div>
+      <div><strong>Invoice / Order</strong> ${escapeHtml(orderNo)}</div>
+      <div>Date: ${escapeHtml(dateStr)} (PKT)</div>
+      <div style="margin-top:8px"><span class="badge">${escapeHtml(order.orderStatus)} · ${escapeHtml(order.paymentStatus)}</span></div>
+    </div>
+    <div>
+      <div><strong>Bill To</strong></div>
+      <div>${escapeHtml(order.customerName)}</div>
+      <div>${escapeHtml(order.email)}</div>
+      <div>${escapeHtml(order.phone)}</div>
+      <div>${escapeHtml([order.address, order.city].filter(Boolean).join(", "))}</div>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Line Total</th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="4">No items</td></tr>`}</tbody>
+  </table>
+  <div class="total">Subtotal: <span class="accent">PKR ${Number(order.subtotal || 0).toLocaleString()}</span></div>
+  <p style="margin-top:28px;font-size:12px;color:#7a8c99">Payment: ${escapeHtml(String(order.paymentMethod || "").toUpperCase())}${order.transactionReference ? ` · Ref: ${escapeHtml(order.transactionReference)}` : ""}</p>
+  <p style="font-size:12px;color:#9aa9b4">40-Ferozpur Road, Lahore, Pakistan · Automated invoice from MARBLEX Client Portal</p>
+</body></html>`;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    return res.send(html);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -385,6 +498,21 @@ const updatePaymentStatus = async (req, res) => {
   }
 };
 
+const updateOrderFulfillment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = {};
+    ["dispatchNote", "courierName", "trackingRef"].forEach((k) => {
+      if (req.body[k] !== undefined) updates[k] = String(req.body[k] || "").trim();
+    });
+    const order = await Order.findByIdAndUpdate(id, updates, { new: true });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    res.json({ success: true, order });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getPaymentConfig,
   uploadPaymentProof,
@@ -392,6 +520,10 @@ module.exports = {
   verifyStripeSession,
   stripeWebhook,
   getMyOrders,
+  getMyOrderById,
+  cancelMyOrder,
+  getMyOrderInvoice,
   updateOrderStatus,
   updatePaymentStatus,
+  updateOrderFulfillment,
 };

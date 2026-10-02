@@ -96,7 +96,7 @@ export const UserReviewDetailPage = () => {
 
   const deleteSubmission = async () => {
     await http.delete(`/product-reviews/${id}`, authHeaders(token));
-    navigate("/dashboard", { replace: true, state: { dashboardTab: 2 } });
+    navigate("/dashboard/partner", { replace: true });
   };
 
   const onCommentTouchStart = (commentId) => {
@@ -125,7 +125,7 @@ export const UserReviewDetailPage = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Back Button */}
       <button 
-        onClick={() => navigate("/dashboard", { state: { dashboardTab: 2 } })}
+        onClick={() => navigate("/dashboard/partner")}
         className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold transition-colors w-fit px-4 py-2 rounded-xl hover:bg-slate-100"
       >
         <ArrowBackRoundedIcon fontSize="small" /> Back to Review Queue

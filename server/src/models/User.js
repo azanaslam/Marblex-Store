@@ -1,5 +1,17 @@
 const mongoose = require("mongoose");
 
+const deliverySiteSchema = new mongoose.Schema(
+  {
+    label: { type: String, required: true, trim: true },
+    address: { type: String, required: true, trim: true },
+    city: { type: String, default: "", trim: true },
+    area: { type: String, default: "", trim: true },
+    contactPhone: { type: String, default: "", trim: true },
+    isDefault: { type: Boolean, default: false },
+  },
+  { _id: true }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -14,6 +26,9 @@ const userSchema = new mongoose.Schema(
     company: { type: String, default: "" },
     industryType: { type: String, default: "Waterproofing & Construction" },
     city: { type: String, default: "" },
+    ntn: { type: String, default: "", trim: true },
+    strn: { type: String, default: "", trim: true },
+    deliverySites: { type: [deliverySiteSchema], default: [] },
     gender: { type: String, enum: ["male", "female", "other", "prefer_not_to_say"], default: "prefer_not_to_say" },
     twoFactorCode: { type: String, default: null },
     twoFactorExpires: { type: Date, default: null },

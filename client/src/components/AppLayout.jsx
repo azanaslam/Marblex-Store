@@ -56,8 +56,8 @@ export const AppLayout = ({ cartCount, children }) => {
   const isUserLoggedIn = Boolean(authUser);
   const isCustomer = Boolean(authUser) && authUser?.role !== "admin";
   const isAdmin = authUser?.role === "admin";
-  const customerLabel = authUser?.name ? `${authUser.name.split(" ")[0]}'s Dashboard` : "My Dashboard";
-  
+  const customerLabel = authUser?.name ? `${authUser.name.split(" ")[0]}'s Portal` : "Client Portal";
+
   const toggleTheme = () => {
     const newTheme = themeMode === "light" ? "dark" : "light";
     setThemeMode(newTheme);
@@ -121,7 +121,7 @@ export const AppLayout = ({ cartCount, children }) => {
       http
         .get("/chat/unread-count", authHeaders(t))
         .then((r) => setChatUnreadNav(Number(r.data?.count) || 0))
-        .catch(() => {});
+        .catch(() => { });
     };
     load();
     const id = setInterval(load, 20000);
@@ -219,12 +219,11 @@ export const AppLayout = ({ cartCount, children }) => {
   const isDark = themeMode === "dark";
 
   return (
-    <div className={`flex flex-col min-h-screen relative transition-colors duration-300 ${
-      isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
-    }`}>
-      
+    <div className={`flex flex-col min-h-screen relative transition-colors duration-300 ${isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
+      }`}>
+
       {/* 1. Top Brand Announcement & Trust Badges Header */}
-      <div 
+      <div
         ref={announcementRef}
         className="bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1.5 sm:py-2 px-3 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden"
       >
@@ -300,15 +299,14 @@ export const AppLayout = ({ cartCount, children }) => {
       {/* 2. Sleek Compact Main Navbar */}
       <header
         ref={headerRef}
-        className={`sticky top-0 z-40 transition-all duration-200 ease-in-out w-full border-b ${
-          isDark
+        className={`sticky top-0 z-40 transition-all duration-200 ease-in-out w-full border-b ${isDark
             ? scrolled || isMenuOpen
               ? "bg-[#0c222f]/95 backdrop-blur-md border-slate-800 shadow-md shadow-black/20 py-2"
               : "bg-[#091b24] border-slate-800/80 py-2.5"
             : scrolled || isMenuOpen
               ? "bg-white/95 backdrop-blur-md border-slate-200/90 shadow-md shadow-[#0a3d52]/5 py-2"
               : "bg-white border-slate-200/80 py-2.5"
-        }`}
+          }`}
       >
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between">
@@ -318,18 +316,16 @@ export const AppLayout = ({ cartCount, children }) => {
               {!isHomePage && (
                 <button
                   onClick={() => navigate(-1)}
-                  className={`md:hidden p-1.5 -ml-1.5 rounded-lg transition-colors ${
-                    isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-[#0a3d52]"
-                  }`}
+                  className={`md:hidden p-1.5 -ml-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-[#0a3d52]"
+                    }`}
                   aria-label="Go Back"
                 >
                   <ArrowBackIosNewIcon sx={{ fontSize: 16 }} />
                 </button>
               )}
               <RouterLink to="/" className="flex items-center gap-2.5 group">
-                <div className={`h-11 w-11 rounded-2xl border p-1.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200 shrink-0 overflow-hidden ${
-                  isDark ? "bg-[#0e2735] border-slate-700" : "bg-white border-slate-200"
-                }`}>
+                <div className={`h-11 w-11 rounded-2xl border p-1.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200 shrink-0 overflow-hidden ${isDark ? "bg-[#0e2735] border-slate-700" : "bg-white border-slate-200"
+                  }`}>
                   <img
                     src="/logo-icon-transparent.png"
                     alt="MARBLEX Logo"
@@ -337,14 +333,12 @@ export const AppLayout = ({ cartCount, children }) => {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className={`text-xl sm:text-2xl font-black tracking-tight font-heading leading-none ${
-                    isDark ? "text-white" : "text-[#0a3d52]"
-                  }`}>
+                  <span className={`text-xl sm:text-2xl font-black tracking-tight font-heading leading-none ${isDark ? "text-white" : "text-[#0a3d52]"
+                    }`}>
                     MAR<span className="text-[#ff6b4a]">BLEX</span>
                   </span>
-                  <span className={`text-[9.5px] font-bold tracking-[0.16em] uppercase font-subheading mt-0.5 ${
-                    isDark ? "text-slate-400" : "text-[#475569]"
-                  }`}>
+                  <span className={`text-[9.5px] font-bold tracking-[0.16em] uppercase font-subheading mt-0.5 ${isDark ? "text-slate-400" : "text-[#475569]"
+                    }`}>
                     CHEMICAL & RUBBER
                   </span>
                 </div>
@@ -352,11 +346,10 @@ export const AppLayout = ({ cartCount, children }) => {
             </div>
 
             {/* Main Navigation - Desktop (Center Capsule Pill Bar) */}
-            <nav 
+            <nav
               ref={navPillsRef}
-              className={`hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-full border ${
-                isDark ? "bg-[#0e2735] border-slate-700/80" : "bg-[#f1f5f9] border-slate-200/80"
-              }`}
+              className={`hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-full border ${isDark ? "bg-[#0e2735] border-slate-700/80" : "bg-[#f1f5f9] border-slate-200/80"
+                }`}
             >
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.path;
@@ -364,13 +357,12 @@ export const AppLayout = ({ cartCount, children }) => {
                   <RouterLink
                     key={link.label}
                     to={link.path}
-                    className={`relative px-4 py-2 text-[13px] font-semibold font-subheading rounded-full transition-all duration-150 flex items-center gap-1 ${
-                      isActive
+                    className={`relative px-4 py-2 text-[13px] font-semibold font-subheading rounded-full transition-all duration-150 flex items-center gap-1 ${isActive
                         ? "bg-[#0a3d52] text-white shadow-xs"
                         : isDark
                           ? "text-slate-300 hover:text-white hover:bg-white/10"
                           : "text-slate-700 hover:text-[#0a3d52] hover:bg-white/70"
-                    }`}
+                      }`}
                   >
                     <span>{link.label}</span>
                     {link.hasDropdown && (
@@ -386,17 +378,16 @@ export const AppLayout = ({ cartCount, children }) => {
 
             {/* Action Buttons (Right) */}
             <div ref={actionsRef} className="flex items-center gap-2 sm:gap-3">
-              
+
               {/* Theme Toggle Button (Icon Only - ☀️ / 🌙) */}
               <button
                 onClick={toggleTheme}
                 title={`Switch to ${isDark ? "Light" : "Dark"} Mode`}
                 aria-label="Toggle Theme"
-                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full border transition-all flex items-center justify-center shrink-0 ${
-                  isDark
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full border transition-all flex items-center justify-center shrink-0 ${isDark
                     ? "bg-[#0e2735] border-slate-700 text-amber-400 hover:bg-slate-800 hover:border-amber-400/50 shadow-xs"
                     : "bg-[#f8fafc] border-slate-200 text-[#0a3d52] hover:bg-white hover:border-[#0a3d52]/40 shadow-xs"
-                }`}
+                  }`}
               >
                 {isDark ? (
                   <LightModeOutlinedIcon sx={{ fontSize: 18 }} />
@@ -408,26 +399,25 @@ export const AppLayout = ({ cartCount, children }) => {
               {/* Cart Button with Dynamic Coral Badge (Only visible when items > 0) */}
               <RouterLink
                 to="/cart"
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] relative ${
-                  isDark
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] relative ${isDark
                     ? "border-slate-700 bg-[#0e2735] text-white hover:border-[#ff6b4a]"
                     : "border-slate-200 bg-[#f8fafc] hover:border-slate-300 text-[#0a3d52]"
-                }`}
+                  }`}
               >
-                <Badge 
-                  badgeContent={cartCount} 
+                <Badge
+                  badgeContent={cartCount}
                   invisible={!cartCount || cartCount <= 0}
-                  sx={{ 
-                    "& .MuiBadge-badge": { 
-                      bgcolor: "#ff6b4a", 
-                      color: "white", 
-                      fontWeight: 800, 
-                      fontSize: "9px", 
-                      height: "15px", 
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      bgcolor: "#ff6b4a",
+                      color: "white",
+                      fontWeight: 800,
+                      fontSize: "9px",
+                      height: "15px",
                       minWidth: "15px",
                       top: -4,
                       right: -4
-                    } 
+                    }
                   }}
                 >
                   <ShoppingCartIcon sx={{ fontSize: 17, color: isDark ? "#ff8c73" : "#0a3d52" }} />
@@ -473,9 +463,8 @@ export const AppLayout = ({ cartCount, children }) => {
                   {isCustomer && (
                     <RouterLink
                       to="/dashboard"
-                      className={`px-3.5 py-2 text-xs font-semibold rounded-full transition-colors font-subheading ${
-                        isDark ? "text-slate-200 hover:bg-slate-800" : "text-[#08222e] hover:bg-slate-100"
-                      }`}
+                      className={`px-3.5 py-2 text-xs font-semibold rounded-full transition-colors font-subheading ${isDark ? "text-slate-200 hover:bg-slate-800" : "text-[#08222e] hover:bg-slate-100"
+                        }`}
                     >
                       <Badge color="error" variant="dot" invisible={chatUnreadNav === 0}>
                         {customerLabel}
@@ -493,9 +482,8 @@ export const AppLayout = ({ cartCount, children }) => {
 
               {/* Mobile Menu Toggle */}
               <button
-                className={`lg:hidden p-2 rounded-lg transition-colors ${
-                  isDark ? "hover:bg-slate-800 text-white" : "hover:bg-slate-100 text-[#08222e]"
-                }`}
+                className={`lg:hidden p-2 rounded-lg transition-colors ${isDark ? "hover:bg-slate-800 text-white" : "hover:bg-slate-100 text-[#08222e]"
+                  }`}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 aria-label="Open Navigation Menu"
               >
@@ -507,20 +495,18 @@ export const AppLayout = ({ cartCount, children }) => {
 
         {/* Mobile Navigation Menu */}
         <div
-          className={`lg:hidden absolute top-full left-0 w-full border-b transition-all duration-200 ease-in-out overflow-hidden ${
-            isDark ? "bg-[#0c222f] border-slate-800" : "bg-white border-[#e0e6ed]"
-          } ${isMenuOpen ? "max-h-[480px] opacity-100 py-5" : "max-h-0 opacity-0 py-0"}`}
+          className={`lg:hidden absolute top-full left-0 w-full border-b transition-all duration-200 ease-in-out overflow-hidden ${isDark ? "bg-[#0c222f] border-slate-800" : "bg-white border-[#e0e6ed]"
+            } ${isMenuOpen ? "max-h-[480px] opacity-100 py-5" : "max-h-0 opacity-0 py-0"}`}
         >
           <div className="flex flex-col px-6 gap-2.5">
             {navLinks.map((link) => (
               <RouterLink
                 key={link.label}
                 to={link.path}
-                className={`text-sm font-bold font-subheading transition-colors py-2 border-b ${
-                  isDark
+                className={`text-sm font-bold font-subheading transition-colors py-2 border-b ${isDark
                     ? "text-slate-200 hover:text-[#ff6b4a] border-slate-800"
                     : "text-[#0a3d52] hover:text-[#ff6b4a] border-slate-100"
-                }`}
+                  }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.label}
@@ -553,9 +539,8 @@ export const AppLayout = ({ cartCount, children }) => {
                   {isCustomer && (
                     <RouterLink
                       to="/dashboard"
-                      className={`flex items-center justify-between w-full py-2.5 px-4 rounded-xl font-bold text-xs ${
-                        isDark ? "bg-slate-800 text-white" : "bg-slate-50 text-[#0a3d52]"
-                      }`}
+                      className={`flex items-center justify-between w-full py-2.5 px-4 rounded-xl font-bold text-xs ${isDark ? "bg-slate-800 text-white" : "bg-slate-50 text-[#0a3d52]"
+                        }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {customerLabel}
