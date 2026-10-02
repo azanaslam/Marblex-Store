@@ -32,6 +32,8 @@ export const PortalHost = () => {
       type: "MARBLEX_PORTAL_INIT",
       path: location.pathname,
       view: pathToPortalView(location.pathname),
+      embedded: true,
+      theme: localStorage.getItem("marblex_theme") || "light",
       user: user
         ? {
             name: user.name,
@@ -47,7 +49,7 @@ export const PortalHost = () => {
       try {
         iframe.contentWindow?.postMessage(payload, window.location.origin);
       } catch {
-        /* cross-origin guard */
+        /* ignore */
       }
     };
 
@@ -61,19 +63,18 @@ export const PortalHost = () => {
   }
 
   return (
-    <iframe
-      ref={iframeRef}
-      title="MARBLEX Client Portal"
-      src="/marblex-client-portal.html"
-      className="mx-portal-frame"
-      style={{
-        display: "block",
-        width: "100%",
-        border: 0,
-        minHeight: "100dvh",
-        height: "100dvh",
-        background: "#06212b",
-      }}
-    />
+    <div className="mx-portal-host relative flex w-full flex-1 flex-col overflow-hidden bg-[#06212b]">
+      <iframe
+        ref={iframeRef}
+        title="MARBLEX Client Portal"
+        src="/marblex-client-portal.html"
+        className="mx-portal-frame block w-full flex-1 border-0"
+        style={{
+          minHeight: "min(100dvh - 7.5rem, 900px)",
+          height: "calc(100dvh - 7.5rem)",
+          background: "#06212b",
+        }}
+      />
+    </div>
   );
 };

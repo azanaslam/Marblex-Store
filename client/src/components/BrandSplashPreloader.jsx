@@ -18,6 +18,11 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   const blexLetters = ["B", "L", "E", "X"];
 
   const handleFinish = useCallback(() => {
+    // Persist so navbar/layout remounts (Strict Mode, Suspense) don't stay stuck hidden
+    try {
+      sessionStorage.setItem("marblex_intro_done", "1");
+    } catch {}
+    window.__MARBLEX_INTRO_DONE__ = true;
     // Broadcast event so Navbar, Hero Banner & Landing Page initiate their entrance seamlessly
     window.dispatchEvent(new CustomEvent("marblex:intro_reveal"));
     onComplete?.();

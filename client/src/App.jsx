@@ -54,30 +54,54 @@ function App() {
         <CssBaseline />
         <BrowserRouter>
           <LenisScroll>
-            <Suspense fallback={<RouteFallback />}>
-              <Routes>
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/admin/review/:id" element={<AdminReviewDetailPage />} />
-                <Route path="/dashboard/review/:id" element={<UserReviewDetailPage />} />
-                <Route path="/dashboard/*" element={<PortalHost />} />
+            <Routes>
+              <Route
+                path="/admin"
+                element={
+                  <Suspense fallback={<RouteFallback />}>
+                    <AdminPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/admin/review/:id"
+                element={
+                  <Suspense fallback={<RouteFallback />}>
+                    <AdminReviewDetailPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/dashboard/review/:id"
+                element={
+                  <Suspense fallback={<RouteFallback />}>
+                    <UserReviewDetailPage />
+                  </Suspense>
+                }
+              />
 
-                <Route element={<AppLayoutShell cartCount={cartCount} />}>
-                  <Route path="/" element={<ShopPage addToCart={addToCart} />} />
-                  <Route path="/product/:id" element={<ProductDetailPage addToCart={addToCart} />} />
-                  <Route path="/cart" element={<CartPage cart={cart} setCart={setCart} />} />
-                  <Route path="/services" element={<ServicesPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/blogs" element={<BlogsPage />} />
-                  <Route path="/blogs/:id" element={<BlogDetailsPage />} />
-                  <Route path="/catalogs" element={<CatalogsPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/payment/success" element={<PaymentResultPage success />} />
-                  <Route path="/payment/cancel" element={<PaymentResultPage success={false} />} />
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Route>
-              </Routes>
-            </Suspense>
+              {/* Suspense lives inside the layout shell so the navbar never unmounts on lazy routes */}
+              <Route
+                element={
+                  <AppLayoutShell cartCount={cartCount} fallback={<RouteFallback />} />
+                }
+              >
+                <Route path="/" element={<ShopPage addToCart={addToCart} />} />
+                <Route path="/product/:id" element={<ProductDetailPage addToCart={addToCart} />} />
+                <Route path="/cart" element={<CartPage cart={cart} setCart={setCart} />} />
+                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/blogs" element={<BlogsPage />} />
+                <Route path="/blogs/:id" element={<BlogDetailsPage />} />
+                <Route path="/catalogs" element={<CatalogsPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/dashboard/*" element={<PortalHost />} />
+                <Route path="/payment/success" element={<PaymentResultPage success />} />
+                <Route path="/payment/cancel" element={<PaymentResultPage success={false} />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Route>
+            </Routes>
           </LenisScroll>
         </BrowserRouter>
       </ThemeProvider>

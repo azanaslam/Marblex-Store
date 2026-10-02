@@ -24,6 +24,8 @@ import EastRoundedIcon from "@mui/icons-material/EastRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
+import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
@@ -43,6 +45,7 @@ export const AppLayout = ({ cartCount, children }) => {
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [portalNotifs, setPortalNotifs] = useState({ unread: 0, items: [] });
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem("marblex_theme") || "light";
   });
@@ -75,6 +78,21 @@ export const AppLayout = ({ cartCount, children }) => {
   const displayFirstName = authUser?.name ? authUser.name.split(" ")[0] : "Client";
   const accountInitial = (displayFirstName || "M").charAt(0).toUpperCase();
 
+  const syncPortalTheme = useCallback((theme) => {
+    try {
+      localStorage.setItem("mx_dash_theme", theme);
+    } catch {}
+    const frame = document.querySelector("iframe.mx-portal-frame");
+    if (frame?.contentWindow) {
+      try {
+        frame.contentWindow.postMessage(
+          { type: "MARBLEX_THEME", theme },
+          window.location.origin
+        );
+      } catch {}
+    }
+  }, []);
+
   const toggleTheme = () => {
     const newTheme = themeMode === "light" ? "dark" : "light";
     setThemeMode(newTheme);
@@ -84,6 +102,7 @@ export const AppLayout = ({ cartCount, children }) => {
     } else {
       document.documentElement.classList.remove("dark");
     }
+    syncPortalTheme(newTheme);
   };
 
   useEffect(() => {
@@ -92,7 +111,34 @@ export const AppLayout = ({ cartCount, children }) => {
     } else {
       document.documentElement.classList.remove("dark");
     }
-  }, [themeMode]);
+    syncPortalTheme(themeMode);
+  }, [themeMode, syncPortalTheme]);
+
+  useEffect(() => {
+    const onMsg = (e) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type !== "MARBLEX_PORTAL_NOTIFY") return;
+      setPortalNotifs({
+        unread: Number(e.data.unread) || 0,
+        items: Array.isArray(e.data.items) ? e.data.items : [],
+      });
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
+
+  const markPortalNotifsRead = () => {
+    setPortalNotifs((prev) => ({ ...prev, unread: 0 }));
+    const frame = document.querySelector("iframe.mx-portal-frame");
+    if (frame?.contentWindow) {
+      try {
+        frame.contentWindow.postMessage(
+          { type: "MARBLEX_MARK_NOTIFS_READ" },
+          window.location.origin
+        );
+      } catch {}
+    }
+  };
 
   const logout = () => {
     clearAuthSession();
@@ -188,11 +234,43 @@ export const AppLayout = ({ cartCount, children }) => {
     return () => clearInterval(id);
   }, [location.pathname, authUserFromStorage, token]);
 
-  const runNavEntrance = useCallback(() => {
-    if (hasNavAnimatedRef.current) return;
-    hasNavAnimatedRef.current = true;
+  const showNavInstant = useCallback(() => {
+    const targets = [
+      announcementRef.current,
+      headerRef.current,
+      logoRef.current,
+      ...(navPillsRef.current ? Array.from(navPillsRef.current.children) : []),
+      ...(actionsRef.current ? Array.from(actionsRef.current.children) : []),
+    ].filter(Boolean);
 
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    if (!targets.length) return;
+    gsap.set(targets, {
+      opacity: 1,
+      y: 0,
+      x: 0,
+      scale: 1,
+      filter: "none",
+      clearProps: "filter",
+    });
+  }, []);
+
+  const runNavEntrance = useCallback(() => {
+    if (hasNavAnimatedRef.current) {
+      showNavInstant();
+      return;
+    }
+    hasNavAnimatedRef.current = true;
+    try {
+      sessionStorage.setItem("marblex_intro_done", "1");
+    } catch {}
+    window.__MARBLEX_INTRO_DONE__ = true;
+
+    const tl = gsap.timeline({
+      defaults: { ease: "power3.out" },
+      onComplete: () => {
+        showNavInstant();
+      },
+    });
 
     if (announcementRef.current) {
       tl.fromTo(
@@ -207,7 +285,7 @@ export const AppLayout = ({ cartCount, children }) => {
       tl.fromTo(
         headerRef.current,
         { y: -28, opacity: 0, filter: "blur(10px)" },
-        { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.85 },
+        { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.85, clearProps: "filter" },
         0.12
       );
     }
@@ -238,10 +316,28 @@ export const AppLayout = ({ cartCount, children }) => {
         0.4
       );
     }
-  }, []);
+  }, [showNavInstant]);
 
-  // Keep navbar hidden until MARBLEX splash finishes, then animate in
+  // Keep navbar hidden until MARBLEX splash finishes, then animate in.
+  // Never re-hide after intro is done (Suspense remounts / Strict Mode used to blank the bar).
   useEffect(() => {
+    const introDone =
+      hasNavAnimatedRef.current ||
+      window.__MARBLEX_INTRO_DONE__ === true ||
+      (() => {
+        try {
+          return sessionStorage.getItem("marblex_intro_done") === "1";
+        } catch {
+          return false;
+        }
+      })();
+
+    if (introDone) {
+      hasNavAnimatedRef.current = true;
+      showNavInstant();
+      return undefined;
+    }
+
     if (announcementRef.current) gsap.set(announcementRef.current, { opacity: 0, y: -36 });
     if (headerRef.current) gsap.set(headerRef.current, { opacity: 0, y: -28, filter: "blur(10px)" });
     if (logoRef.current) gsap.set(logoRef.current, { opacity: 0 });
@@ -249,24 +345,33 @@ export const AppLayout = ({ cartCount, children }) => {
     if (actionsRef.current) gsap.set(actionsRef.current.children, { opacity: 0 });
 
     let delayedCall = null;
+    let cancelled = false;
+
     const handleIntroReveal = () => {
-      // Wait until MARBLEX splash curtain has mostly exited
-      delayedCall = gsap.delayedCall(0.9, runNavEntrance);
+      if (cancelled || hasNavAnimatedRef.current) return;
+      delayedCall = gsap.delayedCall(0.55, () => {
+        if (!cancelled) runNavEntrance();
+      });
     };
 
     window.addEventListener("marblex:intro_reveal", handleIntroReveal);
 
-    // Fallback only if splash event never fires (e.g. hard navigation edge case)
+    // Fallback if splash event was missed (remount after reveal already fired)
     const safetyTimer = setTimeout(() => {
-      runNavEntrance();
-    }, 4800);
+      if (!cancelled) runNavEntrance();
+    }, 4200);
 
     return () => {
+      cancelled = true;
       window.removeEventListener("marblex:intro_reveal", handleIntroReveal);
       clearTimeout(safetyTimer);
       if (delayedCall) delayedCall.kill();
+      // If cleanup runs after intro already completed, leave navbar visible for next mount
+      if (hasNavAnimatedRef.current || window.__MARBLEX_INTRO_DONE__) {
+        showNavInstant();
+      }
     };
-  }, [runNavEntrance]);
+  }, [runNavEntrance, showNavInstant]);
 
   const navLinks = [
     { label: "Home", path: "/", icon: HomeOutlinedIcon, desc: "Products & industrial catalog" },
@@ -278,6 +383,7 @@ export const AppLayout = ({ cartCount, children }) => {
   ];
 
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isPortalRoute = location.pathname.startsWith("/dashboard");
 
   if (isAdminRoute) {
     return (
@@ -291,12 +397,12 @@ export const AppLayout = ({ cartCount, children }) => {
 
   return (
     <div className={`flex flex-col min-h-screen relative transition-colors duration-300 ${isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
-      }`}>
+      } ${isPortalRoute ? "portal-shell" : ""}`}>
 
       {/* 1. Top Brand Announcement & Trust Badges Header */}
       <div
         ref={announcementRef}
-        className="bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1.5 sm:py-2 px-3 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden"
+        className="bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1 md:py-2 px-2 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden"
       >
         {/* Desktop View (md and up) */}
         <div className="hidden md:flex max-w-[1440px] mx-auto items-center justify-between gap-6">
@@ -370,32 +476,32 @@ export const AppLayout = ({ cartCount, children }) => {
       {/* 2. Sleek Compact Main Navbar */}
       <header
         ref={headerRef}
-        className={`sticky top-0 z-40 transition-all duration-200 ease-in-out w-full border-b ${isMenuOpen ? "z-[70]" : "z-40"} ${isDark
+        className={`sticky top-0 z-40 w-full border-b transition-[background-color,box-shadow,padding] duration-200 ease-in-out ${isMenuOpen ? "z-[70]" : "z-40"} ${isDark
             ? scrolled || isMenuOpen
-              ? "bg-[#0c222f]/95 backdrop-blur-md border-slate-800 shadow-md shadow-black/20 py-2"
-              : "bg-[#091b24] border-slate-800/80 py-2.5"
+              ? "bg-[#0c222f]/95 backdrop-blur-md border-slate-800 shadow-md shadow-black/20 py-1.5 sm:py-2"
+              : "bg-[#091b24] border-slate-800/80 py-2 sm:py-2.5"
             : scrolled || isMenuOpen
-              ? "bg-white/95 backdrop-blur-md border-slate-200/90 shadow-md shadow-[#0a3d52]/5 py-2"
-              : "bg-white border-slate-200/80 py-2.5"
+              ? "bg-white/95 backdrop-blur-md border-slate-200/90 shadow-md shadow-[#0a3d52]/5 py-1.5 sm:py-2"
+              : "bg-white border-slate-200/80 py-2 sm:py-2.5"
           }`}
       >
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-4 md:px-8">
+          <div className="flex items-center justify-between gap-2">
 
             {/* MARBLEX Logo (Left) */}
-            <div ref={logoRef} className="flex items-center gap-2">
+            <div ref={logoRef} className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               {!isHomePage && (
                 <button
                   onClick={() => navigate(-1)}
-                  className={`md:hidden p-1.5 -ml-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-[#0a3d52]"
+                  className={`md:hidden p-1.5 -ml-1 rounded-lg transition-colors shrink-0 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-[#0a3d52]"
                     }`}
                   aria-label="Go Back"
                 >
-                  <ArrowBackIosNewIcon sx={{ fontSize: 16 }} />
+                  <ArrowBackIosNewIcon sx={{ fontSize: 15 }} />
                 </button>
               )}
-              <RouterLink to="/" className="flex items-center gap-2.5 group">
-                <div className={`h-11 w-11 rounded-2xl border p-1.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200 shrink-0 overflow-hidden ${isDark ? "bg-[#0e2735] border-slate-700" : "bg-white border-slate-200"
+              <RouterLink to="/" className="flex min-w-0 items-center gap-2 group">
+                <div className={`h-9 w-9 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl border p-1 sm:p-1.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200 shrink-0 overflow-hidden ${isDark ? "bg-[#0e2735] border-slate-700" : "bg-white border-slate-200"
                   }`}>
                   <img
                     src="/logo-icon-transparent.png"
@@ -403,12 +509,12 @@ export const AppLayout = ({ cartCount, children }) => {
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <div className="flex flex-col">
-                  <span className={`text-xl sm:text-2xl font-black tracking-tight font-heading leading-none ${isDark ? "text-white" : "text-[#0a3d52]"
+                <div className="flex min-w-0 flex-col">
+                  <span className={`text-[1.05rem] sm:text-2xl font-black tracking-tight font-heading leading-none ${isDark ? "text-white" : "text-[#0a3d52]"
                     }`}>
                     MAR<span className="text-[#ff6b4a]">BLEX</span>
                   </span>
-                  <span className={`text-[9.5px] font-bold tracking-[0.16em] uppercase font-subheading mt-0.5 ${isDark ? "text-slate-400" : "text-[#475569]"
+                  <span className={`text-[8px] sm:text-[9.5px] font-bold tracking-[0.12em] sm:tracking-[0.16em] uppercase font-subheading mt-0.5 ${isDark ? "text-slate-400" : "text-[#475569]"
                     }`}>
                     CHEMICAL & RUBBER
                   </span>
@@ -448,14 +554,15 @@ export const AppLayout = ({ cartCount, children }) => {
             </nav>
 
             {/* Action Buttons (Right) */}
-            <div ref={actionsRef} className="flex items-center gap-2 sm:gap-3">
+            <div ref={actionsRef} className="flex shrink-0 items-center gap-2.5 sm:gap-2.5 lg:gap-3">
 
-              {/* Theme Toggle Button (Icon Only - ☀️ / 🌙) */}
+              {/* Theme toggle — always in navbar */}
               <button
+                type="button"
                 onClick={toggleTheme}
                 title={`Switch to ${isDark ? "Light" : "Dark"} Mode`}
                 aria-label="Toggle Theme"
-                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full border transition-all flex items-center justify-center shrink-0 ${isDark
+                className={`flex w-9 h-9 sm:w-10 sm:h-10 rounded-full border transition-all items-center justify-center shrink-0 ${isDark
                     ? "bg-[#0e2735] border-slate-700 text-amber-400 hover:bg-slate-800 hover:border-amber-400/50 shadow-xs"
                     : "bg-[#f8fafc] border-slate-200 text-[#0a3d52] hover:bg-white hover:border-[#0a3d52]/40 shadow-xs"
                   }`}
@@ -467,10 +574,11 @@ export const AppLayout = ({ cartCount, children }) => {
                 )}
               </button>
 
-              {/* Cart Button with Dynamic Coral Badge (Only visible when items > 0) */}
+              {/* Cart — desktop/tablet in navbar; mobile uses floating FAB above chat */}
               <RouterLink
                 to="/cart"
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] relative ${isDark
+                aria-label="Cart"
+                className={`relative hidden sm:flex h-auto w-auto items-center gap-2 px-3.5 py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] ${isDark
                     ? "border-slate-700 bg-[#0e2735] text-white hover:border-[#ff6b4a]"
                     : "border-slate-200 bg-[#f8fafc] hover:border-slate-300 text-[#0a3d52]"
                   }`}
@@ -493,7 +601,7 @@ export const AppLayout = ({ cartCount, children }) => {
                 >
                   <ShoppingCartIcon sx={{ fontSize: 17, color: isDark ? "#ff8c73" : "#0a3d52" }} />
                 </Badge>
-                <span className="hidden sm:inline font-subheading">Cart</span>
+                <span className="font-subheading">Cart</span>
               </RouterLink>
 
               {/* Vertical Divider Stick */}
@@ -525,7 +633,7 @@ export const AppLayout = ({ cartCount, children }) => {
                     aria-expanded={accountMenuOpen}
                     aria-haspopup="menu"
                     aria-label="Account menu"
-                    className={`flex items-center gap-1.5 rounded-full border transition-all lg:gap-2 lg:pl-1.5 lg:pr-2.5 lg:py-1.5 ${
+                    className={`flex items-center rounded-full border transition-all lg:gap-2 lg:pl-1.5 lg:pr-2.5 lg:py-1.5 ${
                       accountMenuOpen
                         ? isDark
                           ? "border-[#ff6b4a]/40 bg-[#ff6b4a]/10"
@@ -533,12 +641,12 @@ export const AppLayout = ({ cartCount, children }) => {
                         : isDark
                           ? "border-slate-700 bg-[#0e2735] hover:border-slate-600"
                           : "border-slate-200 bg-[#f8fafc] hover:border-slate-300"
-                    } p-0.5 lg:p-0`}
+                    } p-0 lg:p-0`}
                   >
-                    <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] text-[12px] font-extrabold text-white shadow-sm lg:h-8 lg:w-8">
+                    <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] text-[11px] font-extrabold text-white shadow-sm sm:h-9 sm:w-9 lg:h-8 lg:w-8 lg:text-[12px]">
                       {accountInitial}
-                      {chatUnreadNav > 0 && (
-                        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#ff6b4a] dark:border-[#0c222f]" />
+                      {(chatUnreadNav > 0 || portalNotifs.unread > 0) && (
+                        <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2 border-white bg-[#ff6b4a] dark:border-[#0c222f] sm:h-2.5 sm:w-2.5" />
                       )}
                     </span>
                     <span className="hidden min-w-0 text-left lg:block">
@@ -571,6 +679,71 @@ export const AppLayout = ({ cartCount, children }) => {
                         </p>
                       </div>
                       <div className="p-1.5">
+                        {(isCustomer || isAdmin) && (
+                          <div className={`mb-1.5 rounded-xl border ${isDark ? "border-slate-700" : "border-slate-100"}`}>
+                            <div className="flex items-center justify-between gap-2 px-3 pt-2.5 pb-1">
+                              <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${isDark ? "text-slate-300" : "text-[#0a3d52]"}`}>
+                                <NotificationsNoneOutlinedIcon sx={{ fontSize: 16 }} />
+                                Notifications
+                                {portalNotifs.unread > 0 && (
+                                  <span className="rounded-full bg-[#ff6b4a] px-1.5 py-0.5 text-[9px] font-extrabold text-white">
+                                    {portalNotifs.unread}
+                                  </span>
+                                )}
+                              </span>
+                              {portalNotifs.unread > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={markPortalNotifsRead}
+                                  className="text-[10px] font-bold text-[#ff6b4a] hover:underline"
+                                >
+                                  Mark read
+                                </button>
+                              )}
+                            </div>
+                            <div className="max-h-44 overflow-y-auto px-1.5 pb-1.5">
+                              {(portalNotifs.items.length ? portalNotifs.items : [
+                                { id: "empty", icon: "bell", title: "No new notifications", time: "You're all caught up" },
+                              ]).slice(0, 5).map((n) => (
+                                <div
+                                  key={n.id}
+                                  className={`mb-1 flex gap-2.5 rounded-lg px-2 py-2 last:mb-0 ${
+                                    isDark ? "hover:bg-white/5" : "hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                    isDark ? "bg-[#091b24] text-[#ff8c73]" : "bg-[#ff6b4a]/10 text-[#ff6b4a]"
+                                  }`}>
+                                    {n.icon === "order" ? (
+                                      <ShoppingBagOutlinedIcon sx={{ fontSize: 16 }} />
+                                    ) : (
+                                      <NotificationsNoneOutlinedIcon sx={{ fontSize: 16 }} />
+                                    )}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <p className={`truncate text-[12px] font-semibold ${isDark ? "text-slate-100" : "text-[#0a3d52]"}`}>
+                                      {n.title}
+                                    </p>
+                                    <p className="truncate text-[10px] text-slate-400">{n.time}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {isCustomer && (
+                              <RouterLink
+                                to="/dashboard/support"
+                                onClick={() => setAccountMenuOpen(false)}
+                                className={`block border-t px-3 py-2 text-center text-[11px] font-bold ${
+                                  isDark
+                                    ? "border-slate-700 text-sky-300"
+                                    : "border-slate-100 text-[#0a3d52]"
+                                }`}
+                              >
+                                View all in portal
+                              </RouterLink>
+                            )}
+                          </div>
+                        )}
                         {isAdmin && (
                           <RouterLink
                             to="/admin"
@@ -617,7 +790,7 @@ export const AppLayout = ({ cartCount, children }) => {
               {/* Mobile Menu Toggle */}
               <button
                 type="button"
-                className={`lg:hidden relative z-[70] flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${isMenuOpen
+                className={`lg:hidden relative z-[70] flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 ${isMenuOpen
                     ? isDark
                       ? "border-[#ff6b4a]/50 bg-[#ff6b4a]/15 text-[#ff8c73] rotate-90"
                       : "border-[#ff6b4a]/40 bg-[#ff6b4a]/10 text-[#ff6b4a] rotate-90"
@@ -632,7 +805,7 @@ export const AppLayout = ({ cartCount, children }) => {
                 aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
                 aria-expanded={isMenuOpen}
               >
-                {isMenuOpen ? <CloseIcon sx={{ fontSize: 20 }} /> : <MenuIcon sx={{ fontSize: 20 }} />}
+                {isMenuOpen ? <CloseIcon sx={{ fontSize: 18 }} /> : <MenuIcon sx={{ fontSize: 18 }} />}
               </button>
             </div>
           </div>
@@ -750,19 +923,57 @@ export const AppLayout = ({ cartCount, children }) => {
       </div>
 
       {/* Main Content Area */}
-      <main className="flex-grow flex flex-col relative z-10 w-full">
-        <Container maxWidth={false} sx={{ py: { xs: 1.5, md: 2.5 }, px: { xs: 1.5, sm: 2, md: 4 } }} className="page-content">
-          {children}
-        </Container>
+      <main className={`flex-grow flex flex-col relative z-10 w-full ${isPortalRoute ? "min-h-0" : ""}`}>
+        {isPortalRoute ? (
+          <div className="page-content-portal flex w-full min-h-0 flex-1 flex-col">{children}</div>
+        ) : (
+          <Container maxWidth={false} sx={{ py: { xs: 1.5, md: 2.5 }, px: { xs: 1.5, sm: 2, md: 4 } }} className="page-content">
+            {children}
+          </Container>
+        )}
       </main>
 
-      {/* Store Footer */}
-      <SiteFooter />
+      {/* Store Footer — hidden on client portal for a tighter workspace */}
+      {!isPortalRoute && <SiteFooter />}
+
+      {/* Mobile floating cart — sits above chat FAB */}
+      {!isPortalRoute && (
+        <RouterLink
+          to="/cart"
+          aria-label="Cart"
+          className={`sm:hidden fixed z-[9998] flex h-14 w-14 items-center justify-center rounded-full border shadow-lg transition active:scale-95 ${
+            isCustomer ? "bottom-[9.5rem] right-5" : "bottom-6 right-6"
+          } ${
+            isDark
+              ? "border-slate-600 bg-[#0e2735] text-[#ff8c73] shadow-black/40"
+              : "border-slate-200 bg-white text-[#0a3d52] shadow-[#0a3d52]/20"
+          }`}
+        >
+          <Badge
+            badgeContent={cartCount}
+            invisible={!cartCount || cartCount <= 0}
+            sx={{
+              "& .MuiBadge-badge": {
+                bgcolor: "#ff6b4a",
+                color: "white",
+                fontWeight: 800,
+                fontSize: "10px",
+                height: "18px",
+                minWidth: "18px",
+              },
+            }}
+          >
+            <ShoppingCartIcon sx={{ fontSize: 24 }} />
+          </Badge>
+        </RouterLink>
+      )}
 
       {/* Floating Chat */}
-      <Suspense fallback={null}>
-        <FloatingChatWidget />
-      </Suspense>
+      {!isPortalRoute && (
+        <Suspense fallback={null}>
+          <FloatingChatWidget />
+        </Suspense>
+      )}
     </div>
   );
 };

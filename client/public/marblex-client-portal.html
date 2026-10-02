@@ -16,6 +16,21 @@ h1,h2,h3,.sg,.kpi b{font-family:'Space Grotesk',Inter,sans-serif}
 button{font-family:inherit;cursor:pointer}
 .ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .app{display:grid;grid-template-columns:268px 1fr;min-height:100svh}
+body.embedded #th,
+body.embedded #th2,
+body.embedded #bl,
+body.embedded #np{display:none!important}
+body.embedded .tr{gap:8px}
+body.embedded .app{min-height:100%;height:100svh}
+body.embedded .main{border-radius:24px 0 0 24px;box-shadow:inset 1px 0 0 rgba(255,255,255,.04)}
+body.embedded .top{border-radius:24px 0 0 0;padding-top:14px;padding-bottom:14px}
+body.embedded .top h1{font-size:20px;letter-spacing:-.01em}
+body.embedded .side{top:0;height:100svh}
+@media(max-width:900px){
+body.embedded .main{border-radius:0}
+body.embedded .top{border-radius:0}
+body.embedded .app{height:100svh}
+}
 .side{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100svh - env(safe-area-inset-top,0px));background:linear-gradient(180deg,var(--sd1),var(--sd2));color:#fff;display:flex;flex-direction:column;padding:22px 16px;z-index:40}
 .prof{display:flex;gap:12px;align-items:center;padding:4px 8px 18px}
 .av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--or),var(--or2));display:grid;place-items:center;font:700 18px 'Space Grotesk';box-shadow:0 8px 18px -6px rgba(241,91,55,.7)}
@@ -346,9 +361,11 @@ const openDrawer=()=>{$('#side').classList.add('open');$('#ov').classList.add('o
 $('#mn').onclick=()=>{const a=$('.app');a.classList.toggle('col');try{localStorage.setItem('mx_col',a.classList.contains('col')?'1':'')}catch(_){}};$('#ov').onclick=()=>{$('#side').classList.remove('open');$('#ov').classList.remove('on')};
 function npDraw(){const it=[...S.orders.map(o=>({i:'bag',t:'Order #'+o.id+' is '+o.st,s:o.date})),...S.ann.map(a=>({i:'bell',t:a[0],s:a[1]}))];
 $('#np').innerHTML=`<div class="nh"><b>Notifications</b><button class="t" id="mr">Mark all read</button></div>`+it.map(n=>`<div class="ni${S.unread?' un':''}"><i>${I(n.i)}</i><div><b>${esc(n.t)}</b><small>${n.s}</small></div></div>`).join('')+`<button class="g" style="width:100%;margin-top:8px" data-go="support" data-t="bc">View all announcements</button>`;
-$('#mr').onclick=()=>{S.unread=0;const d=$('#dot');d&&d.remove();npDraw()}}
+$('#mr').onclick=()=>{S.unread=0;const d=$('#dot');d&&d.remove();npDraw();pushNotifs()}
+}
+const pushNotifs=()=>{try{window.parent.postMessage({type:'MARBLEX_PORTAL_NOTIFY',unread:S.unread,items:[...S.orders.map(o=>({id:'o-'+o.id,icon:'order',title:'Order #'+o.id+' is '+o.st,time:o.date})),...S.ann.map((a,i)=>({id:'a-'+i,icon:'bell',title:a[0],time:a[1]}))]},window.location.origin)}catch(_){}};
 $('#bl').onclick=()=>{const p=$('#np');if(p.classList.contains('on'))return p.classList.remove('on');npDraw();p.classList.add('on')};
-function pal(){const items=[...NAV.map(n=>({l:n[2],h:'page',i:n[1],f:()=>go(n[0])})),{l:'New RFQ',h:'action',i:'plus',f:rfq},{l:'New ticket',h:'action',i:'plus',f:tkt},{l:'New project list',h:'action',i:'listp',f:newList},{l:'Request datasheet',h:'action',i:'mail',f:reqDs},{l:'Toggle theme',h:'action',i:'moon',f:()=>togT()},
+function pal(){const items=[...NAV.map(n=>({l:n[2],h:'page',i:n[1],f:()=>go(n[0])})),{l:'New RFQ',h:'action',i:'plus',f:rfq},{l:'New ticket',h:'action',i:'plus',f:tkt},{l:'New project list',h:'action',i:'listp',f:newList},{l:'Request datasheet',h:'action',i:'mail',f:reqDs},
 ...S.orders.map(o=>({l:'Order #'+o.id,h:o.st,i:'bag',f:()=>det(o.id)})),...S.docs.map(d=>({l:d[1],h:d[0],i:'doc',f:()=>toast('Opening “'+d[1]+'”…')}))];
 const m=$('#modal');m.innerHTML=`<div class="mo pt"><div class="md pal"><div class="pi">${I('search')}<input id="pq" placeholder="Search pages, orders, documents, actions…" autocomplete="off"><kbd>Esc</kbd></div><div id="pr" class="prs"></div></div></div>`;
 let cur=0,list=items;const draw=()=>{$('#pr').innerHTML=list.length?list.map((x,i)=>`<button class="pr${i===cur?' on':''}" data-i="${i}">${I(x.i)}<span>${esc(x.l)}</span><small>${x.h}</small></button>`).join(''):'<p class="mut" style="padding:18px">No results found.</p>';const a=$('#pr .on');a&&a.scrollIntoView({block:'nearest'})};
@@ -357,12 +374,12 @@ q.oninput=()=>{const v=q.value.toLowerCase();list=items.filter(x=>x.l.toLowerCas
 q.onkeydown=e=>{if(e.key==='ArrowDown'){cur=Math.min(cur+1,list.length-1);draw();e.preventDefault()}else if(e.key==='ArrowUp'){cur=Math.max(cur-1,0);draw();e.preventDefault()}else if(e.key==='Enter')run(cur)};
 $('#pr').onclick=e=>{const b=e.target.closest('.pr');if(b)run(+b.dataset.i)};m.firstChild.onclick=e=>{if(e.target.classList.contains('mo'))close()}}
 $('#gs').onclick=$('#gs2').onclick=pal;
-const th=$('#th'),sT=t=>{document.documentElement.dataset.theme=t;th.innerHTML=I(t==='dark'?'sun':'moon');$('#th2').innerHTML=I(t==='dark'?'sun':'moon')+'<span>'+(t==='dark'?'Light mode':'Dark mode')+'</span>';try{localStorage.setItem('mx_dash_theme',t)}catch(_){}};
-let tt='light';try{tt=localStorage.getItem('mx_dash_theme')||'light'}catch(_){}sT(tt);const togT=()=>sT(document.documentElement.dataset.theme==='dark'?'light':'dark');th.onclick=$('#th2').onclick=togT;
+const th=$('#th'),th2=$('#th2'),sT=t=>{document.documentElement.dataset.theme=t;if(th)th.innerHTML=I(t==='dark'?'sun':'moon');if(th2)th2.innerHTML=I(t==='dark'?'sun':'moon')+'<span>'+(t==='dark'?'Light mode':'Dark mode')+'</span>';try{localStorage.setItem('mx_dash_theme',t);localStorage.setItem('marblex_theme',t)}catch(_){}};
+let tt='light';try{tt=localStorage.getItem('marblex_theme')||localStorage.getItem('mx_dash_theme')||'light'}catch(_){}sT(tt);const togT=()=>sT(document.documentElement.dataset.theme==='dark'?'light':'dark');if(th)th.onclick=togT;if(th2)th2.onclick=togT;
 try{if(localStorage.getItem('mx_col'))$('.app').classList.add('col')}catch(_){}
 const pathToView=(p)=>{const m=(p||'').replace(/^\/dashboard\/?/,'').split('/')[0]||'';return({overview:'overview','':'overview',orders:'orders',quotes:'quotes',documents:'docs',support:'support',favorites:'favs',account:'account',partner:'overview'}[m]||'overview');};
-window.addEventListener('message',e=>{if(!e.data||e.data.type!=='MARBLEX_PORTAL_INIT')return;const u=e.data.user;if(u){Object.assign(S.user,{name:u.name||S.user.name,co:u.co||u.company||S.user.co,email:u.email||S.user.email,phone:u.phone||S.user.phone});side()}const v=e.data.view||pathToView(e.data.path);if(v&&V[v])go(v,1);});
-side();go('overview');
+window.addEventListener('message',e=>{if(!e.data)return;if(e.data.type==='MARBLEX_THEME'&&e.data.theme){sT(e.data.theme);return}if(e.data.type==='MARBLEX_MARK_NOTIFS_READ'){S.unread=0;const d=$('#dot');d&&d.remove();pushNotifs();return}if(e.data.type!=='MARBLEX_PORTAL_INIT')return;if(e.data.embedded)document.body.classList.add('embedded');if(e.data.theme)sT(e.data.theme);const u=e.data.user;if(u){Object.assign(S.user,{name:u.name||S.user.name,co:u.co||u.company||S.user.co,email:u.email||S.user.email,phone:u.phone||S.user.phone});side()}const v=e.data.view||pathToView(e.data.path);if(v&&V[v])go(v,1);pushNotifs()});
+side();go('overview');pushNotifs();
 </script>
 </body>
 </html>
