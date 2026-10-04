@@ -33,6 +33,7 @@ import { AdminPaymentQueueTab } from "../components/AdminPaymentQueueTab";
 import { AdminDocumentsTab } from "../components/AdminDocumentsTab";
 import { AdminCustomersTab } from "../components/AdminCustomersTab";
 import { AdminReviewsTab } from "../components/AdminReviewsTab";
+import { AdminProfileTab } from "../components/AdminProfileTab";
 import { AdminCommandCenter } from "../components/AdminCommandCenter";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser } from "../auth/session";
@@ -489,6 +490,7 @@ export const AdminPage = () => {
     { id: 10, label: "Client Inquiries", icon: "📧", badge: contactRequests.filter((c) => c.status === "unread").length },
     { id: 16, label: "Client Reviews", icon: "⭐" },
     { id: 11, label: "SMTP Settings", icon: "⚙️" },
+    { id: 17, label: "Account Profile", icon: "👤" },
   ];
 
   const navGroups = [
@@ -496,7 +498,7 @@ export const AdminPage = () => {
     { title: "Revenue & Sales", items: [1, 2, 12, 13, 9] },
     { title: "Catalog & Docs", items: [4, 15, 5, 8] },
     { title: "Customers & Support", items: [3, 6, 14, 7, 10, 16] },
-    { title: "System", items: [11] },
+    { title: "System", items: [11, 17] },
   ];
 
   const render3DOrderCard = (order) => {
@@ -725,13 +727,21 @@ export const AdminPage = () => {
           {/* Desktop MARBLEX Sidebar */}
           <aside className="hidden md:block w-64 lg:w-72 shrink-0">
             <div className="sticky top-20 rounded-2xl bg-white border border-[#e0e6ed] p-4 shadow-sm space-y-5">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#f5f7fa] border border-[#e0e6ed]/60">
+              <button
+                type="button"
+                onClick={() => setActiveTab(17)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                  activeTab === 17
+                    ? "bg-[#ff6b4a]/10 border-[#ff6b4a]/30"
+                    : "bg-[#f5f7fa] border-[#e0e6ed]/60 hover:border-[#ff6b4a]/40"
+                }`}
+              >
                 <Avatar sx={{ width: 36, height: 36, bgcolor: "#0a3d52", fontWeight: 800, fontSize: 13, color: "#ff6b4a" }}>MX</Avatar>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-[#0a3d52] truncate font-heading">MARBLEX Admin</p>
                   <p className="text-[10px] text-[#565e69] font-medium font-subheading">Master Controller</p>
                 </div>
-              </div>
+              </button>
 
               <div className="space-y-4">
                 {navGroups.map((group) => (
@@ -1501,6 +1511,13 @@ export const AdminPage = () => {
                     </button>
                   </div>
                 </TiltCard3D>
+              </TabWrapper3D>
+            )}
+
+            {/* ================= TAB 17: ACCOUNT PROFILE ================= */}
+            {activeTab === 17 && (
+              <TabWrapper3D tabKey={17}>
+                <AdminProfileTab token={token} showToast={showToast} />
               </TabWrapper3D>
             )}
           </div>
