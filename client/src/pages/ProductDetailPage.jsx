@@ -277,7 +277,7 @@ export const ProductDetailPage = ({ addToCart }) => {
     const text = encodeURIComponent(
       `Hello MARBLEX, I would like to inquire about ${product?.name || "Entryway Flooring System"} (Material: ${selectedMaterial}, Color: ${selectedColor}, Qty: ${quantity}, Price: PKR ${product?.price || 4000}). Please provide an instant quotation.`
     );
-    window.open(`https://wa.me/923481116611?text=${text}`, "_blank");
+    window.open(`https://wa.me/923084585792?text=${text}`, "_blank");
   };
 
   const descriptionText =
@@ -753,7 +753,7 @@ export const ProductDetailPage = ({ addToCart }) => {
             </p>
           </div>
           <a
-            href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20please%20send%20the%20official%20Technical%20Data%20Sheet%20(TDS)%20for%20${encodeURIComponent(productName)}.`}
+            href={`https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20please%20send%20the%20official%20Technical%20Data%20Sheet%20(TDS)%20for%20${encodeURIComponent(productName)}.`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#0a3d52] px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-sm transition hover:bg-[#082e3e] sm:px-5 sm:text-xs"

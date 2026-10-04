@@ -31,7 +31,7 @@ const REGIONAL_HUBS = [
     city: "Lahore (HQ & Plant)",
     tag: "Central Plant & Laboratory",
     address: "40-Ferozpur Road, Industrial Area, Lahore, Punjab, Pakistan",
-    phone: "+92 348 1116611",
+    phone: "+92 308 4585792",
     email: "Marblexpak@gmail.com",
     timings: "Mon – Sat: 8:30 AM – 7:30 PM",
     coverage: "Central Punjab, Faisalabad, Gujranwala, Sialkot & Sheikhupura",
@@ -43,7 +43,7 @@ const REGIONAL_HUBS = [
     city: "Karachi Regional Hub",
     tag: "Coastal & Marine Logistics",
     address: "Plot 14-B, Sector 15, Korangi Industrial Area, Karachi, Sindh",
-    phone: "+92 348 1116611",
+    phone: "+92 308 4585792",
     email: "Marblexpak@gmail.com",
     timings: "Mon – Sat: 9:00 AM – 7:00 PM",
     coverage: "Sindh, Port Qasim, Gwadar & Balochistan Coastal Zone",
@@ -55,7 +55,7 @@ const REGIONAL_HUBS = [
     city: "Islamabad & Rawalpindi",
     tag: "Northern Regional Office",
     address: "Plot 48, Street 7, Sector I-9/2 Industrial Area, Islamabad, ICT",
-    phone: "+92 348 1116611",
+    phone: "+92 308 4585792",
     email: "Marblexpak@gmail.com",
     timings: "Mon – Sat: 9:00 AM – 6:30 PM",
     coverage: "Islamabad, Rawalpindi, KPK, Peshawar, AJK & Northern Projects",
@@ -67,7 +67,7 @@ const REGIONAL_HUBS = [
     city: "Multan Regional Center",
     tag: "South Punjab Logistics",
     address: "Phase 1, Industrial Estate, Khanewal Road, Multan, Punjab",
-    phone: "+92 348 1116611",
+    phone: "+92 308 4585792",
     email: "Marblexpak@gmail.com",
     timings: "Mon – Sat: 9:00 AM – 6:00 PM",
     coverage: "South Punjab, Bahawalpur, D.G. Khan, Sahiwal & Rahim Yar Khan",
@@ -217,7 +217,7 @@ export const ContactPage = () => {
       formData.message || "Requesting technical consultation and price quote."
     )}`;
 
-    window.open(`https://wa.me/923481116611?text=${msg}`, "_blank");
+    window.open(`https://wa.me/923084585792?text=${msg}`, "_blank");
   };
 
   return (
@@ -268,7 +268,7 @@ export const ContactPage = () => {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 mb-8">
                 <a
-                  href="tel:03481116611"
+                  href="tel:03084585792"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#ff6243] to-[#f35231] hover:from-[#f35231] hover:to-[#e04524] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-[#ff6b4a]/25 hover:shadow-xl active:scale-95 transition-all cursor-pointer"
                 >
                   <PhoneInTalkRoundedIcon sx={{ fontSize: 18 }} />
@@ -276,7 +276,7 @@ export const ContactPage = () => {
                 </a>
 
                 <a
-                  href="https://wa.me/923481116611?text=Hello%20MARBLEX%20Engineering%2C%20I%20need%20technical%20assistance%20for%20my%20project."
+                  href="https://wa.me/923084585792?text=Hello%20MARBLEX%20Engineering%2C%20I%20need%20technical%20assistance%20for%20my%20project."
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/20 hover:shadow-xl active:scale-95 transition-all cursor-pointer"
@@ -404,13 +404,13 @@ export const ContactPage = () => {
 
           <div className="flex items-center gap-3 shrink-0 z-10 w-full md:w-auto">
             <a
-              href="tel:03481116611"
+              href="tel:03084585792"
               className="flex-1 md:flex-none text-center px-5 py-3 rounded-xl bg-[#ff6b4a] hover:bg-[#ff5530] text-white font-bold text-xs uppercase tracking-wider shadow-md active:scale-95 transition-all"
             >
               Emergency Call
             </a>
             <a
-              href="https://wa.me/923481116611?text=EMERGENCY%3A%20Active%20water%20leakage%20at%20site.%20Need%20immediate%20engineer%20dispatch."
+              href="https://wa.me/923084585792?text=EMERGENCY%3A%20Active%20water%20leakage%20at%20site.%20Need%20immediate%20engineer%20dispatch."
               target="_blank"
               rel="noreferrer"
               className="flex-1 md:flex-none text-center px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider shadow-md active:scale-95 transition-all"
@@ -488,7 +488,7 @@ export const ContactPage = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleCopy("+92 348 1116611", "phone")}
+                  onClick={() => handleCopy("+92 308 4585792", "phone")}
                   className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-[#0a3d52] dark:hover:text-white transition-colors"
                   title="Copy Phone"
                 >
@@ -501,7 +501,7 @@ export const ContactPage = () => {
               </div>
               <div className="ml-14 flex items-baseline gap-3">
                 <a
-                  href="tel:03481116611"
+                  href="tel:03084585792"
                   className="text-base sm:text-lg font-black text-[#0a3d52] dark:text-white hover:text-[#ff6b4a] transition-colors"
                 >
                   +92 348 111 6611
@@ -563,7 +563,7 @@ export const ContactPage = () => {
                 <p className="text-xs text-emerald-100 mt-0.5">Send site photos & drawings for instant diagnosis</p>
               </div>
               <a
-                href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20have%20an%20inquiry."
+                href="https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20have%20an%20inquiry."
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-2.5 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-xs uppercase tracking-wider shadow-md transition-all active:scale-95 shrink-0 flex items-center gap-1.5"
@@ -1042,13 +1042,13 @@ export const ContactPage = () => {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 z-10 w-full lg:w-auto">
             <a
-              href="tel:03481116611"
+              href="tel:03084585792"
               className="px-7 py-4 rounded-xl bg-[#ff6b4a] hover:bg-[#f35231] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg active:scale-95 transition-all text-center"
             >
               Call 0348-1116611
             </a>
             <a
-              href="https://wa.me/923481116611?text=Hello%20MARBLEX%20Engineering%2C%20I%20would%20like%20to%20schedule%20a%20site%20consultation."
+              href="https://wa.me/923084585792?text=Hello%20MARBLEX%20Engineering%2C%20I%20would%20like%20to%20schedule%20a%20site%20consultation."
               target="_blank"
               rel="noreferrer"
               className="px-7 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"

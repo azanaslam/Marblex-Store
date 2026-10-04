@@ -246,18 +246,19 @@ export const FloatingChatWidget = () => {
 
       <Slide direction="up" in={isOpen} timeout={{ enter: 420, exit: 320 }} mountOnEnter unmountOnExit>
         <Box
+          onClick={(e) => e.stopPropagation()}
           sx={{
             position: "fixed",
             zIndex: 10055,
             pointerEvents: "auto",
-            // Always anchored to screen bottom-right — independent of bot position
-            bottom: { xs: 12, sm: 24 },
-            right: { xs: 12, sm: 24 },
-            left: { xs: 12, sm: "auto" },
+            // Mobile: compact bottom sheet · Desktop: side card
+            bottom: { xs: 10, sm: 24 },
+            right: { xs: 14, sm: 24 },
+            left: { xs: 14, sm: "auto" },
             width: { xs: "auto", sm: 400 },
-            maxWidth: { xs: "calc(100vw - 24px)", sm: 400 },
-            height: { xs: "min(78vh, 620px)", sm: 540 },
-            maxHeight: { xs: "calc(100dvh - 72px)", sm: 540 },
+            maxWidth: { xs: "calc(100vw - 28px)", sm: 400 },
+            height: { xs: "min(54dvh, 420px)", sm: 540 },
+            maxHeight: { xs: "calc(100dvh - 120px)", sm: 540 },
           }}
         >
           <Box
@@ -266,29 +267,35 @@ export const FloatingChatWidget = () => {
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
-              borderRadius: { xs: "22px", sm: "24px" },
-              border: "1px solid rgba(255,255,255,0.12)",
-              boxShadow:
-                "0 24px 64px rgba(9,27,36,0.35), 0 0 0 1px rgba(10,61,82,0.08)",
-              background: "linear-gradient(180deg, #0c222f 0%, #0a3d52 42%, #f4f7fa 42%)",
+              borderRadius: { xs: "18px", sm: "24px" },
+              border: "1px solid rgba(255,255,255,0.14)",
+              boxShadow: {
+                xs: "0 18px 48px rgba(9,27,36,0.42), 0 0 0 1px rgba(10,61,82,0.1)",
+                sm: "0 24px 64px rgba(9,27,36,0.35), 0 0 0 1px rgba(10,61,82,0.08)",
+              },
+              background: {
+                xs: "linear-gradient(180deg, #0a3d52 0%, #0a3d52 64px, #f4f7fa 64px)",
+                sm: "linear-gradient(180deg, #0c222f 0%, #0a3d52 42%, #f4f7fa 42%)",
+              },
             }}
           >
-            {/* Premium header */}
+            {/* Compact premium header */}
             <Box
               sx={{
-                px: 2,
-                pt: 1.75,
-                pb: 1.5,
+                px: { xs: 1.5, sm: 2 },
+                pt: { xs: 1.15, sm: 1.75 },
+                pb: { xs: 1.1, sm: 1.5 },
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                gap: 1.5,
+                gap: 1.25,
                 background:
                   "linear-gradient(135deg, #0a3d52 0%, #0d4e68 55%, #123a4a 100%)",
+                flexShrink: 0,
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.35, minWidth: 0 }}>
-                <Box sx={{ position: "relative", flexShrink: 0 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.35 }, minWidth: 0 }}>
+                <Box sx={{ position: "relative", flexShrink: 0, display: { xs: "none", sm: "block" } }}>
                   <SupportAvatar size={42} />
                   <Box
                     sx={{
@@ -303,11 +310,26 @@ export const FloatingChatWidget = () => {
                     }}
                   />
                 </Box>
+                <Box sx={{ position: "relative", flexShrink: 0, display: { xs: "block", sm: "none" } }}>
+                  <SupportAvatar size={32} />
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      right: 0,
+                      bottom: 0,
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      bgcolor: "#34d399",
+                      border: "1.5px solid #0a3d52",
+                    }}
+                  />
+                </Box>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography
                     sx={{
                       fontWeight: 800,
-                      fontSize: 15,
+                      fontSize: { xs: 13.5, sm: 15 },
                       color: "#fff",
                       lineHeight: 1.2,
                       letterSpacing: "-0.01em",
@@ -315,9 +337,18 @@ export const FloatingChatWidget = () => {
                   >
                     Marblex AI Concierge
                   </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.6, mt: 0.35 }}>
-                    <CircleIcon sx={{ fontSize: 7, color: "#34d399" }} />
-                    <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.72)", fontWeight: 600 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.6, mt: 0.25 }}>
+                    <CircleIcon sx={{ fontSize: 6, color: "#34d399" }} />
+                    <Typography
+                      sx={{
+                        fontSize: { xs: 10, sm: 11 },
+                        color: "rgba(255,255,255,0.72)",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
                       Online · Catalogs & products
                     </Typography>
                   </Box>
@@ -332,11 +363,11 @@ export const FloatingChatWidget = () => {
                   color: "#fff",
                   bgcolor: "rgba(255,255,255,0.1)",
                   "&:hover": { bgcolor: "rgba(255,255,255,0.18)" },
-                  width: 34,
-                  height: 34,
+                  width: { xs: 30, sm: 34 },
+                  height: { xs: 30, sm: 34 },
                 }}
               >
-                <CloseIcon sx={{ fontSize: 18 }} />
+                <CloseIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />
               </IconButton>
             </Box>
 

@@ -6,8 +6,8 @@ export const DEFAULT_PAYMENT_CONFIG = {
   bulkThresholdAmount: 50000,
   bulkThresholdItems: 10,
   whatsapp: {
-    number: import.meta.env.VITE_WHATSAPP_NUMBER || "923481116611",
-    formattedNumber: "+92 348 1116611",
+    number: import.meta.env.VITE_WHATSAPP_NUMBER || "923084585792",
+    formattedNumber: "+92 308 4585792",
     label: "Official MARBLEX Engineering Sales",
   },
   easypaisa: {

@@ -1,4 +1,6 @@
 const bcrypt = require("bcryptjs");
+const speakeasy = require("speakeasy");
+const QRCode = require("qrcode");
 const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const DirectMessage = require("../models/DirectMessage");
@@ -15,6 +17,73 @@ const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
 
 const generate6DigitCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+const PROFILE_SECRET_SELECT = "-passwordHash -twoFactorCode -totpSecret -totpTempSecret";
+
+const verifyTotpToken = (secret, code) => {
+  if (!secret || !code) return false;
+  return speakeasy.totp.verify({
+    secret,
+    encoding: "base32",
+    token: String(code).trim(),
+    window: 1,
+  });
+};
+
+const issueSessionPayload = async (user, req) => {
+  const isNewlyVerified = !user.isEmailVerified;
+  user.twoFactorCode = null;
+  user.twoFactorExpires = null;
+  user.isEmailVerified = true;
+  await user.save();
+
+  if (isNewlyVerified) {
+    sendWelcomeEmail(user.email, user.name).catch((err) =>
+      console.error("[MARBLEX] Welcome email error:", err.message)
+    );
+  }
+
+  if (user.role === "user") {
+    const userAgent = req.headers["user-agent"] || "Web Browser";
+    sendLoginAlertEmail(user.email, user.name, {
+      ip: req.ip || req.connection?.remoteAddress,
+      userAgent,
+    }).catch((err) => console.error("[MARBLEX] Login alert error:", err.message));
+  }
+
+  let chatUnread = 0;
+  if (user.role === "admin") {
+    chatUnread = await DirectMessage.countDocuments({
+      recipient: user._id,
+      seenByAdmin: false,
+    });
+  } else {
+    chatUnread = await DirectMessage.countDocuments({
+      recipient: user._id,
+      seenByUser: false,
+    });
+  }
+
+  return {
+    message: "Authentication successful.",
+    token: createToken({ id: user._id, email: user.email, role: user.role }),
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isAccessGranted: user.isAccessGranted !== false,
+      avatarUrl: user.avatarUrl || "",
+      phone: user.phone || "",
+      company: user.company || "",
+      industryType: user.industryType || "",
+      city: user.city || "",
+      gender: user.gender || "prefer_not_to_say",
+      totpEnabled: Boolean(user.totpEnabled),
+    },
+    chatUnread,
+  };
 };
 
 const register = async (req, res) => {
@@ -98,13 +167,25 @@ const login = async (req, res) => {
     });
   }
 
-  // Generate 2FA Code
+  const methods = user.totpEnabled ? ["email", "authenticator"] : ["email"];
+
+  // Authenticator enabled → let user pick email OTP or app code (no auto-email)
+  if (user.totpEnabled) {
+    return res.json({
+      requires2FA: true,
+      email: user.email,
+      methods,
+      emailSent: false,
+      message: "Choose how you want to verify this sign-in.",
+    });
+  }
+
+  // Default: email 2FA (auto-send)
   const twoFactorCode = generate6DigitCode();
   user.twoFactorCode = twoFactorCode;
-  user.twoFactorExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  user.twoFactorExpires = new Date(Date.now() + 10 * 60 * 1000);
   await user.save();
 
-  // Send verification code email non-blocking for instant UI response
   send2FACodeEmail(user.email, twoFactorCode, user.name, "Account Sign-In 2FA").catch((err) =>
     console.error("[MARBLEX 2FA Login] Email dispatch error:", err.message)
   );
@@ -112,12 +193,14 @@ const login = async (req, res) => {
   return res.json({
     requires2FA: true,
     email: user.email,
+    methods,
+    emailSent: true,
     message: "A 6-digit verification code has been sent to your email.",
   });
 };
 
 const verify2FA = async (req, res) => {
-  const { email, code } = req.body;
+  const { email, code, method } = req.body;
   if (!email || !code) {
     return res.status(400).json({ message: "Email and 6-digit verification code are required" });
   }
@@ -125,6 +208,18 @@ const verify2FA = async (req, res) => {
   const normalizedEmail = email.toLowerCase().trim();
   const user = await User.findOne({ email: normalizedEmail });
   if (!user) return res.status(404).json({ message: "User not found" });
+
+  const useAuthenticator = method === "authenticator" || method === "totp";
+
+  if (useAuthenticator) {
+    if (!user.totpEnabled || !user.totpSecret) {
+      return res.status(400).json({ message: "Authenticator app is not enabled for this account." });
+    }
+    if (!verifyTotpToken(user.totpSecret, code)) {
+      return res.status(400).json({ message: "Incorrect authenticator code. Please try again." });
+    }
+    return res.json(await issueSessionPayload(user, req));
+  }
 
   if (!user.twoFactorCode || !user.twoFactorExpires) {
     return res.status(400).json({ message: "No active verification request found. Please login again." });
@@ -138,59 +233,7 @@ const verify2FA = async (req, res) => {
     return res.status(400).json({ message: "Incorrect 6-digit verification code. Please check and try again." });
   }
 
-  const isNewlyVerified = !user.isEmailVerified;
-
-  // Clear 2FA code & mark email verified
-  user.twoFactorCode = null;
-  user.twoFactorExpires = null;
-  user.isEmailVerified = true;
-  await user.save();
-
-  // Send Welcome Email if newly registered & verified
-  if (isNewlyVerified) {
-    sendWelcomeEmail(user.email, user.name).catch((err) =>
-      console.error("[MARBLEX] Welcome email error:", err.message)
-    );
-  }
-
-  // Send Login Security Alert Email on successful sign in
-  const userAgent = req.headers["user-agent"] || "Web Browser";
-  sendLoginAlertEmail(user.email, user.name, {
-    ip: req.ip || req.connection?.remoteAddress,
-    userAgent,
-  }).catch((err) => console.error("[MARBLEX] Login alert error:", err.message));
-
-  let chatUnread = 0;
-  if (user.role === "admin") {
-    chatUnread = await DirectMessage.countDocuments({
-      recipient: user._id,
-      seenByAdmin: false,
-    });
-  } else {
-    chatUnread = await DirectMessage.countDocuments({
-      recipient: user._id,
-      seenByUser: false,
-    });
-  }
-
-  return res.json({
-    message: "Authentication successful.",
-    token: createToken({ id: user._id, email: user.email, role: user.role }),
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      isAccessGranted: user.isAccessGranted !== false,
-      avatarUrl: user.avatarUrl || "",
-      phone: user.phone || "",
-      company: user.company || "",
-      industryType: user.industryType || "",
-      city: user.city || "",
-      gender: user.gender || "prefer_not_to_say",
-    },
-    chatUnread,
-  });
+  return res.json(await issueSessionPayload(user, req));
 };
 
 const resend2FA = async (req, res) => {
@@ -345,9 +388,21 @@ const googleAuth = async (req, res) => {
     if (displayName && (!user.name || user.name === normalizedEmail.split("@")[0])) {
       user.name = displayName;
     }
-    user.twoFactorCode = twoFactorCode;
-    user.twoFactorExpires = twoFactorExpires;
+    if (!user.totpEnabled) {
+      user.twoFactorCode = twoFactorCode;
+      user.twoFactorExpires = twoFactorExpires;
+    }
     await user.save();
+  }
+
+  if (user.totpEnabled) {
+    return res.json({
+      requires2FA: true,
+      email: user.email,
+      methods: ["email", "authenticator"],
+      emailSent: false,
+      message: "Choose how you want to verify this sign-in.",
+    });
   }
 
   send2FACodeEmail(user.email, twoFactorCode, user.name, "Google Sign-In 2FA").catch((err) =>
@@ -357,6 +412,8 @@ const googleAuth = async (req, res) => {
   return res.json({
     requires2FA: true,
     email: user.email,
+    methods: ["email"],
+    emailSent: true,
     message: `Google verified. A 6-digit code was sent to ${user.email}.`,
   });
 };
@@ -460,9 +517,101 @@ const resetPassword = async (req, res) => {
 };
 
 const getMyProfile = async (req, res) => {
-  const user = await User.findById(req.user.id).select("-passwordHash");
+  const user = await User.findById(req.user.id).select(PROFILE_SECRET_SELECT);
   if (!user) return res.status(404).json({ message: "User not found" });
   return res.json(user);
+};
+
+const setupTotp = async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  const secret = speakeasy.generateSecret({
+    name: `MARBLEX (${user.email})`,
+    issuer: "MARBLEX",
+    length: 20,
+  });
+
+  user.totpTempSecret = secret.base32;
+  await user.save();
+
+  const otpauthUrl =
+    secret.otpauth_url ||
+    `otpauth://totp/MARBLEX:${encodeURIComponent(user.email)}?secret=${secret.base32}&issuer=MARBLEX&digits=6`;
+
+  const qrDataUrl = await QRCode.toDataURL(otpauthUrl, {
+    errorCorrectionLevel: "M",
+    margin: 2,
+    width: 240,
+    color: { dark: "#0b2e3a", light: "#ffffff" },
+  });
+
+  return res.json({
+    qrDataUrl,
+    secret: secret.base32,
+    message: "Scan the QR code with Google Authenticator / Authy, then confirm with a 6-digit code.",
+  });
+};
+
+const confirmTotp = async (req, res) => {
+  const code = String(req.body?.code || "").trim();
+  if (!code || code.length < 6) {
+    return res.status(400).json({ message: "Enter the 6-digit code from your authenticator app." });
+  }
+
+  const user = await User.findById(req.user.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+  if (!user.totpTempSecret) {
+    return res.status(400).json({ message: "No authenticator setup in progress. Generate a QR code first." });
+  }
+
+  if (!verifyTotpToken(user.totpTempSecret, code)) {
+    return res.status(400).json({ message: "Incorrect code. Check your authenticator app and try again." });
+  }
+
+  user.totpSecret = user.totpTempSecret;
+  user.totpTempSecret = null;
+  user.totpEnabled = true;
+  await user.save();
+
+  return res.json({
+    success: true,
+    totpEnabled: true,
+    message: "Authenticator app enabled. You can use it at the next sign-in.",
+  });
+};
+
+const disableTotp = async (req, res) => {
+  const { password, code } = req.body || {};
+  const user = await User.findById(req.user.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+  if (!user.totpEnabled) {
+    return res.json({ success: true, totpEnabled: false, message: "Authenticator was already off." });
+  }
+
+  let ok = false;
+  if (code && user.totpSecret) {
+    ok = verifyTotpToken(user.totpSecret, code);
+  }
+  if (!ok && password) {
+    ok = await bcrypt.compare(password, user.passwordHash);
+  }
+  if (!ok) {
+    return res.status(401).json({
+      message: "Enter your password or a valid authenticator code to disable 2FA.",
+    });
+  }
+
+  user.totpEnabled = false;
+  user.totpSecret = null;
+  user.totpTempSecret = null;
+  await user.save();
+
+  return res.json({
+    success: true,
+    totpEnabled: false,
+    message: "Authenticator app disabled. Sign-in will use email codes only.",
+  });
 };
 
 const updateMyProfile = async (req, res) => {
@@ -482,7 +631,7 @@ const updateMyProfile = async (req, res) => {
   }
   const allowedGenders = ["male", "female", "other", "prefer_not_to_say"];
   if (!allowedGenders.includes(updates.gender)) updates.gender = "prefer_not_to_say";
-  const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select("-passwordHash -twoFactorCode");
+  const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select(PROFILE_SECRET_SELECT);
   return res.json(user);
 };
 
@@ -534,6 +683,9 @@ module.exports = {
   getMyProfile,
   updateMyProfile,
   changePassword,
+  setupTotp,
+  confirmTotp,
+  disableTotp,
   testEmailDelivery,
 };
 

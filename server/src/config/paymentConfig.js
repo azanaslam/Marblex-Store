@@ -6,7 +6,7 @@ const paymentConfig = {
   bulkThresholdItems: 10,
   whatsapp: {
     number: env.whatsappNumber,
-    formattedNumber: "+92 348 1116611",
+    formattedNumber: "+92 308 4585792",
     label: "Official MARBLEX Sales Hotline",
   },
   easypaisa: {

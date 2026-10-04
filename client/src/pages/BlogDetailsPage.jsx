@@ -202,7 +202,7 @@ export const BlogDetailsPage = () => {
               Published by MARBLEX Construction Chemical & Rubber Industry • Lahore, Pakistan
             </span>
             <a
-              href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20have%20a%20technical%20question%20regarding%20the%20research%20paper."
+              href="https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20have%20a%20technical%20question%20regarding%20the%20research%20paper."
               target="_blank"
               rel="noreferrer"
               className="px-6 py-3 rounded-xl bg-[#ff6b4a] hover:bg-[#f35231] text-white font-bold text-xs uppercase tracking-wider shadow-md active:scale-95 transition-all flex items-center gap-2"

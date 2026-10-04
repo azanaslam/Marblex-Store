@@ -336,7 +336,7 @@ export const ServicesPage = () => {
     )}%0A*Notes:* ${encodeURIComponent(bookingForm.notes || "None")}`;
 
     setTimeout(() => {
-      window.open(`https://wa.me/923481116611?text=${msg}`, "_blank");
+      window.open(`https://wa.me/923084585792?text=${msg}`, "_blank");
     }, 400);
   };
 
@@ -350,7 +350,7 @@ export const ServicesPage = () => {
       estCity
     )}%0A*Estimated Range:* PKR ${estimatedCost.minTotal.toLocaleString()} - PKR ${estimatedCost.maxTotal.toLocaleString()}%0A%0APlease arrange a technical engineer consultation for site verification.`;
 
-    window.open(`https://wa.me/923481116611?text=${msg}`, "_blank");
+    window.open(`https://wa.me/923084585792?text=${msg}`, "_blank");
   };
 
   return (
@@ -414,7 +414,7 @@ export const ServicesPage = () => {
                 </div>
 
                 <a
-                  href="https://wa.me/923481116611?text=Hello%20MARBLEX%20Engineering%2C%20I%20need%20expert%20consultation%20for%20my%20construction%20project."
+                  href="https://wa.me/923084585792?text=Hello%20MARBLEX%20Engineering%2C%20I%20need%20expert%20consultation%20for%20my%20construction%20project."
                   target="_blank"
                   rel="noreferrer"
                   className="shimmer-btn inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/20 hover:shadow-xl active:scale-95 transition-all cursor-pointer"
@@ -643,7 +643,7 @@ export const ServicesPage = () => {
                     </button>
 
                     <a
-                      href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20want%20to%20inquire%20about%20${encodeURIComponent(
+                      href={`https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20want%20to%20inquire%20about%20${encodeURIComponent(
                         serv.title
                       )}`}
                       target="_blank"
@@ -941,14 +941,14 @@ export const ServicesPage = () => {
               <div>
                 <div className="text-[11px] text-slate-400 uppercase tracking-wider">Direct Hotline</div>
                 <a
-                  href="tel:+923481116611"
+                  href="tel:+923084585792"
                   className="text-sm sm:text-base font-bold text-white hover:text-[#ff8c73] transition-colors"
                 >
-                  +92 348 1116611
+                  +92 308 4585792
                 </a>
               </div>
               <a
-                href="https://wa.me/923481116611"
+                href="https://wa.me/923084585792"
                 target="_blank"
                 rel="noreferrer"
                 className="p-3 rounded-full bg-emerald-500 text-white hover:scale-105 transition-all shadow-md"

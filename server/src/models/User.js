@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema(
     gender: { type: String, enum: ["male", "female", "other", "prefer_not_to_say"], default: "prefer_not_to_say" },
     twoFactorCode: { type: String, default: null },
     twoFactorExpires: { type: Date, default: null },
+    /** Authenticator app (TOTP) — secret stored base32; never expose in /me */
+    totpSecret: { type: String, default: null },
+    totpTempSecret: { type: String, default: null },
+    totpEnabled: { type: Boolean, default: false },
     isEmailVerified: { type: Boolean, default: false },
     /** Google subject id when signed in via Google Identity */
     googleId: { type: String, default: null, sparse: true },

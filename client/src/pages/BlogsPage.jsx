@@ -327,7 +327,7 @@ export const BlogsPage = () => {
                 </RouterLink>
 
                 <a
-                  href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20would%20like%20to%20request%20a%20technical%20whitepaper."
+                  href="https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20would%20like%20to%20request%20a%20technical%20whitepaper."
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95"

@@ -35,7 +35,7 @@ export const AboutPage = () => {
     },
     {
       q: "How can contractors request on-site substrate testing and technical supervision?",
-      a: "Contractors, consultants, and project engineers can request on-site inspection directly via our WhatsApp Engineering Hotline (+92 348 1116611) or online inquiry form. We provide moisture scanning, pull-off tensile testing, and joint profiling."
+      a: "Contractors, consultants, and project engineers can request on-site inspection directly via our WhatsApp Engineering Hotline (+92 308 4585792) or online inquiry form. We provide moisture scanning, pull-off tensile testing, and joint profiling."
     },
     {
       q: "What warranty coverage is provided on MARBLEX commercial and mega civil installations?",
@@ -529,7 +529,7 @@ export const AboutPage = () => {
           </div>
 
           <a
-            href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20please%20send%20the%20complete%20Technical%20Data%20Sheet%20(TDS)%20and%20lab%20certification%20reports."
+            href="https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20please%20send%20the%20complete%20Technical%20Data%20Sheet%20(TDS)%20and%20lab%20certification%20reports."
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center gap-2 bg-[#ff6b4a] hover:bg-[#ff5530] text-white px-6 py-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#ff6b4a]/20 transition-all shrink-0 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
@@ -611,7 +611,7 @@ export const AboutPage = () => {
               </div>
 
               <a 
-                href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20would%20like%20to%20consult%20regarding%20a%20project."
+                href="https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20would%20like%20to%20consult%20regarding%20a%20project."
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 hover:bg-emerald-100/80 transition-colors cursor-pointer"
@@ -621,7 +621,7 @@ export const AboutPage = () => {
                 </div>
                 <div>
                   <div className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Fast Engineering Hotline</div>
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-0.5">+92 348 1116611 (WhatsApp Instant)</div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-0.5">+92 308 4585792 (WhatsApp Instant)</div>
                 </div>
               </a>
             </div>

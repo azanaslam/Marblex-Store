@@ -250,7 +250,7 @@ export const HeroBanner = () => {
     const text = encodeURIComponent(
       `Hello MARBLEX, I would like to request an instant quotation and technical data regarding ${current.line1} ${current.line2} (${current.eyebrow}).`
     );
-    window.open(`https://wa.me/923481116611?text=${text}`, "_blank");
+    window.open(`https://wa.me/923084585792?text=${text}`, "_blank");
   };
 
   const current = SLIDES[activeSlide];

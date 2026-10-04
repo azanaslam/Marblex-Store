@@ -187,7 +187,7 @@ export const CatalogsPage = () => {
                 </a>
 
                 <a
-                  href="https://wa.me/923481116611?text=Hello%20MARBLEX%20Engineering%2C%20I%20need%20the%20complete%20stamped%20submittal%20package."
+                  href="https://wa.me/923084585792?text=Hello%20MARBLEX%20Engineering%2C%20I%20need%20the%20complete%20stamped%20submittal%20package."
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/20 hover:shadow-xl active:scale-95 transition-all cursor-pointer"
@@ -385,7 +385,7 @@ export const CatalogsPage = () => {
                 Our materials directorate can issue officially stamped and signed technical submittal sets for tender bidding.
               </p>
               <a
-                href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20need%20an%20official%20stamped%20submittal%20set%20for%20a%20tender."
+                href="https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20need%20an%20official%20stamped%20submittal%20set%20for%20a%20tender."
                 target="_blank"
                 rel="noreferrer"
                 className="w-full py-2.5 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
@@ -601,13 +601,13 @@ export const CatalogsPage = () => {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 z-10 w-full lg:w-auto">
             <a
-              href="tel:03481116611"
+              href="tel:03084585792"
               className="px-7 py-4 rounded-xl bg-[#ff6b4a] hover:bg-[#f35231] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg active:scale-95 transition-all text-center"
             >
               Call 0348-1116611
             </a>
             <a
-              href="https://wa.me/923481116611?text=Hello%20MARBLEX%20Engineering%2C%20I%20need%20custom%20CAD%20drawings%20and%20technical%20data."
+              href="https://wa.me/923084585792?text=Hello%20MARBLEX%20Engineering%2C%20I%20need%20custom%20CAD%20drawings%20and%20technical%20data."
               target="_blank"
               rel="noreferrer"
               className="px-7 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"

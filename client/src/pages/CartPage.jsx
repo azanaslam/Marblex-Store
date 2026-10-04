@@ -340,7 +340,7 @@ export const CartPage = ({ cart = [], setCart }) => {
           .map((item) => `• ${item.name} (x${item.quantity || 1}) - PKR ${item.price * (item.quantity || 1)}`)
           .join("%0A");
 
-        const waNum = paymentConfig.whatsapp?.number || res.data?.whatsappNumber || "923481116611";
+        const waNum = paymentConfig.whatsapp?.number || res.data?.whatsappNumber || "923084585792";
         const orderNum = res.data?.orderNumber || "INQUIRY";
 
         const msg =
@@ -610,6 +610,9 @@ export const CartPage = ({ cart = [], setCart }) => {
             )}
           </div>
 
+          {/* Payment + Delivery only after cart has products */}
+          {cart.length > 0 && (
+          <>
           {/* Card 2: Payment Method Selection */}
           <div
             className={`cart-anim-details relative border rounded-2xl sm:rounded-[24px] shadow-sm overflow-hidden transition-all duration-500 bg-white/95 dark:bg-[#112832]/95 ${
@@ -1256,6 +1259,8 @@ export const CartPage = ({ cart = [], setCart }) => {
               </div>
             </div>
           </div>
+          </>
+          )}
         </div>
 
         {/* ==================== RIGHT COLUMN (STICKY ASIDE) ==================== */}

@@ -129,8 +129,8 @@ export function MarblexAiChat() {
         sx={{
           flex: 1,
           overflow: "auto",
-          px: 1.75,
-          py: 1.75,
+          px: { xs: 1.25, sm: 1.75 },
+          py: { xs: 1.15, sm: 1.75 },
           minHeight: 0,
           position: "relative",
           zIndex: 1,
@@ -170,20 +170,22 @@ export function MarblexAiChat() {
         <div ref={endRef} />
       </Box>
 
-      {/* Suggestion chips — only early in the thread */}
+      {/* Suggestion chips — compact on mobile (2 chips), fuller on desktop */}
       {messages.length <= 2 && !typing && (
         <Box
           sx={{
-            px: 1.5,
-            pb: 1,
+            px: { xs: 1.15, sm: 1.5 },
+            pb: { xs: 0.65, sm: 1 },
             display: "flex",
             flexWrap: "wrap",
-            gap: 0.75,
+            gap: { xs: 0.55, sm: 0.75 },
             position: "relative",
             zIndex: 1,
+            maxHeight: { xs: 72, sm: "none" },
+            overflow: "hidden",
           }}
         >
-          {SUGGESTIONS.map((s) => (
+          {SUGGESTIONS.map((s, i) => (
             <Box
               key={s}
               component="button"
@@ -191,13 +193,14 @@ export function MarblexAiChat() {
               className="no-shimmer"
               onClick={() => pushUserAndReply(s)}
               sx={{
+                display: i >= 2 ? { xs: "none", sm: "inline-flex" } : "inline-flex",
                 border: "1px solid rgba(10,61,82,0.14)",
                 bgcolor: "rgba(255,255,255,0.92)",
                 color: "#0a3d52",
-                fontSize: 11,
+                fontSize: { xs: 10.5, sm: 11 },
                 fontWeight: 700,
-                px: 1.25,
-                py: 0.65,
+                px: { xs: 1, sm: 1.25 },
+                py: { xs: 0.5, sm: 0.65 },
                 borderRadius: 999,
                 cursor: "pointer",
                 textAlign: "left",
@@ -218,8 +221,8 @@ export function MarblexAiChat() {
 
       <Box
         sx={{
-          px: 1.5,
-          py: 1.25,
+          px: { xs: 1.15, sm: 1.5 },
+          py: { xs: 0.9, sm: 1.25 },
           borderTop: "1px solid rgba(10,61,82,0.1)",
           background:
             "linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(248,251,252,0.96) 100%)",
@@ -227,18 +230,19 @@ export function MarblexAiChat() {
           WebkitBackdropFilter: "blur(12px)",
           position: "relative",
           zIndex: 1,
+          flexShrink: 0,
         }}
       >
         <Box
           sx={{
             display: "flex",
             alignItems: "flex-end",
-            gap: 1,
-            borderRadius: 3.5,
+            gap: 0.85,
+            borderRadius: { xs: 2.75, sm: 3.5 },
             border: "1px solid rgba(10,61,82,0.12)",
             bgcolor: "#fff",
-            px: 1.25,
-            py: 0.65,
+            px: { xs: 1, sm: 1.25 },
+            py: { xs: 0.45, sm: 0.65 },
             boxShadow: "0 4px 16px rgba(10,61,82,0.06)",
           }}
         >
@@ -252,7 +256,7 @@ export function MarblexAiChat() {
                 pushUserAndReply(draft);
               }
             }}
-            placeholder="Ask about products, catalogs, joints…"
+            placeholder="Ask about products, catalogs…"
             rows={1}
             sx={{
               flex: 1,
@@ -260,12 +264,12 @@ export function MarblexAiChat() {
               outline: "none",
               resize: "none",
               fontFamily: "inherit",
-              fontSize: 13.5,
+              fontSize: { xs: 13, sm: 13.5 },
               fontWeight: 500,
               color: "#0f172a",
               lineHeight: 1.45,
-              py: 0.85,
-              maxHeight: 88,
+              py: { xs: 0.65, sm: 0.85 },
+              maxHeight: { xs: 64, sm: 88 },
               bgcolor: "transparent",
               "&::placeholder": { color: "#94a3b8" },
             }}
@@ -276,8 +280,8 @@ export function MarblexAiChat() {
             disabled={!draft.trim() || typing}
             aria-label="Send"
             sx={{
-              width: 40,
-              height: 40,
+              width: { xs: 34, sm: 40 },
+              height: { xs: 34, sm: 40 },
               bgcolor: draft.trim() ? "#ff6b4a" : "rgba(10,61,82,0.08)",
               color: draft.trim() ? "#fff" : "#94a3b8",
               "&:hover": {
@@ -287,20 +291,21 @@ export function MarblexAiChat() {
                 bgcolor: "rgba(10,61,82,0.06)",
                 color: "#cbd5e1",
               },
-              mb: 0.15,
+              mb: 0.1,
             }}
           >
-            <SendRoundedIcon sx={{ fontSize: 20 }} />
+            <SendRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
           </IconButton>
         </Box>
         <Typography
           sx={{
-            mt: 0.75,
-            fontSize: 10,
+            mt: { xs: 0.45, sm: 0.75 },
+            fontSize: { xs: 9, sm: 10 },
             color: "#94a3b8",
             fontWeight: 600,
             textAlign: "center",
             letterSpacing: "0.02em",
+            display: { xs: "none", sm: "block" },
           }}
         >
           No login needed · Catalog & product guidance

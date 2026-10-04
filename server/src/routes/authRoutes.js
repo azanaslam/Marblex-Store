@@ -14,6 +14,9 @@ const {
   getMyProfile,
   updateMyProfile,
   changePassword,
+  setupTotp,
+  confirmTotp,
+  disableTotp,
   testEmailDelivery,
 } = require("../controllers/authController");
 
@@ -33,6 +36,9 @@ router.all("/test-email", testEmailDelivery);
 router.get("/me", auth, getMyProfile);
 router.put("/me", auth, updateMyProfile);
 router.post("/change-password", auth, changePassword);
+router.post("/2fa/totp/setup", auth, setupTotp);
+router.post("/2fa/totp/confirm", auth, confirmTotp);
+router.post("/2fa/totp/disable", auth, disableTotp);
 
 module.exports = router;
 

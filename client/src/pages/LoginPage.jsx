@@ -43,6 +43,10 @@ export const LoginPage = () => {
   // 2FA Verification Stage States
   const [stageVerify, setStageVerify] = useState(false);
   const [verifyEmail, setVerifyEmail] = useState("");
+  const [twoFaMethods, setTwoFaMethods] = useState(["email"]);
+  const [twoFaMethod, setTwoFaMethod] = useState(null); // null = choose · email | authenticator
+  const [twoFaPick, setTwoFaPick] = useState("email"); // selection on choose screen before continue
+  const [trustDevice, setTrustDevice] = useState(true);
   const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [isOtpSuccess, setIsOtpSuccess] = useState(false);
   const [vMsg, setVMsg] = useState({ text: "", type: "" });
@@ -187,9 +191,8 @@ export const LoginPage = () => {
     const chatUnread = Number(authData.chatUnread) || 0;
     if (authData.user.role === "admin") {
       navigate("/admin", { replace: true, state: { chatUnread } });
-    } else if (chatUnread > 0) {
-      navigate("/dashboard/support", { replace: true, state: { chatUnread } });
     } else {
+      // Always land on Overview after client login
       navigate("/dashboard", { replace: true });
     }
   };
@@ -408,6 +411,26 @@ export const LoginPage = () => {
     ],
   };
 
+  const begin2FAChallenge = (data, fallbackEmail = "") => {
+    const methods = Array.isArray(data?.methods) && data.methods.length
+      ? data.methods
+      : ["email"];
+    const needsChoice = methods.includes("authenticator") && data?.emailSent === false;
+    setVerifyEmail(data?.email || fallbackEmail);
+    setTwoFaMethods(methods);
+    setTwoFaPick(methods.includes("email") ? "email" : "authenticator");
+    setTwoFaMethod(needsChoice ? null : "email");
+    setStageVerify(true);
+    setOtpDigits(["", "", "", "", "", ""]);
+    setIsOtpSuccess(false);
+    setVMsg({
+      text: needsChoice
+        ? ""
+        : data?.message || "Enter the 6-digit code sent to your email.",
+      type: needsChoice ? "" : "success",
+    });
+  };
+
   // Real Google Identity picker → verify token → Marblex email 2FA
   const handleGoogleAuth = async () => {
     setMsg({ text: "", type: "" });
@@ -416,14 +439,7 @@ export const LoginPage = () => {
       const credential = await promptGoogleSignIn();
       const res = await http.post("/auth/google", { credential });
       setSsoModal(null);
-      setVerifyEmail(res.data?.email || "");
-      setStageVerify(true);
-      setOtpDigits(["", "", "", "", "", ""]);
-      setIsOtpSuccess(false);
-      setVMsg({
-        text: res.data?.message || "Google verified. Enter the 6-digit code sent to your email.",
-        type: "success",
-      });
+      begin2FAChallenge(res.data, "");
     } catch (err) {
       const apiMsg = err?.response?.data?.message;
       const cancelled = /cancel/i.test(err?.message || "");
@@ -467,14 +483,7 @@ export const LoginPage = () => {
       setTimeout(() => {
         setSsoModal(null);
         setSsoLoading(false);
-        setVerifyEmail(res.data?.email || selectedEmail);
-        setStageVerify(true);
-        setOtpDigits(["", "", "", "", "", ""]);
-        setIsOtpSuccess(false);
-        setVMsg({
-          text: res.data?.message || `A 6-digit verification code has been sent to ${selectedEmail}.`,
-          type: "success",
-        });
+        begin2FAChallenge(res.data, selectedEmail);
       }, 700);
     } catch (err) {
       setSsoLoading(false);
@@ -512,11 +521,7 @@ export const LoginPage = () => {
       try {
         const res = await http.post("/auth/login", { email: trimmedEmail, password });
         if (res.data?.requires2FA) {
-          setVerifyEmail(res.data.email || trimmedEmail);
-          setStageVerify(true);
-          setOtpDigits(["", "", "", "", "", ""]);
-          setIsOtpSuccess(false);
-          setVMsg({ text: "", type: "" });
+          begin2FAChallenge(res.data, trimmedEmail);
         } else if (res.data?.token) {
           setMsg({ text: "Credentials verified! Redirecting to dashboard…", type: "success" });
           setTimeout(() => completeAuth(res.data), 800);
@@ -537,11 +542,7 @@ export const LoginPage = () => {
         });
 
         if (res.data?.requires2FA) {
-          setVerifyEmail(res.data.email || trimmedEmail);
-          setStageVerify(true);
-          setOtpDigits(["", "", "", "", "", ""]);
-          setIsOtpSuccess(false);
-          setVMsg({ text: "", type: "" });
+          begin2FAChallenge(res.data, trimmedEmail);
         } else {
           setMsg({ text: "Account created successfully! You can now sign in.", type: "success" });
           setMode("in");
@@ -555,14 +556,38 @@ export const LoginPage = () => {
     }
   };
 
+  const choose2FaMethod = async (method) => {
+    if (loading) return;
+    setVMsg({ text: "", type: "" });
+    setOtpDigits(["", "", "", "", "", ""]);
+    if (method === "email") {
+      setLoading(true);
+      try {
+        const res = await http.post("/auth/resend-2fa", { email: verifyEmail });
+        setTwoFaMethod("email");
+        setExpTime(120);
+        setResendCooldown(30);
+        setVMsg({ text: res.data?.message || "A 6-digit code was sent to your email.", type: "success" });
+      } catch {
+        triggerVShake("Could not send email code. Try again.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    setTwoFaMethod("authenticator");
+    setExpTime(300);
+    setVMsg({ text: "Open your authenticator app and enter the current 6-digit code.", type: "success" });
+  };
+
   // 2FA OTP Verify Submit (accepts optional directCode to avoid stale state on auto-submit)
   const handleVerifySubmit = async (eOrCode) => {
     const directCode = typeof eOrCode === "string" ? eOrCode : null;
     if (eOrCode?.preventDefault) eOrCode.preventDefault();
-    if (loading || isOtpSuccess) return;
+    if (loading || isOtpSuccess || !twoFaMethod) return;
 
     const code = String(directCode || otpDigits.join("")).trim();
-    if (expTime <= 0) {
+    if (twoFaMethod === "email" && expTime <= 0) {
       return triggerVShake("Code expired. Please request a new one.");
     }
     if (code.length < 6) {
@@ -573,7 +598,11 @@ export const LoginPage = () => {
     setVMsg({ text: "", type: "" });
 
     try {
-      const res = await http.post("/auth/verify-2fa", { email: verifyEmail, code });
+      const res = await http.post("/auth/verify-2fa", {
+        email: verifyEmail,
+        code,
+        method: twoFaMethod,
+      });
       setIsOtpSuccess(true);
       setVMsg({ text: "Verified! Redirecting to your dashboard…", type: "success" });
       setTimeout(() => completeAuth(res.data), 1000);
@@ -587,7 +616,7 @@ export const LoginPage = () => {
 
   // Resend 2FA
   const handleResend = async () => {
-    if (resendCooldown > 0 || loading) return;
+    if (resendCooldown > 0 || loading || twoFaMethod !== "email") return;
     setLoading(true);
     try {
       const res = await http.post("/auth/resend-2fa", { email: verifyEmail });
@@ -1138,6 +1167,170 @@ export const LoginPage = () => {
           animation: mx-ring 2.4s ease-out infinite;
         }
         .mx-shield:after { animation-delay: 1.2s; }
+
+        .mx-shield.mx-shield-pick {
+          width: 66px;
+          height: 66px;
+          border-radius: 20px;
+          margin-bottom: 14px;
+        }
+        .mx-shield.mx-shield-pick:before,
+        .mx-shield.mx-shield-pick:after { border-radius: 20px; }
+
+        /* Choose verification — method cards (from portal auth prototype) */
+        .mx-mths { display: flex; flex-direction: column; gap: 12px; margin: 20px 0 14px; }
+        .mx-mth {
+          --a: var(--or);
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          width: 100%;
+          text-align: left;
+          padding: 16px;
+          border-radius: 18px;
+          border: 1.5px solid var(--line);
+          background: var(--card);
+          color: var(--ink);
+          cursor: pointer;
+          font-family: inherit;
+          transition: transform .3s cubic-bezier(.2,1.2,.4,1), border-color .25s, box-shadow .3s, background .3s;
+        }
+        .mx-mth[data-m="app"] { --a: #0f7c8f; }
+        .mx-mth:before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity .3s;
+          background: radial-gradient(190px circle at var(--mx,50%) var(--my,50%), color-mix(in srgb, var(--a) 16%, transparent), transparent 70%);
+        }
+        .mx-mth:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 14px 26px -14px color-mix(in srgb, var(--a) 55%, transparent);
+        }
+        .mx-mth:hover:before { opacity: 1; }
+        .mx-mth.on {
+          border-color: var(--a);
+          background: color-mix(in srgb, var(--a) 7%, var(--card));
+          box-shadow: 0 0 0 4px color-mix(in srgb, var(--a) 14%, transparent), 0 16px 30px -14px color-mix(in srgb, var(--a) 60%, transparent);
+        }
+        .mx-mth:focus-visible { outline: 2px solid var(--a); outline-offset: 3px; }
+        .mx-mi2 {
+          width: 50px;
+          height: 50px;
+          border-radius: 15px;
+          display: grid;
+          place-items: center;
+          flex: none;
+          color: var(--a);
+          background: color-mix(in srgb, var(--a) 13%, transparent);
+          transition: all .35s;
+        }
+        .mx-mth.on .mx-mi2 {
+          background: linear-gradient(135deg, var(--a), color-mix(in srgb, var(--a) 65%, #fff));
+          color: #fff;
+          box-shadow: 0 10px 18px -6px color-mix(in srgb, var(--a) 70%, transparent);
+          transform: rotate(-6deg) scale(1.05);
+        }
+        .mx-mt2 { flex: 1; min-width: 0; }
+        .mx-mt2 b { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14.5px; }
+        .mx-mt2 em {
+          font: 700 9.5px Inter, sans-serif;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+          font-style: normal;
+          padding: 3px 8px;
+          border-radius: 20px;
+          background: color-mix(in srgb, #16a672 15%, transparent);
+          color: #16a672;
+        }
+        .mx-mt2 small { display: block; margin-top: 4px; font-size: 12.5px; color: var(--mut); line-height: 1.45; }
+        .mx-mm { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+        .mx-mm i {
+          font: 600 10.5px Inter, sans-serif;
+          font-style: normal;
+          padding: 3px 9px;
+          border-radius: 20px;
+          background: var(--field);
+          color: var(--mut);
+          border: 1px solid var(--line);
+        }
+        .mx-rd2 {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          border: 2px solid var(--line);
+          display: grid;
+          place-items: center;
+          flex: none;
+          color: #fff;
+          transition: all .3s;
+        }
+        .mx-rd2 svg {
+          width: 14px;
+          height: 14px;
+          stroke-dasharray: 24;
+          stroke-dashoffset: 24;
+          transition: stroke-dashoffset .4s .1s;
+        }
+        .mx-mth.on .mx-rd2 {
+          background: var(--a);
+          border-color: var(--a);
+          transform: scale(1.1);
+        }
+        .mx-mth.on .mx-rd2 svg { stroke-dashoffset: 0; }
+        .mx-trow {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 13px 16px;
+          border-radius: 16px;
+          background: var(--field);
+          border: 1px solid var(--line);
+          margin-bottom: 16px;
+        }
+        .mx-trow b { display: block; font-size: 13px; }
+        .mx-trow small { color: var(--mut); font-size: 12px; }
+        .mx-sw2 {
+          width: 46px;
+          height: 26px;
+          border-radius: 26px;
+          border: 0;
+          background: var(--line);
+          position: relative;
+          flex: none;
+          cursor: pointer;
+          transition: .3s;
+        }
+        .mx-sw2:after {
+          content: "";
+          position: absolute;
+          top: 3px;
+          left: 3px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #fff;
+          box-shadow: 0 2px 5px rgba(0,0,0,.25);
+          transition: .3s cubic-bezier(.3,1.4,.5,1);
+        }
+        .mx-sw2.on { background: #16a672; }
+        .mx-sw2.on:after { transform: translateX(20px); }
+        .mx-sec2 {
+          margin-top: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          font-size: 11.5px;
+          color: var(--mut);
+          text-align: center;
+          flex-wrap: wrap;
+        }
 
         @keyframes mx-ring {
           to { transform: scale(1.7); opacity: 0; }
@@ -2653,108 +2846,278 @@ export const LoginPage = () => {
               /* VIEW 2: TWO-FACTOR VERIFICATION (v2 SCREEN)              */
               /* ======================================================== */
               <div className="mx-vw mx-vw-v2">
-                {/* Animated Pulsing Shield Icon */}
-                <div className="mx-shield">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" />
-                    <path className="mx-ck" d="m9 12 2 2 4-4" />
-                  </svg>
-                </div>
+                {!twoFaMethod ? (
+                  <>
+                    <div className="mx-steps">
+                      <div className="mx-st done"><b>1</b>Password</div>
+                      <u className="fill" />
+                      <div className="mx-st on"><b>2</b>Verify</div>
+                      <u />
+                      <div className="mx-st"><b>3</b>Done</div>
+                    </div>
+                    <div className="mx-shield mx-shield-pick">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" />
+                        <path className="mx-ck" d="m9 12 2 2 4-4" />
+                      </svg>
+                    </div>
+                    <div className="mx-head">
+                      <h1>Choose verification</h1>
+                      <p>
+                        Password accepted for <b>{getMaskedEmail(verifyEmail)}</b>. Pick how you want to finish signing in.
+                      </p>
+                    </div>
+                    <div className="mx-mths" role="radiogroup" aria-label="Verification method">
+                      {twoFaMethods.includes("email") && (
+                        <button
+                          type="button"
+                          className={`mx-mth${twoFaPick === "email" ? " on" : ""}`}
+                          role="radio"
+                          aria-checked={twoFaPick === "email"}
+                          data-m="email"
+                          disabled={loading}
+                          onClick={() => setTwoFaPick("email")}
+                          onPointerMove={(e) => {
+                            const r = e.currentTarget.getBoundingClientRect();
+                            e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+                            e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+                          }}
+                        >
+                          <span className="mx-mi2">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="3" y="5" width="18" height="14" rx="3" />
+                              <path d="m3 8 9 6 9-6" />
+                            </svg>
+                          </span>
+                          <span className="mx-mt2">
+                            <b>Email 2FA code <em>Recommended</em></b>
+                            <small>Send a 6-digit code to your inbox</small>
+                            <span className="mx-mm"><i>Arrives in seconds</i><i>Valid for 2 min</i></span>
+                          </span>
+                          <span className="mx-rd2" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="m5 12.5 4.5 4.5L19 7.5" />
+                            </svg>
+                          </span>
+                        </button>
+                      )}
+                      {twoFaMethods.includes("authenticator") && (
+                        <button
+                          type="button"
+                          className={`mx-mth${twoFaPick === "authenticator" ? " on" : ""}`}
+                          role="radio"
+                          aria-checked={twoFaPick === "authenticator"}
+                          data-m="app"
+                          disabled={loading}
+                          onClick={() => setTwoFaPick("authenticator")}
+                          onPointerMove={(e) => {
+                            const r = e.currentTarget.getBoundingClientRect();
+                            e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+                            e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+                          }}
+                        >
+                          <span className="mx-mi2">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="6" y="2" width="12" height="20" rx="3" />
+                              <path d="M11 18h2" />
+                            </svg>
+                          </span>
+                          <span className="mx-mt2">
+                            <b>Authenticator app</b>
+                            <small>Use Google Authenticator, Authy or Microsoft Authenticator</small>
+                            <span className="mx-mm"><i>Works offline</i><i>Refreshes every 30s</i></span>
+                          </span>
+                          <span className="mx-rd2" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="m5 12.5 4.5 4.5L19 7.5" />
+                            </svg>
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                    <div className="mx-trow">
+                      <div>
+                        <b>Trust this device for 30 days</b>
+                        <small>Skip verification on this browser</small>
+                      </div>
+                      <button
+                        type="button"
+                        className={`mx-sw2${trustDevice ? " on" : ""}`}
+                        role="switch"
+                        aria-checked={trustDevice}
+                        aria-label="Trust this device"
+                        onClick={() => setTrustDevice((v) => !v)}
+                      />
+                    </div>
+                    <button
+                      className="mx-btn"
+                      type="button"
+                      disabled={loading}
+                      onClick={(e) => {
+                        handleButtonClick(e);
+                        choose2FaMethod(twoFaPick);
+                      }}
+                    >
+                      {loading ? (
+                        <i className="mx-spin" />
+                      ) : (
+                        <span>
+                          {twoFaPick === "authenticator"
+                            ? "Continue with Authenticator"
+                            : "Send code to my email"}
+                        </span>
+                      )}
+                      {!loading && (
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M5 12h14m-6-6 6 6-6 6" />
+                        </svg>
+                      )}
+                    </button>
+                    <div className="mx-msg" style={{ color: vMsg.type === "success" ? "#16a672" : "var(--or)" }}>
+                      {vMsg.text}
+                    </div>
+                    <button
+                      className="mx-back"
+                      type="button"
+                      style={{ marginTop: 12 }}
+                      onClick={() => {
+                        setStageVerify(false);
+                        setTwoFaMethod(null);
+                        setMsg({ text: "", type: "" });
+                        setVMsg({ text: "", type: "" });
+                      }}
+                    >
+                      ← Back to Sign In
+                    </button>
+                    <p className="mx-sec2">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="4" y="11" width="16" height="10" rx="3" />
+                        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                      </svg>
+                      Protected by 256-bit encryption · Need help? <b>Marblexpak@gmail.com</b>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="mx-shield">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" />
+                        <path className="mx-ck" d="m9 12 2 2 4-4" />
+                      </svg>
+                    </div>
+                    <div className="mx-head">
+                      <h1>Two-Factor Verification</h1>
+                      <p>
+                        {twoFaMethod === "authenticator" ? (
+                          <>Enter the 6-digit code from your <b>authenticator app</b>.</>
+                        ) : (
+                          <>Enter the 6-digit code we sent to <b>{getMaskedEmail(verifyEmail)}</b>.</>
+                        )}
+                      </p>
+                    </div>
 
-                {/* 2FA Header */}
-                <div className="mx-head">
-                  <h1>Two-Factor Verification</h1>
-                  <p>
-                    Enter the 6-digit code we sent to <b>{getMaskedEmail(verifyEmail)}</b> to secure your MARBLEX account.
-                  </p>
-                </div>
+                    <div className={`mx-otp ${isOtpSuccess ? "okk" : ""} ${isVShaking ? "mx-shake" : ""}`} onPaste={handleOtpPaste}>
+                      {otpDigits.map((digit, index) => (
+                        <input
+                          key={index}
+                          ref={(el) => (inputRefs.current[index] = el)}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          autoComplete="one-time-code"
+                          aria-label={`Digit ${index + 1}`}
+                          value={digit}
+                          className={digit ? "f" : ""}
+                          onChange={(e) => handleOtpChange(index, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                          autoFocus={index === 0}
+                        />
+                      ))}
+                    </div>
 
-                {/* 6-Digit Passcode Box */}
-                <div className={`mx-otp ${isOtpSuccess ? "okk" : ""} ${isVShaking ? "mx-shake" : ""}`} onPaste={handleOtpPaste}>
-                  {otpDigits.map((digit, index) => (
-                    <input
-                      key={index}
-                      ref={(el) => (inputRefs.current[index] = el)}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      autoComplete="one-time-code"
-                      aria-label={`Digit ${index + 1}`}
-                      value={digit}
-                      className={digit ? "f" : ""}
-                      onChange={(e) => handleOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      autoFocus={index === 0}
-                    />
-                  ))}
-                </div>
+                    {twoFaMethod === "email" && (
+                      <>
+                        <div className="mx-tb">
+                          <i style={{ width: `${Math.max(expTime, 0) / 120 * 100}%` }} />
+                        </div>
+                        <div className="mx-tm">
+                          <span>
+                            Code expires in <b>{formatTimer(expTime)}</b>
+                          </span>
+                          <button
+                            className="mx-lk"
+                            type="button"
+                            disabled={resendCooldown > 0 || loading}
+                            onClick={handleResend}
+                          >
+                            {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+                          </button>
+                        </div>
+                      </>
+                    )}
 
-                {/* Progress Expiry Timer Bar */}
-                <div className="mx-tb">
-                  <i style={{ width: `${Math.max(expTime, 0) / 120 * 100}%` }} />
-                </div>
+                    {twoFaMethod === "authenticator" && twoFaMethods.includes("email") && (
+                      <div className="mx-tm" style={{ justifyContent: "center" }}>
+                        <button className="mx-lk" type="button" disabled={loading} onClick={() => choose2FaMethod("email")}>
+                          Use email code instead
+                        </button>
+                      </div>
+                    )}
 
-                {/* Timer Info & Resend Action */}
-                <div className="mx-tm">
-                  <span>
-                    Code expires in <b>{formatTimer(expTime)}</b>
-                  </span>
-                  <button
-                    className="mx-lk"
-                    type="button"
-                    disabled={resendCooldown > 0 || loading}
-                    onClick={handleResend}
-                  >
-                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
-                  </button>
-                </div>
+                    <button
+                      className={`mx-btn ${isOtpSuccess ? "ok" : ""}`}
+                      type="button"
+                      disabled={loading}
+                      onClick={(e) => {
+                        handleButtonClick(e);
+                        handleVerifySubmit();
+                      }}
+                    >
+                      {loading ? (
+                        <i className="mx-spin" />
+                      ) : (
+                        <span>{isOtpSuccess ? "Verified ✓" : "Verify & Continue"}</span>
+                      )}
+                      {!loading && !isOtpSuccess && (
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M5 12h14m-6-6 6 6-6 6" />
+                        </svg>
+                      )}
+                    </button>
 
-                {/* Verify Submit Button */}
-                <button
-                  className={`mx-btn ${isOtpSuccess ? "ok" : ""}`}
-                  type="button"
-                  disabled={loading}
-                  onClick={(e) => {
-                    handleButtonClick(e);
-                    handleVerifySubmit();
-                  }}
-                >
-                  {loading ? (
-                    <i className="mx-spin" />
-                  ) : (
-                    <span>{isOtpSuccess ? "Verified ✓" : "Verify & Continue"}</span>
-                  )}
-                  {!loading && !isOtpSuccess && (
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M5 12h14m-6-6 6 6-6 6" />
-                    </svg>
-                  )}
-                </button>
+                    <div
+                      className="mx-msg"
+                      style={{ color: vMsg.type === "success" ? "#16a672" : "var(--or)" }}
+                    >
+                      {vMsg.text}
+                    </div>
 
-                {/* 2FA Status Message */}
-                <div
-                  className="mx-msg"
-                  style={{ color: vMsg.type === "success" ? "#16a672" : "var(--or)" }}
-                >
-                  {vMsg.text}
-                </div>
+                    <button
+                      className="mx-back"
+                      type="button"
+                      onClick={() => {
+                        if (twoFaMethods.includes("authenticator") && twoFaMethods.length > 1) {
+                          setTwoFaMethod(null);
+                          setOtpDigits(["", "", "", "", "", ""]);
+                          setVMsg({ text: "", type: "" });
+                          return;
+                        }
+                        setStageVerify(false);
+                        setTwoFaMethod(null);
+                        setMsg({ text: "", type: "" });
+                        setVMsg({ text: "", type: "" });
+                      }}
+                    >
+                      ← {twoFaMethods.includes("authenticator") && twoFaMethods.length > 1 ? "Change method" : "Back to Sign In"}
+                    </button>
 
-                {/* Return Back Button */}
-                <button
-                  className="mx-back"
-                  type="button"
-                  onClick={() => {
-                    setStageVerify(false);
-                    setMsg({ text: "", type: "" });
-                    setVMsg({ text: "", type: "" });
-                  }}
-                >
-                  ← Back to Sign In
-                </button>
-
-                <p className="mx-legal">
-                  Didn't get the code? Check spam or contact portal admin · <b>Marblexpak@gmail.com</b>
-                </p>
+                    <p className="mx-legal">
+                      {twoFaMethod === "email"
+                        ? <>Didn't get the code? Check spam or contact portal admin · <b>Marblexpak@gmail.com</b></>
+                        : <>Codes refresh every 30s in your authenticator app · <b>Marblexpak@gmail.com</b></>}
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </section>

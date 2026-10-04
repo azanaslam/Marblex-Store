@@ -141,7 +141,7 @@ export const AboutHeroBanner = () => {
     const text = encodeURIComponent(
       `Hello MARBLEX, I would like to consult regarding a construction chemical & waterproofing project (${current.eyebrow}).`
     );
-    window.open(`https://wa.me/923481116611?text=${text}`, "_blank");
+    window.open(`https://wa.me/923084585792?text=${text}`, "_blank");
   };
 
   const current = ABOUT_SLIDES[activeSlide];

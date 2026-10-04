@@ -93,7 +93,7 @@ const createOrder = async (req, res) => {
     }
 
     if (!phone || !validatePkPhone(phone)) {
-      return res.status(400).json({ message: "Valid Pakistani phone number is required (e.g. 0348 1116611 or +923481116611)" });
+      return res.status(400).json({ message: "Valid Pakistani phone number is required (e.g. 0308 4585792 or +923084585792)" });
     }
 
     if (orderChannel === "website") {

@@ -1638,7 +1638,7 @@ export const ShopPage = ({ addToCart }) => {
                 </div>
 
                 <a
-                  href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20calculated%20my%20project%20area%20as%20${calcArea}%20sq.ft%20for%20${calcSurface}%20application.%20Please%20provide%20official%20quotation.`}
+                  href={`https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20calculated%20my%20project%20area%20as%20${calcArea}%20sq.ft%20for%20${calcSurface}%20application.%20Please%20provide%20official%20quotation.`}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-auto flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3.5 text-center text-[11px] font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-600/25 transition hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] sm:text-xs"
@@ -1755,7 +1755,7 @@ export const ShopPage = ({ addToCart }) => {
 
                   <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3.5 dark:border-slate-800/80">
                     <a
-                      href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20saw%20your%20Case%20Study%20on%20${encodeURIComponent(pair.title)}%20and%20want%20to%20know%20more.`}
+                      href={`https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20saw%20your%20Case%20Study%20on%20${encodeURIComponent(pair.title)}%20and%20want%20to%20know%20more.`}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-bold text-[#0a3d52] hover:underline dark:text-sky-400"
@@ -1819,7 +1819,7 @@ export const ShopPage = ({ addToCart }) => {
             return (
               <a
                 key={step.step}
-                href={`https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20am%20interested%20in%20learning%20more%20about%20Stage%20${step.step}%3A%20${encodeURIComponent(step.title)}.`}
+                href={`https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20am%20interested%20in%20learning%20more%20about%20Stage%20${step.step}%3A%20${encodeURIComponent(step.title)}.`}
                 target="_blank"
                 rel="noreferrer"
                 className="methodology-card-item no-shimmer group relative flex h-full w-[min(86vw,21rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[1.5rem] border border-slate-200/90 bg-white opacity-0 shadow-[0_12px_32px_-20px_rgba(10,61,82,0.4)] transition duration-300 hover:-translate-y-1.5 hover:border-[#0a3d52]/30 hover:shadow-[0_22px_44px_-24px_rgba(10,61,82,0.45)] dark:border-slate-800 dark:bg-[#0c222e] sm:w-auto sm:shrink sm:snap-align-none"
@@ -2242,7 +2242,7 @@ export const ShopPage = ({ addToCart }) => {
             <div className="glowing-border-beam" />
             <div className="glowing-border-body w-full">
               <a
-                href="https://wa.me/923481116611?text=Hello%20MARBLEX%2C%20I%20need%20technical%20consultation%20for%20my%20project."
+                href="https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20need%20technical%20consultation%20for%20my%20project."
                 target="_blank"
                 rel="noreferrer"
                 className="shimmer-btn w-full sm:w-auto py-3.5 px-6 bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider rounded-2xl shadow-lg shadow-[#ff6b4a]/30 transition-all duration-200 flex items-center justify-center gap-2"
@@ -2254,7 +2254,7 @@ export const ShopPage = ({ addToCart }) => {
           </div>
 
           <a
-            href="tel:03481116611"
+            href="tel:03084585792"
             className="shimmer-btn w-full sm:w-auto py-3.5 px-6 bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider rounded-2xl border border-white/20 transition-all duration-200 flex items-center justify-center gap-2"
           >
             <LocalPhoneOutlinedIcon sx={{ fontSize: 18 }} />

@@ -286,7 +286,7 @@ ${centerContent}
         </a>
       </td>
       <td style="padding:0 4px;">
-        <a href="https://wa.me/923000000000" target="_blank" class="soc-link" style="display:inline-block;padding:7px 12px;background:#ffffff;border:1px solid #dbe4ea;border-radius:9px;color:#16a34a;text-decoration:none;font-weight:700;font-size:12px;line-height:16px;">
+        <a href="https://wa.me/923084585792" target="_blank" class="soc-link" style="display:inline-block;padding:7px 12px;background:#ffffff;border:1px solid #dbe4ea;border-radius:9px;color:#16a34a;text-decoration:none;font-weight:700;font-size:12px;line-height:16px;">
           <img src="${ICONS.whatsapp}" alt="" width="16" height="16" style="vertical-align:middle;margin-right:5px;border:0;display:inline-block;" />WhatsApp
         </a>
       </td>
@@ -749,6 +749,18 @@ const sendWelcomeEmail = async (toEmail, userName = "Valued Client") => {
 
 const sendLoginAlertEmail = async (toEmail, userName = "Valued Client", meta = {}) => {
   const config = await getEmailConfig();
+  const to = String(toEmail || "").toLowerCase().trim();
+  if (!to) {
+    return { success: false, error: "Login alert skipped: missing recipient email" };
+  }
+
+  // Hard guard — never deliver a client login notice into the admin mailbox
+  const admin = String(env.adminEmail || "").toLowerCase().trim();
+  if (admin && to === admin) {
+    console.log("[Mailer] Login alert skipped for admin mailbox (clients only).");
+    return { success: true, skipped: true, reason: "admin_mailbox" };
+  }
+
   const requestedAt = new Date().toLocaleString("en-US", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }) + " (PKT)";
 
   const html = loginAlertEmailTemplate({
@@ -759,7 +771,7 @@ const sendLoginAlertEmail = async (toEmail, userName = "Valued Client", meta = {
   });
 
   return sendEmail({
-    to: toEmail,
+    to,
     subject: "MARBLEX Security: New Sign-in to Your Account",
     html,
     text: `New login recorded on your MARBLEX account at ${requestedAt}. If this wasn't you, contact ${config.senderEmail}`,
@@ -864,7 +876,7 @@ const sendOrderConfirmationEmail = async (order) => {
         </div>
 
         <p style="margin:0 0 24px 0;font-size:13px;line-height:1.6;color:#64748b;">
-          If you have questions about this order, please reply to this email or reach us on WhatsApp at <strong>+92 348 1116611</strong>.
+          If you have questions about this order, please reply to this email or reach us on WhatsApp at <strong>+92 308 4585792</strong>.
         </p>
       </td></tr>
     `;

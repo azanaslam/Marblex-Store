@@ -169,7 +169,7 @@ export const PaymentResultPage = ({ success }) => {
                 </RouterLink>
               ) : (
                 <a
-                  href={`https://wa.me/923481116611?text=${encodeURIComponent(
+                  href={`https://wa.me/923084585792?text=${encodeURIComponent(
                     `Hello MARBLEX Support, I have placed Order ${orderNum}. Please provide a delivery update.`
                   )}`}
                   target="_blank"
@@ -243,7 +243,7 @@ export const PaymentResultPage = ({ success }) => {
 
             <div className="flex items-center justify-center gap-3">
               <a
-                href="https://wa.me/923481116611"
+                href="https://wa.me/923084585792"
                 target="_blank"
                 rel="noreferrer"
                 className="px-6 py-3 rounded-xl bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2"

@@ -22,9 +22,9 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 import EastRoundedIcon from "@mui/icons-material/EastRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
+import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
@@ -46,6 +46,7 @@ export const AppLayout = ({ cartCount, children }) => {
   const [token, setToken] = useState(getAuthToken());
   const [chatUnreadNav, setChatUnreadNav] = useState(0);
   const [broadcastUnread, setBroadcastUnread] = useState(0);
+  const [portalUnread, setPortalUnread] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -79,7 +80,19 @@ export const AppLayout = ({ cartCount, children }) => {
   const isCustomer = Boolean(authUser) && authUser?.role !== "admin";
   const isAdmin = authUser?.role === "admin";
   const displayFirstName = authUser?.name ? authUser.name.split(" ")[0] : "Client";
+  const accountAvatarUrl = String(authUser?.avatarUrl || "").trim();
   const accountInitial = (displayFirstName || "M").charAt(0).toUpperCase();
+  const AccountAvatar = ({ className = "" }) => (
+    <span
+      className={`relative flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] font-extrabold text-white shadow-sm ${className}`}
+    >
+      {accountAvatarUrl ? (
+        <img src={accountAvatarUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        accountInitial
+      )}
+    </span>
+  );
 
   const syncPortalTheme = useCallback((theme) => {
     try {
@@ -228,7 +241,17 @@ export const AppLayout = ({ cartCount, children }) => {
     };
   }, [location.pathname, authUserFromStorage, token]);
 
-  const notifCount = chatUnreadNav + broadcastUnread;
+  // Client portal iframe pushes unread count for activity-feed notifications
+  useEffect(() => {
+    const onPortalNotify = (e) => {
+      if (e?.origin && e.origin !== window.location.origin) return;
+      if (e?.data?.type !== "MARBLEX_PORTAL_NOTIFY") return;
+      const next = Number(e.data.unread) || 0;
+      setPortalUnread((prev) => (prev === next ? prev : next));
+    };
+    window.addEventListener("message", onPortalNotify);
+    return () => window.removeEventListener("message", onPortalNotify);
+  }, []);
 
   const openNotifications = (e) => {
     e?.stopPropagation?.();
@@ -394,6 +417,12 @@ export const AppLayout = ({ cartCount, children }) => {
 
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isPortalRoute = location.pathname.startsWith("/dashboard");
+  // Clients: Azzan dropdown badge = portal activity-feed unread only (0 when all read)
+  const notifCount = isAdmin
+    ? chatUnreadNav
+    : isPortalRoute || portalUnread > 0
+      ? portalUnread
+      : chatUnreadNav + broadcastUnread;
 
   if (isAdminRoute) {
     return (
@@ -659,9 +688,7 @@ export const AppLayout = ({ cartCount, children }) => {
                       aria-label="Account menu"
                       className="flex items-center gap-0 rounded-full p-0 lg:gap-2 lg:pl-1.5 lg:pr-2 lg:py-1.5"
                     >
-                      <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] text-[11px] font-extrabold text-white shadow-sm sm:h-9 sm:w-9 lg:h-8 lg:w-8 lg:text-[12px]">
-                        {accountInitial}
-                      </span>
+                      <AccountAvatar className="h-8 w-8 text-[11px] sm:h-9 sm:w-9 lg:h-8 lg:w-8 lg:text-[12px]" />
                       <span className="hidden min-w-0 text-left lg:block">
                         <span className={`block max-w-[7.5rem] truncate text-[12px] font-bold leading-tight ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
                           {displayFirstName}
@@ -685,9 +712,7 @@ export const AppLayout = ({ cartCount, children }) => {
                       }`}
                     >
                       <div className={`flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5 sm:py-3 ${isDark ? "bg-white/[0.02]" : "bg-slate-50/80"}`}>
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] text-[11px] font-extrabold text-white shadow-sm sm:h-9 sm:w-9 sm:text-[12px]">
-                          {accountInitial}
-                        </span>
+                        <AccountAvatar className="h-8 w-8 shrink-0 text-[11px] sm:h-9 sm:w-9 sm:text-[12px]" />
                         <div className="min-w-0 flex-1">
                           <p className={`truncate text-[12.5px] font-bold leading-tight sm:text-[13px] ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
                             {authUser?.name || displayFirstName}
@@ -699,7 +724,25 @@ export const AppLayout = ({ cartCount, children }) => {
                       </div>
 
                       <div className={`border-t p-1 sm:p-1.5 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
-                        {notifCount > 0 && (
+                        {!isAdmin && (
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={openNotifications}
+                            className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${
+                              isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
+                            }`}
+                          >
+                            <NotificationsNoneOutlinedIcon sx={{ fontSize: 17 }} />
+                            <span className="flex-1 text-left">Notifications</span>
+                            {notifCount > 0 && (
+                              <span className="rounded-full bg-[#ff6b4a] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
+                                {notifCount > 99 ? "99+" : notifCount}
+                              </span>
+                            )}
+                          </button>
+                        )}
+                        {isAdmin && notifCount > 0 && (
                           <button
                             type="button"
                             role="menuitem"
@@ -737,7 +780,7 @@ export const AppLayout = ({ cartCount, children }) => {
                               isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
                             }`}
                           >
-                            <DashboardOutlinedIcon sx={{ fontSize: 17 }} />
+                            <BusinessCenterOutlinedIcon sx={{ fontSize: 17 }} />
                             <span className="flex-1">Client portal</span>
                           </RouterLink>
                         )}
@@ -857,7 +900,7 @@ export const AppLayout = ({ cartCount, children }) => {
             <div data-mobile-nav-footer className="mt-3 space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800">
               <div className="grid grid-cols-2 gap-2">
                 <a
-                  href="https://wa.me/923481116611"
+                  href="https://wa.me/923084585792"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white"
@@ -866,7 +909,7 @@ export const AppLayout = ({ cartCount, children }) => {
                   WhatsApp
                 </a>
                 <a
-                  href="tel:03481116611"
+                  href="tel:03084585792"
                   className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider ${
                     isDark ? "bg-slate-800 text-slate-100" : "bg-[#0a3d52] text-white"
                   }`}
@@ -910,7 +953,7 @@ export const AppLayout = ({ cartCount, children }) => {
           to="/cart"
           aria-label="Cart"
           className={`sm:hidden fixed z-[9998] flex h-14 w-14 items-center justify-center rounded-full border shadow-lg transition active:scale-95 ${
-            isCustomer ? "bottom-[7.25rem] right-5" : "bottom-5 right-6"
+            isCustomer ? "bottom-[5.25rem] right-5" : "bottom-5 right-6"
           } ${
             isDark
               ? "border-slate-600 bg-[#0e2735] text-[#ff8c73] shadow-black/40"

@@ -11,7 +11,7 @@ module.exports = {
   port: process.env.PORT || 5000,
   mongoUri: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/marblex",
   jwtSecret: process.env.JWT_SECRET || "change_this_secret",
-  whatsappNumber: process.env.WHATSAPP_NUMBER || "923481116611",
+  whatsappNumber: process.env.WHATSAPP_NUMBER || "923084585792",
   adminEmail: process.env.ADMIN_EMAIL || "Marblexpak@gmail.com",
   adminPassword: process.env.ADMIN_PASSWORD || "admin123",
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",

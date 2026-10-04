@@ -131,6 +131,64 @@ export const PortalAccount = () => {
       {tab === 0 && (
         <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: "1px solid #dbe4ea" }}>
           <Stack spacing={1.75}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Box
+                sx={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: "22px",
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  bgcolor: "#f15b37",
+                  color: "#fff",
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 800,
+                  fontSize: 28,
+                }}
+              >
+                {profile.avatarUrl ? (
+                  <Box component="img" src={profile.avatarUrl} alt="" sx={{ width: 1, height: 1, objectFit: "cover" }} />
+                ) : (
+                  (profile.name || "M").trim().charAt(0).toUpperCase()
+                )}
+              </Box>
+              <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontWeight: 800, fontSize: 14 }}>Profile image</Typography>
+                <Typography color="text.secondary" sx={{ fontSize: 12.5 }}>
+                  Upload a photo for your account avatar.
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Button component="label" size="small" variant="contained" color="secondary">
+                    Choose photo
+                    <input
+                      hidden
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (!file.type.startsWith("image/")) {
+                          setToast({ open: true, severity: "error", message: "Please choose an image file." });
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setProfile((p) => ({ ...p, avatarUrl: String(reader.result || "") }));
+                          setToast({ open: true, severity: "success", message: "Photo ready — save profile to apply." });
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </Button>
+                  {profile.avatarUrl ? (
+                    <Button size="small" onClick={() => setProfile((p) => ({ ...p, avatarUrl: "" }))}>
+                      Remove
+                    </Button>
+                  ) : null}
+                </Stack>
+              </Stack>
+            </Stack>
             <TextField label="Email" value={profile.email} disabled fullWidth />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
               <TextField

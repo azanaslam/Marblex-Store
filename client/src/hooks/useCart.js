@@ -106,6 +106,29 @@ export const useCart = () => {
     };
   }, []);
 
+  // Keep React cart in sync when portal iframe reorders / updates cart.
+  useEffect(() => {
+    const onMsg = (e) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type !== "MARBLEX_CART_UPDATE") return;
+      if (Array.isArray(e.data.cart)) {
+        setCart(e.data.cart);
+        return;
+      }
+      setCart(loadInitialCart());
+    };
+    const onStorage = (e) => {
+      if (e.key !== GUEST_CART_KEY && !(e.key || "").startsWith("marblex_cart_user_")) return;
+      setCart(loadInitialCart());
+    };
+    window.addEventListener("message", onMsg);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("message", onMsg);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+
   const addToCart = useCallback((product) => {
     const qtyToAdd = Math.max(1, parseInt(product.quantity, 10) || 1);
     const prodId = product._id || product.productId || product.id;
