@@ -294,13 +294,16 @@ const verifyStripeSession = async (req, res) => {
     if (!order) return res.status(404).json({ message: "Associated order not found" });
 
     if (session.payment_status === "paid") {
+      const wasUnpaid = order.paymentStatus !== "paid";
       order.paymentStatus = "paid";
       order.stripePaymentIntentId = String(session.payment_intent || "");
       await order.save();
 
-      // Dispatch confirmation email once paid
-      sendOrderConfirmationEmail(order).catch(() => {});
-      sendAdminOrderNotificationEmail(order).catch(() => {});
+      // Email only on first transition to paid (webhook may also fire)
+      if (wasUnpaid) {
+        sendOrderConfirmationEmail(order).catch(() => {});
+        sendAdminOrderNotificationEmail(order).catch(() => {});
+      }
     }
 
     return res.json({

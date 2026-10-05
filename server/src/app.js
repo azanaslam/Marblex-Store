@@ -3,6 +3,7 @@ const cors = require("cors");
 const apiRoutes = require("./routes");
 const { errorHandler } = require("./middleware/errorHandler");
 const { frontendUrl } = require("./config/env");
+const { stripeWebhook } = require("./controllers/orderController");
 
 const app = express();
 
@@ -23,6 +24,14 @@ app.use(
     credentials: true,
   })
 );
+
+// Stripe webhook MUST receive the raw body (before express.json)
+app.post(
+  "/api/orders/stripe-webhook",
+  express.raw({ type: "application/json" }),
+  stripeWebhook
+);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use("/api", apiRoutes);

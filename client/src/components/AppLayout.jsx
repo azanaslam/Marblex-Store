@@ -97,7 +97,7 @@ export const AppLayout = ({ cartCount, children }) => {
   const syncPortalTheme = useCallback((theme) => {
     try {
       localStorage.setItem("mx_dash_theme", theme);
-    } catch {}
+    } catch { }
     const frame = document.querySelector("iframe.mx-portal-frame");
     if (frame?.contentWindow) {
       try {
@@ -105,7 +105,7 @@ export const AppLayout = ({ cartCount, children }) => {
           { type: "MARBLEX_THEME", theme },
           window.location.origin
         );
-      } catch {}
+      } catch { }
     }
   }, []);
 
@@ -218,7 +218,7 @@ export const AppLayout = ({ cartCount, children }) => {
       http
         .get("/chat/unread-count", authHeaders(t))
         .then((r) => setChatUnreadNav(Number(r.data?.count) || 0))
-        .catch(() => {});
+        .catch(() => { });
 
       if (u.role !== "admin") {
         http
@@ -295,7 +295,7 @@ export const AppLayout = ({ cartCount, children }) => {
     hasNavAnimatedRef.current = true;
     try {
       sessionStorage.setItem("marblex_intro_done", "1");
-    } catch {}
+    } catch { }
     window.__MARBLEX_INTRO_DONE__ = true;
 
     const tl = gsap.timeline({
@@ -516,12 +516,12 @@ export const AppLayout = ({ cartCount, children }) => {
       <header
         ref={headerRef}
         className={`sticky top-0 z-40 w-full border-b transition-[background-color,box-shadow,padding] duration-200 ease-in-out ${isMenuOpen ? "z-[70]" : "z-40"} ${isDark
-            ? scrolled || isMenuOpen
-              ? "bg-[#0c222f]/95 backdrop-blur-md border-slate-800 shadow-md shadow-black/20 py-1.5 sm:py-2"
-              : "bg-[#091b24] border-slate-800/80 py-2 sm:py-2.5"
-            : scrolled || isMenuOpen
-              ? "bg-white/95 backdrop-blur-md border-slate-200/90 shadow-md shadow-[#0a3d52]/5 py-1.5 sm:py-2"
-              : "bg-white border-slate-200/80 py-2 sm:py-2.5"
+          ? scrolled || isMenuOpen
+            ? "bg-[#0c222f]/95 backdrop-blur-md border-slate-800 shadow-md shadow-black/20 py-1.5 sm:py-2"
+            : "bg-[#091b24] border-slate-800/80 py-2 sm:py-2.5"
+          : scrolled || isMenuOpen
+            ? "bg-white/95 backdrop-blur-md border-slate-200/90 shadow-md shadow-[#0a3d52]/5 py-1.5 sm:py-2"
+            : "bg-white border-slate-200/80 py-2 sm:py-2.5"
           }`}
       >
         <div className="max-w-[1440px] mx-auto px-3 sm:px-4 md:px-8">
@@ -574,10 +574,10 @@ export const AppLayout = ({ cartCount, children }) => {
                     key={link.label}
                     to={link.path}
                     className={`relative px-4 py-2 text-[13px] font-semibold font-subheading rounded-full transition-all duration-150 flex items-center gap-1 ${isActive
-                        ? "bg-[#0a3d52] text-white shadow-xs"
-                        : isDark
-                          ? "text-slate-300 hover:text-white hover:bg-white/10"
-                          : "text-slate-700 hover:text-[#0a3d52] hover:bg-white/70"
+                      ? "bg-[#0a3d52] text-white shadow-xs"
+                      : isDark
+                        ? "text-slate-300 hover:text-white hover:bg-white/10"
+                        : "text-slate-700 hover:text-[#0a3d52] hover:bg-white/70"
                       }`}
                   >
                     <span>{link.label}</span>
@@ -602,8 +602,8 @@ export const AppLayout = ({ cartCount, children }) => {
                 title={`Switch to ${isDark ? "Light" : "Dark"} Mode`}
                 aria-label="Toggle Theme"
                 className={`flex w-9 h-9 sm:w-10 sm:h-10 rounded-full border transition-all items-center justify-center shrink-0 ${isDark
-                    ? "bg-[#0e2735] border-slate-700 text-amber-400 hover:bg-slate-800 hover:border-amber-400/50 shadow-xs"
-                    : "bg-[#f8fafc] border-slate-200 text-[#0a3d52] hover:bg-white hover:border-[#0a3d52]/40 shadow-xs"
+                  ? "bg-[#0e2735] border-slate-700 text-amber-400 hover:bg-slate-800 hover:border-amber-400/50 shadow-xs"
+                  : "bg-[#f8fafc] border-slate-200 text-[#0a3d52] hover:bg-white hover:border-[#0a3d52]/40 shadow-xs"
                   }`}
               >
                 {isDark ? (
@@ -617,13 +617,11 @@ export const AppLayout = ({ cartCount, children }) => {
               <RouterLink
                 to="/cart"
                 aria-label="Cart"
-                className={`relative ${
-                  isUserLoggedIn ? "hidden sm:flex" : "flex"
-                } w-9 h-9 sm:w-auto sm:h-auto items-center justify-center sm:justify-start gap-2 sm:px-3.5 sm:py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] ${
-                  isDark
+                className={`relative ${isUserLoggedIn ? "hidden sm:flex" : "flex"
+                  } w-9 h-9 sm:w-auto sm:h-auto items-center justify-center sm:justify-start gap-2 sm:px-3.5 sm:py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] ${isDark
                     ? "border-slate-700 bg-[#0e2735] text-white hover:border-[#ff6b4a]"
                     : "border-slate-200 bg-[#f8fafc] hover:border-slate-300 text-[#0a3d52]"
-                }`}
+                  }`}
               >
                 <Badge
                   badgeContent={cartCount}
@@ -667,15 +665,14 @@ export const AppLayout = ({ cartCount, children }) => {
               ) : (
                 <div className="relative" ref={accountMenuRef}>
                   <div
-                    className={`flex items-center rounded-full border transition-all ${
-                      accountMenuOpen
+                    className={`flex items-center rounded-full border transition-all ${accountMenuOpen
                         ? isDark
                           ? "border-[#ff6b4a]/40 bg-[#ff6b4a]/10"
                           : "border-[#0a3d52]/25 bg-[#0a3d52]/5"
                         : isDark
                           ? "border-slate-700 bg-[#0e2735] hover:border-slate-600"
                           : "border-slate-200 bg-[#f8fafc] hover:border-slate-300"
-                    }`}
+                      }`}
                   >
                     <button
                       type="button"
@@ -707,9 +704,8 @@ export const AppLayout = ({ cartCount, children }) => {
                   {accountMenuOpen && (
                     <div
                       role="menu"
-                      className={`absolute right-0 top-[calc(100%+8px)] z-[80] w-[min(16.5rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border shadow-[0_18px_40px_-22px_rgba(8,34,46,.5)] ${
-                        isDark ? "border-slate-700/80 bg-[#0c222f]" : "border-slate-200/90 bg-white"
-                      }`}
+                      className={`absolute right-0 top-[calc(100%+8px)] z-[80] w-[min(16.5rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border shadow-[0_18px_40px_-22px_rgba(8,34,46,.5)] ${isDark ? "border-slate-700/80 bg-[#0c222f]" : "border-slate-200/90 bg-white"
+                        }`}
                     >
                       <div className={`flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5 sm:py-3 ${isDark ? "bg-white/[0.02]" : "bg-slate-50/80"}`}>
                         <AccountAvatar className="h-8 w-8 shrink-0 text-[11px] sm:h-9 sm:w-9 sm:text-[12px]" />
@@ -729,9 +725,8 @@ export const AppLayout = ({ cartCount, children }) => {
                             type="button"
                             role="menuitem"
                             onClick={openNotifications}
-                            className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${
-                              isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
-                            }`}
+                            className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
+                              }`}
                           >
                             <NotificationsNoneOutlinedIcon sx={{ fontSize: 17 }} />
                             <span className="flex-1 text-left">Notifications</span>
@@ -747,9 +742,8 @@ export const AppLayout = ({ cartCount, children }) => {
                             type="button"
                             role="menuitem"
                             onClick={openNotifications}
-                            className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${
-                              isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
-                            }`}
+                            className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
+                              }`}
                           >
                             <NotificationsNoneOutlinedIcon sx={{ fontSize: 17 }} />
                             <span className="flex-1 text-left">Notifications</span>
@@ -763,9 +757,8 @@ export const AppLayout = ({ cartCount, children }) => {
                             to="/admin"
                             role="menuitem"
                             onClick={() => setAccountMenuOpen(false)}
-                            className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${
-                              isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
-                            }`}
+                            className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
+                              }`}
                           >
                             <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 17 }} />
                             <span className="flex-1">Admin console</span>
@@ -776,9 +769,8 @@ export const AppLayout = ({ cartCount, children }) => {
                             to="/dashboard"
                             role="menuitem"
                             onClick={() => setAccountMenuOpen(false)}
-                            className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${
-                              isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
-                            }`}
+                            className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
+                              }`}
                           >
                             <BusinessCenterOutlinedIcon sx={{ fontSize: 17 }} />
                             <span className="flex-1">Client portal</span>
@@ -803,12 +795,12 @@ export const AppLayout = ({ cartCount, children }) => {
               <button
                 type="button"
                 className={`lg:hidden relative z-[70] flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 ${isMenuOpen
-                    ? isDark
-                      ? "border-[#ff6b4a]/50 bg-[#ff6b4a]/15 text-[#ff8c73] rotate-90"
-                      : "border-[#ff6b4a]/40 bg-[#ff6b4a]/10 text-[#ff6b4a] rotate-90"
-                    : isDark
-                      ? "border-slate-700 bg-[#0e2735] text-white hover:bg-slate-800"
-                      : "border-slate-200 bg-[#f8fafc] text-[#08222e] hover:bg-slate-100"
+                  ? isDark
+                    ? "border-[#ff6b4a]/50 bg-[#ff6b4a]/15 text-[#ff8c73] rotate-90"
+                    : "border-[#ff6b4a]/40 bg-[#ff6b4a]/10 text-[#ff6b4a] rotate-90"
+                  : isDark
+                    ? "border-slate-700 bg-[#0e2735] text-white hover:bg-slate-800"
+                    : "border-slate-200 bg-[#f8fafc] text-[#08222e] hover:bg-slate-100"
                   }`}
                 onClick={() => {
                   setAccountMenuOpen(false);
@@ -826,9 +818,8 @@ export const AppLayout = ({ cartCount, children }) => {
 
       {/* Mobile Navigation — simple professional drawer */}
       <div
-        className={`lg:hidden fixed inset-0 z-[60] transition-[opacity,visibility] duration-300 ${
-          isMenuOpen ? "pointer-events-auto visible opacity-100" : "pointer-events-none invisible opacity-0"
-        }`}
+        className={`lg:hidden fixed inset-0 z-[60] transition-[opacity,visibility] duration-300 ${isMenuOpen ? "pointer-events-auto visible opacity-100" : "pointer-events-none invisible opacity-0"
+          }`}
         aria-hidden={!isMenuOpen}
       >
         <button
@@ -840,9 +831,8 @@ export const AppLayout = ({ cartCount, children }) => {
 
         <div
           ref={mobileMenuPanelRef}
-          className={`absolute inset-x-3 top-[4.6rem] max-h-[min(78dvh,520px)] overflow-hidden rounded-2xl border shadow-xl transition-all duration-300 ease-out sm:inset-x-4 ${
-            isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200 bg-white"
-          } ${isMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}
+          className={`absolute inset-x-3 top-[4.6rem] max-h-[min(78dvh,520px)] overflow-hidden rounded-2xl border shadow-xl transition-all duration-300 ease-out sm:inset-x-4 ${isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200 bg-white"
+            } ${isMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}
         >
           <div ref={mobileMenuItemsRef} className="overflow-y-auto overscroll-contain px-3 py-3.5 sm:px-4">
             <div data-mobile-nav-brand className="mb-3 flex items-center justify-between px-1">
@@ -864,26 +854,24 @@ export const AppLayout = ({ cartCount, children }) => {
                     to={link.path}
                     data-mobile-nav-item
                     onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition active:scale-[0.99] ${
-                      isActive
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition active:scale-[0.99] ${isActive
                         ? isDark
                           ? "bg-[#ff6b4a]/15 text-[#ff8c73]"
                           : "bg-[#0a3d52]/8 text-[#0a3d52]"
                         : isDark
                           ? "text-slate-200 hover:bg-white/5"
                           : "text-[#0a3d52] hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                        isActive
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isActive
                           ? isDark
                             ? "bg-[#ff6b4a]/20 text-[#ff8c73]"
                             : "bg-[#0a3d52] text-white"
                           : isDark
                             ? "bg-slate-800 text-slate-300"
                             : "bg-slate-100 text-[#0a3d52]"
-                      }`}
+                        }`}
                     >
                       <Icon sx={{ fontSize: 18 }} />
                     </span>
@@ -910,9 +898,8 @@ export const AppLayout = ({ cartCount, children }) => {
                 </a>
                 <a
                   href="tel:03084585792"
-                  className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider ${
-                    isDark ? "bg-slate-800 text-slate-100" : "bg-[#0a3d52] text-white"
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider ${isDark ? "bg-slate-800 text-slate-100" : "bg-[#0a3d52] text-white"
+                    }`}
                 >
                   <LocalPhoneOutlinedIcon sx={{ fontSize: 16 }} />
                   Call
@@ -952,13 +939,11 @@ export const AppLayout = ({ cartCount, children }) => {
         <RouterLink
           to="/cart"
           aria-label="Cart"
-          className={`sm:hidden fixed z-[9998] flex h-14 w-14 items-center justify-center rounded-full border shadow-lg transition active:scale-95 ${
-            isCustomer ? "bottom-[5.25rem] right-5" : "bottom-5 right-6"
-          } ${
-            isDark
+          className={`sm:hidden fixed z-[9998] flex h-14 w-14 items-center justify-center rounded-full border shadow-lg transition active:scale-95 ${isCustomer ? "bottom-[5.25rem] right-5" : "bottom-5 right-6"
+            } ${isDark
               ? "border-slate-600 bg-[#0e2735] text-[#ff8c73] shadow-black/40"
               : "border-slate-200 bg-white text-[#0a3d52] shadow-[#0a3d52]/20"
-          }`}
+            }`}
         >
           <Badge
             badgeContent={cartCount}

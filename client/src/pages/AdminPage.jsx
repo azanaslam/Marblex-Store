@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import {
   Alert,
-  Avatar,
   Dialog,
   DialogActions,
   DialogContent,
@@ -17,13 +16,17 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import SearchIcon from "@mui/icons-material/Search";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import SendIcon from "@mui/icons-material/Send";
 import SparklesIcon from "@mui/icons-material/AutoAwesome";
+import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import WorkspacePremiumOutlinedIcon from "@mui/icons-material/WorkspacePremiumOutlined";
+import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 
 import { AdminBroadcastTab } from "../components/AdminBroadcastTab";
 import { AdminMessengerTab } from "../components/AdminMessengerTab";
@@ -35,16 +38,19 @@ import { AdminCustomersTab } from "../components/AdminCustomersTab";
 import { AdminReviewsTab } from "../components/AdminReviewsTab";
 import { AdminProfileTab } from "../components/AdminProfileTab";
 import { AdminCommandCenter } from "../components/AdminCommandCenter";
+import { AdminProductsTab } from "../components/AdminProductsTab";
+import { AdminPartnerSubmissionsTab } from "../components/AdminPartnerSubmissionsTab";
 import { authHeaders, http } from "../api/http";
-import { clearAuthSession, getAuthToken, getAuthUser } from "../auth/session";
+import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
 import { TiltCard3D } from "../components/admin3d/TiltCard3D";
-import { StatCard3D } from "../components/admin3d/StatCard3D";
 import { TabWrapper3D } from "../components/admin3d/TabWrapper3D";
+import "../styles/admin-shell.css";
 
 export const AdminPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [token, setToken] = useState(getAuthToken());
+  const [adminUser, setAdminUser] = useState(() => getAuthUser());
   const [activeTab, setActiveTab] = useState(0);
   const [chatUnreadTotal, setChatUnreadTotal] = useState(0);
   const [overview, setOverview] = useState(null);
@@ -74,10 +80,16 @@ export const AdminPage = () => {
   const [replyDialog, setReplyDialog] = useState({ open: false, request: null, reply: "" });
   const [emailConfig, setEmailConfig] = useState({ user: "", pass: "" });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminSearch, setAdminSearch] = useState("");
   const [statusConfirmDialog, setStatusConfirmDialog] = useState({ open: false, order: null, newStatus: "" });
   const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [productStudioTab, setProductStudioTab] = useState("inventory"); // inventory | editor
+  const [productFilter, setProductFilter] = useState("all"); // all | active | featured | low
+  const [productQuery, setProductQuery] = useState("");
+  const [editorSection, setEditorSection] = useState("basics"); // basics | media | details
   const refreshBtnRef = useRef(null);
+  const productStudioTopRef = useRef(null);
 
   const showToast = (type, message) => setToast({ open: true, type, message });
 
@@ -140,6 +152,19 @@ export const AdminPage = () => {
   }, [loadDashboardData]);
 
   useEffect(() => {
+    const sync = () => {
+      setToken(getAuthToken());
+      setAdminUser(getAuthUser());
+    };
+    window.addEventListener(onAuthSessionChangeEvent, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(onAuthSessionChangeEvent, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  useEffect(() => {
     const n = location.state?.chatUnread;
     const backTab = location.state?.adminTab;
     if (typeof backTab === "number") {
@@ -161,7 +186,7 @@ export const AdminPage = () => {
     if (!token) return;
     const h = authHeaders(token);
     const load = () =>
-      http.get("/chat/unread-count", h).then((r) => setChatUnreadTotal(Number(r.data?.count) || 0)).catch(() => {});
+      http.get("/chat/unread-count", h).then((r) => setChatUnreadTotal(Number(r.data?.count) || 0)).catch(() => { });
     load();
     const id = setInterval(load, 20000);
     return () => clearInterval(id);
@@ -187,6 +212,25 @@ export const AdminPage = () => {
       active: true,
     });
     setEditingProductId("");
+    setEditorSection("basics");
+  };
+
+  const scrollProductStudioTop = () => {
+    requestAnimationFrame(() => {
+      const el = productStudioTopRef.current;
+      if (el?.scrollIntoView) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  };
+
+  const openProductEditor = (mode = "new") => {
+    if (mode === "new") resetProductForm();
+    setProductStudioTab("editor");
+    setActiveTab(4);
+    scrollProductStudioTop();
   };
 
   const saveProduct = async () => {
@@ -200,6 +244,7 @@ export const AdminPage = () => {
     }
 
     setIsSaving(true);
+    const wasEditing = Boolean(editingProductId);
     try {
       if (editingProductId) {
         await http.put(`/products/${editingProductId}`, product, authHeaders(token));
@@ -208,7 +253,9 @@ export const AdminPage = () => {
       }
       resetProductForm();
       await loadDashboardData();
-      showToast("success", editingProductId ? "Product updated." : "Product published to Database!");
+      showToast("success", wasEditing ? "Product updated." : "Product published to Database!");
+      setProductStudioTab("inventory");
+      scrollProductStudioTop();
     } catch {
       showToast("error", "Failed to save product.");
     } finally {
@@ -242,7 +289,10 @@ export const AdminPage = () => {
       featured: Boolean(item.featured),
       active: item.active !== false,
     });
+    setEditorSection("basics");
+    setProductStudioTab("editor");
     setActiveTab(4);
+    scrollProductStudioTop();
   };
 
   const deleteProductItem = async (id) => {
@@ -457,109 +507,173 @@ export const AdminPage = () => {
 
   const visualBars = (overview?.weeklyBars || []).length
     ? overview.weeklyBars.map((b) => ({
-        label: b.label,
-        value: b.orders || 0,
-        height: b.height || "8%",
-        revenue: b.revenue || 0,
-      }))
+      label: b.label,
+      value: b.orders || 0,
+      height: b.height || "8%",
+      revenue: b.revenue || 0,
+    }))
     : [
-        { label: "Mon", value: 0, height: "8%", revenue: 0 },
-        { label: "Tue", value: 0, height: "8%", revenue: 0 },
-        { label: "Wed", value: 0, height: "8%", revenue: 0 },
-        { label: "Thu", value: 0, height: "8%", revenue: 0 },
-        { label: "Fri", value: 0, height: "8%", revenue: 0 },
-        { label: "Sat", value: 0, height: "8%", revenue: 0 },
-        { label: "Sun", value: 0, height: "8%", revenue: 0 },
-      ];
+      { label: "Mon", value: 0, height: "8%", revenue: 0 },
+      { label: "Tue", value: 0, height: "8%", revenue: 0 },
+      { label: "Wed", value: 0, height: "8%", revenue: 0 },
+      { label: "Thu", value: 0, height: "8%", revenue: 0 },
+      { label: "Fri", value: 0, height: "8%", revenue: 0 },
+      { label: "Sat", value: 0, height: "8%", revenue: 0 },
+      { label: "Sun", value: 0, height: "8%", revenue: 0 },
+    ];
 
   const navItems = [
-    { id: 0, label: "Command Center", icon: "⚡" },
-    { id: 1, label: "Web Orders", icon: "🌐", badge: websiteOrders },
-    { id: 2, label: "WhatsApp Orders", icon: "📱", badge: whatsappOrders },
-    { id: 12, label: "Payment Queue", icon: "💳", badge: paymentQueueCount || overview?.pendingVerification || 0 },
+    { id: 0, label: "Command center", icon: "🔥" },
+    { id: 1, label: "Web orders", icon: "🌐", badge: websiteOrders },
+    { id: 2, label: "WhatsApp orders", icon: "💬", badge: whatsappOrders },
+    { id: 12, label: "Payment queue", icon: "💳", badge: paymentQueueCount || overview?.pendingVerification || 0 },
     { id: 13, label: "Quotes / RFQ", icon: "📋", badge: overview?.openQuotes || 0 },
     { id: 3, label: "Customers", icon: "👥", badge: pendingAccessCount },
-    { id: 4, label: "Products Catalog", icon: "🛍️", badge: products.length },
+    { id: 4, label: "Products catalog", icon: "🛍️", badge: products.length },
     { id: 15, label: "Documents", icon: "📄" },
-    { id: 5, label: "Blogs & Stories", icon: "📝", badge: blogs.length },
-    { id: 6, label: "Support Chats", icon: "💬", badge: chatUnreadTotal },
+    { id: 5, label: "Blogs & stories", icon: "✍️", badge: blogs.length },
+    { id: 6, label: "Support chats", icon: "🗨️", badge: chatUnreadTotal },
     { id: 14, label: "Tickets", icon: "🎫", badge: overview?.openTickets || 0 },
-    { id: 7, label: "Global Broadcast", icon: "📢" },
-    { id: 8, label: "Partner Submissions", icon: "🤝", badge: adminUnreadReviews },
-    { id: 9, label: "Order Lookup", icon: "🔍" },
-    { id: 10, label: "Client Inquiries", icon: "📧", badge: contactRequests.filter((c) => c.status === "unread").length },
-    { id: 16, label: "Client Reviews", icon: "⭐" },
-    { id: 11, label: "SMTP Settings", icon: "⚙️" },
-    { id: 17, label: "Account Profile", icon: "👤" },
+    { id: 7, label: "Global broadcast", icon: "📣" },
+    { id: 8, label: "Partner submissions", icon: "🤝", badge: adminUnreadReviews },
+    { id: 9, label: "Order lookup", icon: "🔎" },
+    { id: 10, label: "Client inquiries", icon: "📧", badge: contactRequests.filter((c) => c.status === "unread").length },
+    { id: 16, label: "Client reviews", icon: "⭐" },
+    { id: 11, label: "SMTP settings", icon: "⚙️" },
+    { id: 17, label: "Account profile", icon: "👤" },
   ];
 
   const navGroups = [
-    { title: "Core Operations", items: [0] },
-    { title: "Revenue & Sales", items: [1, 2, 12, 13, 9] },
-    { title: "Catalog & Docs", items: [4, 15, 5, 8] },
-    { title: "Customers & Support", items: [3, 6, 14, 7, 10, 16] },
+    { title: "", items: [0] },
+    { title: "Revenue & sales", items: [1, 2, 12, 13, 9] },
+    { title: "Catalog & docs", items: [4, 15, 5, 8] },
+    { title: "Customers & support", items: [3, 6, 14, 7, 10, 16] },
     { title: "System", items: [11, 17] },
   ];
+
+  const runAdminSearch = (q) => {
+    const term = String(q || "").trim().toLowerCase();
+    if (!term) return;
+    const hitOrder = (orderLookup.all || []).find(
+      (o) =>
+        String(o.orderNumber || "").toLowerCase().includes(term) ||
+        String(o.customerName || "").toLowerCase().includes(term) ||
+        String(o._id || "").toLowerCase().includes(term)
+    );
+    if (hitOrder) {
+      setOrderLookup((prev) => ({ ...prev, q: term, filtered: [hitOrder] }));
+      setActiveTab(9);
+      return;
+    }
+    const hitProduct = products.find((p) => String(p.name || "").toLowerCase().includes(term));
+    if (hitProduct) {
+      setActiveTab(4);
+      return;
+    }
+    const hitUser = (usersData.users || []).find(
+      (u) =>
+        String(u.name || "").toLowerCase().includes(term) ||
+        String(u.email || "").toLowerCase().includes(term)
+    );
+    if (hitUser) {
+      setActiveTab(3);
+      return;
+    }
+    showToast("error", "No match in orders, clients, or products.");
+  };
 
   const render3DOrderCard = (order) => {
     const displayNum = order.orderNumber || `#${String(order._id).slice(-6).toUpperCase()}`;
     const isManual = ["easypaisa", "jazzcash", "bank_transfer"].includes(order.paymentMethod);
+    const payTone =
+      order.paymentStatus === "paid"
+        ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+        : order.paymentStatus === "pending_verification"
+          ? "text-sky-700 bg-sky-50 border-sky-200"
+          : order.paymentStatus === "failed"
+            ? "text-rose-700 bg-rose-50 border-rose-200"
+            : "text-amber-700 bg-amber-50 border-amber-200";
+    const methodTone =
+      order.paymentMethod === "cod"
+        ? "bg-slate-100 text-slate-700 border-slate-200"
+        : order.paymentMethod === "stripe"
+          ? "bg-violet-50 text-violet-700 border-violet-200"
+          : "bg-emerald-50 text-emerald-700 border-emerald-200";
+
+    const metaBits = [
+      order.city ? { k: "City", v: order.city } : null,
+      order.address ? { k: "Address", v: order.address } : null,
+      order.areaSize ? { k: "Area", v: `${order.areaSize} sq ft` } : null,
+      order.deliveryDate ? { k: "Date", v: order.deliveryDate } : null,
+      order.courierName ? { k: "Courier", v: order.courierName } : null,
+      order.trackingRef ? { k: "Track", v: order.trackingRef } : null,
+    ].filter(Boolean);
 
     return (
-      <TiltCard3D
+      <article
         key={order._id}
-        maxTilt={3}
-        scale={1.01}
-        className="group rounded-2xl bg-white border border-[#e0e6ed] p-5 shadow-sm transition-all duration-300 hover:border-[#ff8c73] hover:shadow-md"
+        className="mx-oc rounded-2xl bg-white border border-[#e2e8ec] overflow-hidden shadow-[0_1px_2px_rgba(11,47,61,.04),0_10px_24px_-16px_rgba(11,47,61,.22)]"
       >
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b border-[#e0e6ed]/60">
-          <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-[#0a3d52]/5 border border-[#0a3d52]/10 flex items-center justify-center font-mono font-bold text-[#0a3d52] text-xs">
+        {/* Accent rail */}
+        <div className="h-1 w-full bg-gradient-to-r from-[#0a3d52] via-[#ff6b4a] to-[#0a3d52]/30" />
+
+        <div className="p-3.5 sm:p-4">
+          {/* Header */}
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl shrink-0 grid place-items-center font-mono font-extrabold text-[#0a3d52] text-[11px] sm:text-xs bg-[#f1f5f9] border border-[#e2e8ec]">
               {String(displayNum).slice(-4)}
             </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="text-base font-bold text-[#0a3d52] font-heading">{order.customerName}</h4>
-                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#f5f7fa] text-[#565e69] border border-[#e0e6ed]">
-                  {order.channel || order.orderSource}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h4 className="text-[14px] sm:text-[15px] font-extrabold text-[#0a3d52] tracking-[-0.2px] leading-tight truncate">
+                    {order.customerName}
+                  </h4>
+                  <p className="text-[11px] text-[#64748b] mt-0.5 truncate">
+                    {[order.email, order.phone].filter(Boolean).join(" · ") || "No contact"}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-[13px] sm:text-sm font-black text-[#0a3d52] tabular-nums leading-none">
+                    PKR {Number(order.subtotal || 0).toLocaleString()}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyOrderId(displayNum)}
+                    className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold font-mono text-[#64748b] hover:text-[#0a3d52]"
+                    title="Copy order number"
+                  >
+                    <ContentCopyRoundedIcon sx={{ fontSize: 11 }} />
+                    {displayNum}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <span className="text-[9px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-[#f8fafc] text-[#64748b] border border-[#e2e8ec]">
+                  {order.channel || order.orderSource || "store"}
                 </span>
-                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                  order.paymentMethod === "cod"
-                    ? "bg-slate-100 text-slate-700"
-                    : order.paymentMethod === "stripe"
-                    ? "bg-purple-50 text-purple-700 border border-purple-200"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                }`}>
+                <span className={`text-[9px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded-md border ${methodTone}`}>
                   {order.paymentMethod ? String(order.paymentMethod).replace("_", " ") : "COD"}
                 </span>
+                {isManual ? (
+                  <span className="text-[9px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-700 border border-orange-200">
+                    Manual
+                  </span>
+                ) : null}
               </div>
-              <p className="text-xs text-[#565e69] font-medium mt-0.5">
-                {order.email} <span className="text-slate-300">|</span> {order.phone}
-              </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => copyOrderId(displayNum)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f5f7fa] hover:bg-[#e0e6ed] text-[#0a3d52] border border-[#e0e6ed] text-xs font-mono transition-colors cursor-pointer"
-              title="Copy Order Number"
-            >
-              <ContentCopyRoundedIcon sx={{ fontSize: 13 }} />
-              {displayNum}
-            </button>
-
-            <div className="flex items-center rounded-lg bg-[#f5f7fa] border border-[#e0e6ed] p-1">
+          {/* Status toolbar */}
+          <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:items-center sm:bg-[#f8fafc] sm:border sm:border-[#e8eef2] sm:rounded-xl sm:p-1.5">
+            <label className="flex-1 min-w-0 flex items-center gap-2 rounded-lg border border-[#e2e8ec] sm:border-0 bg-white sm:bg-transparent px-2.5 py-2 sm:py-1.5">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider text-[#94a3b8] shrink-0">Pay</span>
               <select
                 value={order.paymentStatus || "pending"}
                 onChange={(e) => handleUpdatePaymentStatus(order._id, e.target.value)}
-                className={`text-xs font-bold uppercase px-2.5 py-1 rounded border-0 bg-transparent focus:ring-0 cursor-pointer ${
-                  order.paymentStatus === "paid"
-                    ? "text-emerald-700 font-bold"
-                    : order.paymentStatus === "pending_verification"
-                    ? "text-blue-700 font-bold"
-                    : "text-amber-600"
-                }`}
+                className={`min-w-0 flex-1 text-[11px] font-extrabold uppercase border-0 bg-transparent outline-none cursor-pointer ${payTone.split(" ")[0]}`}
               >
                 <option value="unpaid">Unpaid</option>
                 <option value="pending">Pending</option>
@@ -567,13 +681,17 @@ export const AdminPage = () => {
                 <option value="paid">Paid</option>
                 <option value="failed">Failed</option>
               </select>
-
-              <div className="w-px h-3.5 bg-[#e0e6ed] mx-1" />
-
+              <span className={`hidden sm:inline text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border ${payTone}`}>
+                {(order.paymentStatus || "pending").replace("_", " ")}
+              </span>
+            </label>
+            <div className="hidden sm:block w-px h-6 bg-[#e2e8ec]" />
+            <label className="flex-1 min-w-0 flex items-center gap-2 rounded-lg border border-[#e2e8ec] sm:border-0 bg-white sm:bg-transparent px-2.5 py-2 sm:py-1.5">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider text-[#94a3b8] shrink-0">Ship</span>
               <select
                 value={order.orderStatus || "pending"}
                 onChange={(e) => handleUpdateOrderStatus(order, e.target.value)}
-                className="text-xs font-bold uppercase px-2.5 py-1 rounded border-0 bg-transparent focus:ring-0 cursor-pointer text-[#0a3d52]"
+                className="min-w-0 flex-1 text-[11px] font-extrabold uppercase border-0 bg-transparent outline-none cursor-pointer text-[#0a3d52]"
               >
                 <option value="pending">Pending</option>
                 <option value="processing">Processing</option>
@@ -581,948 +699,863 @@ export const AdminPage = () => {
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
               </select>
-            </div>
-
-            <div className="px-3.5 py-1.5 rounded-lg bg-[#0a3d52] text-white font-bold text-xs shadow-sm font-subheading">
-              PKR {order.subtotal?.toLocaleString()}
-            </div>
-          </div>
-        </div>
-
-        {/* Detailed Address & Transaction Verification Bar */}
-        <div className="py-2.5 px-3 rounded-xl bg-slate-50 border border-[#e0e6ed]/80 my-3 text-xs space-y-1">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700">
-            {order.city && (
-              <span><strong>City:</strong> {order.city}</span>
-            )}
-            {order.address && (
-              <span><strong>Site Address:</strong> {order.address}</span>
-            )}
-            {order.areaSize && (
-              <span><strong>Area Size:</strong> {order.areaSize} sq ft</span>
-            )}
-            {order.deliveryDate && (
-              <span><strong>Pref. Date:</strong> {order.deliveryDate}</span>
-            )}
+            </label>
           </div>
 
-          {(order.transactionReference || order.paymentScreenshotUrl) && (
-            <div className="pt-1.5 border-t border-slate-200/80 flex flex-wrap items-center gap-3 text-xs">
-              {order.transactionReference && (
-                <span className="text-blue-700 font-semibold flex items-center gap-1">
-                  <strong>TID / Ref:</strong> <span className="font-mono bg-blue-50 px-2 py-0.5 rounded border border-blue-200">{order.transactionReference}</span>
-                </span>
-              )}
-              {order.paymentScreenshotUrl && (
-                <a
-                  href={order.paymentScreenshotUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[#ff6b4a] hover:underline font-bold text-xs flex items-center gap-1"
-                >
-                  📸 View Receipt Screenshot
-                </a>
-              )}
-            </div>
-          )}
+          {/* Meta chips */}
+          {(metaBits.length > 0 ||
+            order.transactionReference ||
+            order.paymentScreenshotUrl ||
+            order.notes ||
+            order.dispatchNote) && (
+            <div className="mt-3 pt-3 border-t border-dashed border-[#e8eef2]">
+              {metaBits.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {metaBits.map((m) => (
+                    <span
+                      key={`${order._id}-${m.k}`}
+                      className="inline-flex max-w-full items-baseline gap-1 rounded-lg bg-[#f8fafc] border border-[#e8eef2] px-2 py-1 text-[11px]"
+                    >
+                      <span className="font-extrabold uppercase tracking-wide text-[9px] text-[#94a3b8]">{m.k}</span>
+                      <span className="font-semibold text-[#334155] truncate">{m.v}</span>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
 
-          {order.notes && (
-            <div className="text-[11px] text-slate-500 italic pt-0.5">
-              <strong>Notes:</strong> {order.notes}
-            </div>
-          )}
-          {(order.courierName || order.trackingRef || order.dispatchNote) && (
-            <div className="text-[11px] text-slate-700 pt-0.5">
-              {order.courierName ? <span><strong>Courier:</strong> {order.courierName} </span> : null}
-              {order.trackingRef ? <span><strong>Track:</strong> {order.trackingRef} </span> : null}
-              {order.dispatchNote ? <span className="block italic">{order.dispatchNote}</span> : null}
-            </div>
-          )}
-        </div>
+              {(order.transactionReference || order.paymentScreenshotUrl) && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {order.transactionReference ? (
+                    <span className="inline-flex items-center text-[10px] font-bold font-mono text-sky-800 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-md">
+                      TID {order.transactionReference}
+                    </span>
+                  ) : null}
+                  {order.paymentScreenshotUrl ? (
+                    <a
+                      href={order.paymentScreenshotUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] font-extrabold text-[#ff6b4a] hover:underline"
+                    >
+                      Receipt
+                    </a>
+                  ) : null}
+                </div>
+              )}
 
-        <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {order.items?.map((item, idx) => (
-            <div key={`${order._id}-${idx}`} className="flex items-center gap-3 p-2.5 rounded-xl bg-[#f5f7fa] border border-[#e0e6ed]/60">
-              <img
-                src={item.imageUrl || "/products/Banner1.jpeg"}
-                alt={item.name}
-                className="w-10 h-10 rounded-lg object-cover border border-[#e0e6ed] bg-white shrink-0"
-              />
-              <div className="min-w-0">
-                <h5 className="text-xs font-bold text-[#0f1929] truncate">{item.name}</h5>
-                <p className="text-[11px] text-[#565e69] font-medium">
-                  Qty: <span className="text-[#ff6b4a] font-bold">{item.quantity}</span> · PKR {item.price?.toLocaleString()}
+              {order.notes ? (
+                <p className="mt-2 text-[11px] text-[#64748b]">
+                  <span className="font-bold text-[#94a3b8]">Note</span> {order.notes}
                 </p>
-              </div>
+              ) : null}
+              {order.dispatchNote ? (
+                <p className="mt-1 text-[11px] text-[#64748b] italic">{order.dispatchNote}</p>
+              ) : null}
             </div>
-          ))}
+          )}
+
+          {/* Items */}
+          {order.items?.length ? (
+            <div className="mt-3 space-y-1.5">
+              {order.items.map((item, idx) => (
+                <div
+                  key={`${order._id}-${idx}`}
+                  className="flex items-center gap-2.5 rounded-xl bg-[#f8fafc] border border-[#eef2f5] px-2 py-1.5"
+                >
+                  <img
+                    src={item.imageUrl || "/products/Banner1.jpeg"}
+                    alt={item.name}
+                    className="w-9 h-9 rounded-lg object-cover border border-[#e2e8ec] bg-white shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-bold text-[#0f1929] truncate">{item.name}</p>
+                    <p className="text-[10px] text-[#64748b] font-semibold">
+                      ×{item.quantity}
+                      <span className="text-[#cbd5e1]"> · </span>
+                      PKR {Number(item.price || 0).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
-      </TiltCard3D>
+      </article>
+    );
+  };
+
+  const filteredProducts = useMemo(() => {
+    const q = productQuery.trim().toLowerCase();
+    return (products || []).filter((p) => {
+      if (productFilter === "active" && p.active === false) return false;
+      if (productFilter === "featured" && !p.featured) return false;
+      if (productFilter === "low" && Number(p.stock || 0) >= 5) return false;
+      if (productFilter === "hidden" && p.active !== false) return false;
+      if (!q) return true;
+      return (
+        String(p.name || "").toLowerCase().includes(q) ||
+        String(p.category || "").toLowerCase().includes(q)
+      );
+    });
+  }, [products, productFilter, productQuery]);
+
+  const bottomTabs = [
+    { id: 0, label: "Home", icon: "🔥" },
+    { id: 1, label: "Orders", icon: "🧾" },
+    { id: 4, label: "Catalog", icon: "🛍️" },
+    { id: 3, label: "Clients", icon: "👥" },
+  ];
+
+  const renderNavButton = (item) => {
+    const isActive = activeTab === item.id;
+    return (
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => {
+          setActiveTab(item.id);
+          setMobileMenuOpen(false);
+        }}
+        className={`mx-nav ${isActive ? "on" : ""}`}
+      >
+        <i>{item.icon}</i>
+        {item.label}
+        {item.badge > 0 ? <em>{item.badge}</em> : null}
+      </button>
     );
   };
 
   return (
-    <div className="admin-redesign relative min-h-screen w-full bg-[#f7f7f5] text-[#17201d] font-sans selection:bg-[#17201d] selection:text-white pb-16">
-      {/* The dashboard uses a quiet operational surface rather than decorative 3D effects. */}
-
-      {/* Top MARBLEX Executive Bar */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/95 border-b border-[#e0e6ed] shadow-sm">
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 rounded-xl bg-[#f5f7fa] text-[#0a3d52]"
-            >
-              <MenuIcon />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-white border border-[#e0e6ed] p-1.5 flex items-center justify-center shadow-sm overflow-hidden shrink-0">
-                <img src="/logo-icon-transparent.png" alt="MARBLEX Logo" className="w-full h-full object-contain" />
-              </div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-black tracking-tight text-[#0a3d52] font-heading">
-                  MAR<span className="text-[#ff6b4a]">BLEX</span>
-                </h1>
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Atlas Connected
+    <div className="mx-admin selection:bg-[#0b2f3d] selection:text-white">
+      {/* Homepage-style announcement strip */}
+      <div className="mx-ann">
+        <div className="mx-ann__inner mx-ann__desktop">
+          <div className="mx-ann__brand">
+            <span className="mx-ann__bolt">⚡</span>
+            <span className="mx-ann__sep">|</span>
+            <span>MARBLEX — Premium Construction Chemical & Industrial Rubber Solutions</span>
+          </div>
+          <div className="mx-ann__badges">
+            <span className="mx-ann__badge">
+              <ShieldOutlinedIcon sx={{ fontSize: 15, color: "#10b981" }} />
+              <span>
+                <b>ISO Certified</b>
+                <small>Quality You Can Trust</small>
+              </span>
+            </span>
+            <span className="mx-ann__badge">
+              <WorkspacePremiumOutlinedIcon sx={{ fontSize: 15, color: "#10b981" }} />
+              <span>
+                <b>15+ Years</b>
+                <small>Proven Performance</small>
+              </span>
+            </span>
+            <span className="mx-ann__badge">
+              <SpaOutlinedIcon sx={{ fontSize: 15, color: "#10b981" }} />
+              <span>
+                <b>Sustainable</b>
+                <small>For a Better Tomorrow</small>
+              </span>
+            </span>
+          </div>
+        </div>
+        <div className="mx-ann__mobile">
+          <div className="mx-ann__marquee">
+            {[1, 2].map((k) => (
+              <div key={k} className="mx-ann__marquee-track">
+                <span>
+                  <span className="mx-ann__bolt">⚡</span> <b>MARBLEX</b> — Premium Construction Chemical & Industrial
+                  Rubber Solutions
                 </span>
+                <span>•</span>
+                <span className="text-emerald-300 font-bold inline-flex items-center gap-1">
+                  <ShieldOutlinedIcon sx={{ fontSize: 13 }} /> ISO Certified
+                </span>
+                <span>•</span>
+                <span className="text-sky-300 font-bold inline-flex items-center gap-1">
+                  <WorkspacePremiumOutlinedIcon sx={{ fontSize: 13 }} /> 15+ Years Proven
+                </span>
+                <span>•</span>
+                <span className="text-emerald-200 font-bold inline-flex items-center gap-1">
+                  <SpaOutlinedIcon sx={{ fontSize: 13 }} /> Sustainable Eco Formulations
+                </span>
+                <span>•</span>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Homepage-style sticky navbar (admin actions) */}
+      <header className="mx-top">
+        <div className="mx-top__bar">
+          <div className="mx-top__left">
+            <button
+              type="button"
+              className="mx-top__icon-btn mx-top__menu"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <MenuRoundedIcon sx={{ fontSize: 20 }} />
+            </button>
+            <Link to="/" className="mx-top__brand-link">
+              <div className="mx-top__logo">
+                <img src="/logo-icon-transparent.png" alt="MARBLEX" />
+              </div>
+              <div className="mx-top__titles">
+                <span className="mx-top__name">
+                  MAR<span>BLEX</span>
+                </span>
+                <span className="mx-top__tag">Admin console</span>
+              </div>
+            </Link>
+            <span className="mx-pill mx-top__status">Atlas connected</span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/"
-              className="btn-3d-white flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold"
-            >
-              <StorefrontIcon sx={{ fontSize: 16 }} />
-              <span className="hidden sm:inline font-subheading">View Storefront</span>
-            </Link>
+          <label className="mx-srch mx-top__search">
+            <SearchIcon sx={{ fontSize: 16, color: "#6b8190" }} />
+            <input
+              id="mx-admin-search"
+              placeholder="Search orders, clients, products"
+              aria-label="Search"
+              value={adminSearch}
+              onChange={(e) => setAdminSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") runAdminSearch(adminSearch);
+              }}
+            />
+            <kbd>/</kbd>
+          </label>
 
+          <div className="mx-top__actions">
             <button
-              onClick={handleManualRefresh}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0a3d52]/5 hover:bg-[#0a3d52]/10 text-[#0a3d52] border border-[#0a3d52]/20 text-xs font-bold transition-all active:scale-95"
+              type="button"
+              className={`mx-top__icon-btn mx-bell ${chatUnreadTotal > 0 || adminUnreadReviews > 0 ? "dot" : ""}`}
+              aria-label="Notifications"
+              onClick={() => setActiveTab(6)}
             >
-              <span ref={refreshBtnRef} className="inline-block">
+              <NotificationsOutlinedIcon sx={{ fontSize: 18 }} />
+            </button>
+            <Link to="/" className="mx-top__pill-btn mx-hide">
+              <StorefrontIcon sx={{ fontSize: 16 }} />
+              View storefront
+            </Link>
+            <button type="button" onClick={handleManualRefresh} className="mx-top__pill-btn mx-hide">
+              <span ref={refreshBtnRef} className="inline-flex">
                 <RefreshRoundedIcon sx={{ fontSize: 16 }} />
               </span>
-              <span className="hidden sm:inline font-subheading">{isRefreshing ? "Syncing..." : "Sync DB"}</span>
+              {isRefreshing ? "Syncing…" : "Sync DB"}
             </button>
-
-            <button
-              onClick={logout}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold transition-all active:scale-95 font-subheading"
-            >
+            <button type="button" onClick={logout} className="mx-top__pill-btn mx-top__logout">
               <LogoutIcon sx={{ fontSize: 15 }} />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="mx-hide">Logout</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Workspace */}
-      <main className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-8 py-8">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Desktop MARBLEX Sidebar */}
-          <aside className="hidden md:block w-64 lg:w-72 shrink-0">
-            <div className="sticky top-20 rounded-2xl bg-white border border-[#e0e6ed] p-4 shadow-sm space-y-5">
+      <div className="mx-wrap">
+        <aside className="mx-side mx-side-desktop">
+          <button
+            type="button"
+            className={`mx-me ${activeTab === 17 ? "on" : ""}`}
+            onClick={() => setActiveTab(17)}
+          >
+            <div className="mx-av">
+              {adminUser?.avatarUrl ? (
+                <img src={adminUser.avatarUrl} alt="" />
+              ) : (
+                (adminUser?.name || "MX").trim().slice(0, 2).toUpperCase()
+              )}
+            </div>
+            <div>
+              <b>{adminUser?.name || "MARBLEX Admin"}</b>
+              <small>Master controller</small>
+            </div>
+          </button>
+          {navGroups.map((group) => (
+            <div key={group.title || "core"}>
+              {group.title ? <p className="mx-grp">{group.title}</p> : null}
+              {group.items.map((id) => {
+                const item = navItems.find((n) => n.id === id);
+                return item ? renderNavButton(item) : null;
+              })}
+            </div>
+          ))}
+        </aside>
+
+        <Drawer
+          anchor="left"
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          PaperProps={{
+            className: "mx-mdraw",
+            sx: {
+              width: "min(312px, 88vw)",
+              bgcolor: "transparent",
+              boxShadow: "none",
+              overflow: "visible",
+            },
+          }}
+        >
+          <div className="mx-mdraw__sheet">
+            <div className="mx-mdraw__hero">
+              <div className="mx-mdraw__hero-top">
+                <div className="mx-mdraw__brand">
+                  MAR<b>BLEX</b>
+                </div>
+                <button
+                  type="button"
+                  className="mx-mdraw__close"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-label="Close menu"
+                >
+                  <CloseIcon sx={{ fontSize: 18 }} />
+                </button>
+              </div>
               <button
                 type="button"
-                onClick={() => setActiveTab(17)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
-                  activeTab === 17
-                    ? "bg-[#ff6b4a]/10 border-[#ff6b4a]/30"
-                    : "bg-[#f5f7fa] border-[#e0e6ed]/60 hover:border-[#ff6b4a]/40"
-                }`}
+                className={`mx-mdraw__me ${activeTab === 17 ? "on" : ""}`}
+                onClick={() => {
+                  setActiveTab(17);
+                  setMobileMenuOpen(false);
+                }}
               >
-                <Avatar sx={{ width: 36, height: 36, bgcolor: "#0a3d52", fontWeight: 800, fontSize: 13, color: "#ff6b4a" }}>MX</Avatar>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-[#0a3d52] truncate font-heading">MARBLEX Admin</p>
-                  <p className="text-[10px] text-[#565e69] font-medium font-subheading">Master Controller</p>
+                <div className="mx-mdraw__av">
+                  {adminUser?.avatarUrl ? (
+                    <img src={adminUser.avatarUrl} alt="" />
+                  ) : (
+                    (adminUser?.name || "MX").trim().slice(0, 2).toUpperCase()
+                  )}
                 </div>
+                <div className="mx-mdraw__me-text">
+                  <b>{adminUser?.name || "MARBLEX Admin"}</b>
+                  <small>Master controller</small>
+                </div>
+                <span className="mx-mdraw__chev">›</span>
               </button>
+            </div>
 
-              <div className="space-y-4">
-                {navGroups.map((group) => (
-                  <div key={group.title} className="space-y-1">
-                    <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#565e69] font-subheading">
-                      {group.title}
-                    </p>
+            <div className="mx-mdraw__body">
+              {navGroups.map((group) => (
+                <section key={`m-${group.title || "core"}`} className="mx-mdraw__group">
+                  {group.title ? <p className="mx-mdraw__grp">{group.title}</p> : null}
+                  <div className="mx-mdraw__list">
                     {group.items.map((id) => {
                       const item = navItems.find((n) => n.id === id);
+                      if (!item) return null;
                       const isActive = activeTab === item.id;
                       return (
                         <button
                           key={item.id}
-                          onClick={() => setActiveTab(item.id)}
-                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs transition-all duration-150 font-subheading ${
-                            isActive
-                              ? "btn-3d-accent text-white shadow-md shadow-[#ff6b4a]/20"
-                              : "text-[#565e69] hover:text-[#0a3d52] hover:bg-[#f5f7fa]"
-                          }`}
+                          type="button"
+                          className={`mx-mdraw__nav ${isActive ? "on" : ""}`}
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setMobileMenuOpen(false);
+                          }}
                         >
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-sm">{item.icon}</span>
-                            <span>{item.label}</span>
-                          </div>
-                          {item.badge > 0 && (
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                isActive ? "bg-white text-[#ff6b4a]" : "bg-[#ff6b4a]/10 text-[#ff6b4a] border border-[#ff6b4a]/20"
-                              }`}
-                            >
-                              {item.badge}
-                            </span>
-                          )}
+                          <i>{item.icon}</i>
+                          <span>{item.label}</span>
+                          {item.badge > 0 ? <em>{item.badge}</em> : null}
                         </button>
                       );
                     })}
                   </div>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          {/* Mobile Drawer */}
-          <Drawer
-            anchor="left"
-            open={mobileMenuOpen}
-            onClose={() => setMobileMenuOpen(false)}
-            PaperProps={{
-              sx: {
-                width: "280px",
-                bgcolor: "#ffffff",
-                color: "#0f1929",
-                p: 3,
-                borderRight: "1px solid #e0e6ed",
-              },
-            }}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-base font-black text-[#0a3d52] font-heading">
-                MAR<span className="text-[#ff6b4a]">BLEX</span>
-              </h2>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 rounded-lg bg-[#f5f7fa] text-[#0a3d52]">
-                <CloseIcon />
-              </button>
-            </div>
-            <div className="space-y-1.5">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs font-subheading ${
-                    activeTab === item.id ? "bg-[#0a3d52] text-white" : "text-[#565e69] hover:bg-[#f5f7fa]"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge > 0 && (
-                    <span className="bg-[#ff6b4a] text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
+                </section>
               ))}
             </div>
-          </Drawer>
+          </div>
+        </Drawer>
 
-          {/* Dynamic Content */}
-          <div className="flex-1 min-w-0">
-            {/* ================= TAB 0: COMMAND CENTER / OVERVIEW ================= */}
-            {activeTab === 0 && (
-              <TabWrapper3D tabKey={0}>
-                <AdminCommandCenter
-                  overview={overview}
-                  usersData={usersData}
-                  products={products}
-                  orders={orderLookup.all || []}
-                  websiteShare={websiteShare}
-                  whatsappShare={whatsappShare}
-                  paidShare={paidShare}
-                  paymentQueueCount={paymentQueueCount}
-                  pendingAccessCount={pendingAccessCount}
-                  visualBars={visualBars}
-                  onNavigate={setActiveTab}
-                />
-              </TabWrapper3D>
-            )}
+        <div className="mx-main">
+          {/* ================= TAB 0: COMMAND CENTER / OVERVIEW ================= */}
+          {activeTab === 0 && (
+            <TabWrapper3D tabKey={0}>
+              <AdminCommandCenter
+                overview={overview}
+                usersData={usersData}
+                products={products}
+                orders={orderLookup.all || []}
+                websiteShare={websiteShare}
+                whatsappShare={whatsappShare}
+                paidShare={paidShare}
+                paymentQueueCount={paymentQueueCount}
+                pendingAccessCount={pendingAccessCount}
+                visualBars={visualBars}
+                onNavigate={setActiveTab}
+              />
+            </TabWrapper3D>
+          )}
 
-            {/* ================= TAB 1: WEBSITE ORDERS ================= */}
-            {activeTab === 1 && (
-              <TabWrapper3D tabKey={1}>
-                <div className="space-y-5">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-xl font-bold text-[#0a3d52] font-heading">Website Orders</h2>
-                      <p className="text-xs text-[#565e69]">Direct purchases completed through MARBLEX store</p>
+          {/* ================= TAB 1: WEBSITE ORDERS ================= */}
+          {activeTab === 1 && (
+            <TabWrapper3D tabKey={1}>
+                <div className="space-y-4 sm:space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="text-[22px] sm:text-xl md:text-2xl font-extrabold text-[#0a3d52] font-heading tracking-[-0.4px]">
+                        Website Orders
+                      </h2>
+                      <p className="text-[12px] sm:text-xs text-[#6b8190] mt-1">
+                        Direct purchases completed through MARBLEX store
+                      </p>
                     </div>
-                    <span className="px-3 py-1 rounded-lg bg-white border border-[#e0e6ed] text-xs font-bold text-[#0a3d52] shadow-sm font-subheading">
-                      Total: <span className="text-[#ff6b4a]">{websiteData.orders?.length || 0}</span>
+                    <span className="inline-flex items-center self-start sm:self-auto px-3.5 py-2 rounded-xl bg-white border border-[#e2e8ec] text-xs font-extrabold text-[#0a3d52] shadow-[0_3px_0_#e8eef1] font-subheading">
+                      Total{" "}
+                      <span className="ml-1.5 text-[#ff6b4a] text-sm">{websiteData.orders?.length || 0}</span>
                     </span>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     {websiteData.orders?.map(render3DOrderCard)}
                     {!websiteData.orders?.length && (
-                      <div className="py-12 text-center text-[#565e69] font-bold border border-dashed border-[#e0e6ed] rounded-2xl bg-white">
+                      <div className="py-14 text-center text-[#6b8190] font-bold border border-dashed border-[#d5dee4] rounded-[22px] bg-white/80">
                         No website orders recorded yet.
                       </div>
                     )}
                   </div>
                 </div>
-              </TabWrapper3D>
-            )}
+            </TabWrapper3D>
+          )}
 
-            {/* ================= TAB 2: WHATSAPP ORDERS ================= */}
-            {activeTab === 2 && (
-              <TabWrapper3D tabKey={2}>
-                <div className="space-y-5">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-xl font-bold text-[#0a3d52] font-heading">WhatsApp Orders</h2>
-                      <p className="text-xs text-[#565e69]">Inquiries converted through WhatsApp</p>
-                    </div>
-                    <span className="px-3 py-1 rounded-lg bg-white border border-[#e0e6ed] text-xs font-bold text-[#0a3d52] shadow-sm font-subheading">
-                      Total: <span className="text-emerald-700">{whatsappData.orders?.length || 0}</span>
-                    </span>
+          {/* ================= TAB 2: WHATSAPP ORDERS ================= */}
+          {activeTab === 2 && (
+            <TabWrapper3D tabKey={2}>
+              <div className="space-y-4 sm:space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-[22px] sm:text-xl md:text-2xl font-extrabold text-[#0a3d52] font-heading tracking-[-0.4px]">
+                      WhatsApp Orders
+                    </h2>
+                    <p className="text-[12px] sm:text-xs text-[#6b8190] mt-1">
+                      Inquiries converted through WhatsApp
+                    </p>
                   </div>
+                  <span className="inline-flex items-center self-start sm:self-auto px-3.5 py-2 rounded-xl bg-white border border-[#e2e8ec] text-xs font-extrabold text-[#0a3d52] shadow-[0_3px_0_#e8eef1] font-subheading">
+                    Total{" "}
+                    <span className="ml-1.5 text-emerald-600 text-sm">{whatsappData.orders?.length || 0}</span>
+                  </span>
+                </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     {whatsappData.orders?.map(render3DOrderCard)}
                     {!whatsappData.orders?.length && (
-                      <div className="py-12 text-center text-[#565e69] font-bold border border-dashed border-[#e0e6ed] rounded-2xl bg-white">
+                      <div className="py-14 text-center text-[#6b8190] font-bold border border-dashed border-[#d5dee4] rounded-[22px] bg-white/80">
                         No WhatsApp orders recorded yet.
                       </div>
                     )}
                   </div>
-                </div>
-              </TabWrapper3D>
-            )}
+              </div>
+            </TabWrapper3D>
+          )}
 
-            {/* ================= TAB 3: CUSTOMERS ================= */}
-            {activeTab === 3 && (
-              <TabWrapper3D tabKey={3}>
-                <AdminCustomersTab
-                  token={token}
-                  users={usersData.users || []}
-                  pendingAccessCount={pendingAccessCount}
-                  showToast={showToast}
-                  onToggleAccess={handleToggleUserAccess}
-                  onToggleBlock={handleToggleBlockUser}
-                  onReload={loadDashboardData}
-                />
-              </TabWrapper3D>
-            )}
+          {/* ================= TAB 3: CUSTOMERS ================= */}
+          {activeTab === 3 && (
+            <TabWrapper3D tabKey={3}>
+              <AdminCustomersTab
+                token={token}
+                users={usersData.users || []}
+                pendingAccessCount={pendingAccessCount}
+                showToast={showToast}
+                onToggleAccess={handleToggleUserAccess}
+                onToggleBlock={handleToggleBlockUser}
+                onReload={loadDashboardData}
+              />
+            </TabWrapper3D>
+          )}
 
-            {/* ================= TAB 4: PRODUCTS STUDIO ================= */}
-            {activeTab === 4 && (
-              <TabWrapper3D tabKey={4}>
-                <div className="space-y-6">
-                  {/* Creator Form */}
-                  <TiltCard3D
-                    maxTilt={2}
-                    scale={1}
-                    className="rounded-2xl bg-white border border-[#e0e6ed] p-6 sm:p-8 shadow-sm"
-                  >
-                    <div className="flex justify-between items-center mb-5">
-                      <div>
-                        <h2 className="text-xl font-bold text-[#0a3d52] font-heading">
-                          {editingProductId ? "Edit Chemical / Product" : "Add Product to Atlas DB"}
-                        </h2>
-                        <p className="text-xs text-[#565e69]">Save and publish directly to MARBLEX cluster</p>
-                      </div>
-                      {editingProductId && (
-                        <button
-                          onClick={resetProductForm}
-                          className="px-3 py-1 rounded-lg bg-[#f5f7fa] text-[#565e69] text-xs font-bold font-subheading"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
+          {/* ================= TAB 4: PRODUCTS STUDIO ================= */}
+          {activeTab === 4 && (
+            <TabWrapper3D tabKey={4}>
+              <AdminProductsTab
+                products={products}
+                filteredProducts={filteredProducts}
+                product={product}
+                setProduct={setProduct}
+                editingProductId={editingProductId}
+                isSaving={isSaving}
+                productStudioTab={productStudioTab}
+                setProductStudioTab={setProductStudioTab}
+                productFilter={productFilter}
+                setProductFilter={setProductFilter}
+                productQuery={productQuery}
+                setProductQuery={setProductQuery}
+                editorSection={editorSection}
+                setEditorSection={setEditorSection}
+                topRef={productStudioTopRef}
+                onSave={saveProduct}
+                onReset={resetProductForm}
+                onUpload={handleProductImageUpload}
+                onEdit={startEditProduct}
+                onDelete={deleteProductItem}
+                onOpenNew={() => openProductEditor("new")}
+              />
+            </TabWrapper3D>
+          )}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      <div className="lg:col-span-2 space-y-3.5">
-                        <div>
-                          <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Product Name</label>
-                          <input
-                            type="text"
-                            value={product.name}
-                            onChange={(e) => setProduct({ ...product, name: e.target.value })}
-                            placeholder="e.g. MARBLEX Rubber Water Stopper 150mm"
-                            className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a] focus:ring-4 focus:ring-[#ff6b4a]/10 transition-all"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Price (PKR)</label>
-                            <input
-                              type="number"
-                              value={product.price}
-                              onChange={(e) => setProduct({ ...product, price: Number(e.target.value) })}
-                              className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a] focus:ring-4 focus:ring-[#ff6b4a]/10 transition-all"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Stock Units</label>
-                            <input
-                              type="number"
-                              value={product.stock}
-                              onChange={(e) => setProduct({ ...product, stock: Number(e.target.value) })}
-                              className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a] focus:ring-4 focus:ring-[#ff6b4a]/10 transition-all"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Image URL / Upload</label>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={product.imageUrl}
-                              onChange={(e) => setProduct({ ...product, imageUrl: e.target.value })}
-                              placeholder="/products/Banner1.jpeg or url"
-                              className="flex-1 bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
-                            />
-                            <label className="cursor-pointer btn-3d-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1">
-                              <AddPhotoAlternateIcon sx={{ fontSize: 16 }} />
-                              <input type="file" accept="image/*" onChange={handleProductImageUpload} className="hidden" />
-                              Upload
-                            </label>
-                          </div>
-                        </div>
-
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Category</label>
-                            <input
-                              type="text"
-                              value={product.category || "General"}
-                              onChange={(e) => setProduct({ ...product, category: e.target.value })}
-                              className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
-                            />
-                          </div>
-                          <div className="flex items-end">
-                            <label className="flex items-center gap-2 text-xs font-bold text-[#0a3d52] pb-2 cursor-pointer">
-                              <input type="checkbox" checked={Boolean(product.featured)} onChange={(e) => setProduct({ ...product, featured: e.target.checked })} />
-                              Featured
-                            </label>
-                          </div>
-                          <div className="flex items-end">
-                            <label className="flex items-center gap-2 text-xs font-bold text-[#0a3d52] pb-2 cursor-pointer">
-                              <input type="checkbox" checked={product.active !== false} onChange={(e) => setProduct({ ...product, active: e.target.checked })} />
-                              Active / Visible
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          {[0, 1, 2].map((idx) => (
-                            <div key={idx}>
-                              <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Extra image {idx + 1}</label>
-                              <input
-                                type="text"
-                                value={(product.extraImages && product.extraImages[idx]) || ""}
-                                onChange={(e) => {
-                                  const extra = [...(product.extraImages || ["", "", ""])];
-                                  extra[idx] = e.target.value;
-                                  setProduct({ ...product, extraImages: extra });
-                                }}
-                                placeholder="Image URL"
-                                className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
-                              />
-                            </div>
-                          ))}
-                        </div>
-
-<div>
-                          <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Technical Description</label>
-                          <textarea
-                            rows={3}
-                            value={product.description}
-                            onChange={(e) => setProduct({ ...product, description: e.target.value })}
-                            placeholder="Industrial specifications and waterproofing standards..."
-                            className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a] transition-all resize-y"
-                          />
-                        </div>
-
-                        <button
-                          onClick={saveProduct}
-                          disabled={isSaving}
-                          className="btn-3d-accent w-full py-3 rounded-xl text-white font-bold text-xs uppercase tracking-wider"
-                        >
-                          {isSaving ? "Saving..." : editingProductId ? "Update Product" : "Publish to MARBLEX Catalog"}
-                        </button>
-                      </div>
-
-                      {/* 3D Interactive Live Card Preview */}
-                      <div className="flex flex-col items-center justify-center p-5 rounded-xl bg-[#f5f7fa] border border-[#e0e6ed]">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#565e69] mb-3 font-subheading">Live 3D Preview</p>
-                        <TiltCard3D
-                          maxTilt={4}
-                          scale={1.02}
-                          className="w-full max-w-[220px] rounded-xl bg-white border border-[#e0e6ed] p-3.5 shadow-sm"
-                        >
-                          <img
-                            src={product.imageUrl || "/products/Banner1.jpeg"}
-                            alt="Preview"
-                            className="w-full h-32 object-cover rounded-lg border border-[#e0e6ed] bg-[#f5f7fa] mb-2.5"
-                          />
-                          <h4 className="text-xs font-bold text-[#0a3d52] truncate font-heading">{product.name || "Product Name"}</h4>
-                          <p className="text-xs text-[#ff6b4a] font-bold mt-0.5 font-subheading">
-                            PKR {product.price ? product.price.toLocaleString() : "0"}
-                          </p>
-                        </TiltCard3D>
-                      </div>
-                    </div>
-                  </TiltCard3D>
-
-                  {/* Inventory Products */}
-                  <div>
-                    <h3 className="text-lg font-bold text-[#0a3d52] mb-4 font-heading">Inventory Catalog ({products.length})</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                      {products.map((item) => (
-                        <TiltCard3D
-                          key={item._id}
-                          maxTilt={3}
-                          scale={1.01}
-                          className="group rounded-2xl bg-white border border-[#e0e6ed] p-4 shadow-sm flex flex-col justify-between space-y-3 hover:border-[#ff8c73] hover:shadow-md"
-                        >
-                          <div>
-                            <div className="relative rounded-xl overflow-hidden mb-2.5 border border-[#e0e6ed]">
-                              <img
-                                src={item.imageUrl || "/products/Banner1.jpeg"}
-                                alt={item.name}
-                                className="w-full h-36 object-cover"
-                              />
-                              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-sm text-[10px] font-bold text-[#0a3d52] border border-[#e0e6ed] shadow-sm font-subheading">
-                                Stock: {item.stock || 0}
-                              </div>
-                            </div>
-                            <h4 className="text-xs font-bold text-[#0a3d52] leading-tight font-heading">{item.name}</h4>
-                            <p className="text-xs font-bold text-[#ff6b4a] mt-1 font-subheading">
-                              PKR {item.price?.toLocaleString()}
-                            </p>
-                          </div>
-
-                          <div className="flex gap-2 pt-2 border-t border-[#e0e6ed]">
-                            <button
-                              onClick={() => startEditProduct(item)}
-                              className="flex-1 py-1.5 rounded-lg bg-[#f5f7fa] hover:bg-[#e0e6ed] text-[#0a3d52] text-xs font-bold flex items-center justify-center gap-1 border border-[#e0e6ed] font-subheading"
-                            >
-                              <EditOutlinedIcon sx={{ fontSize: 13 }} /> Edit
-                            </button>
-                            <button
-                              onClick={() => deleteProductItem(item._id)}
-                              className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold"
-                            >
-                              <DeleteIcon sx={{ fontSize: 13 }} />
-                            </button>
-                          </div>
-                        </TiltCard3D>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </TabWrapper3D>
-            )}
-
-            {/* ================= TAB 5: BLOGS & STORIES ================= */}
-            {activeTab === 5 && (
-              <TabWrapper3D tabKey={5}>
-                <div className="space-y-6">
-                  {/* Blog Creator */}
-                  <TiltCard3D
-                    maxTilt={2}
-                    scale={1}
-                    className="rounded-2xl bg-white border border-[#e0e6ed] p-6 sm:p-8 shadow-sm"
-                  >
-                    <div className="flex justify-between items-center mb-5">
-                      <div>
-                        <h2 className="text-xl font-bold text-[#0a3d52] font-heading">
-                          {editingBlogId ? "Edit Industry Story" : "Publish Article to Atlas DB"}
-                        </h2>
-                        <p className="text-xs text-[#565e69]">Publish rubber & chemical case studies</p>
-                      </div>
-                      {editingBlogId && (
-                        <button
-                          onClick={resetBlogForm}
-                          className="px-3 py-1 rounded-lg bg-[#f5f7fa] text-[#565e69] text-xs font-bold font-subheading"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="space-y-3.5">
-                      <div>
-                        <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Article Title</label>
-                        <input
-                          type="text"
-                          value={blog.title}
-                          onChange={(e) => setBlog({ ...blog, title: e.target.value })}
-                          placeholder="e.g. Modern Water Stopper Application Guide"
-                          className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Cover Image</label>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={blog.coverImage}
-                              onChange={(e) => setBlog({ ...blog, coverImage: e.target.value })}
-                              placeholder="/products/Banner2.jpeg"
-                              className="flex-1 bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none"
-                            />
-                            <label className="cursor-pointer btn-3d-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1">
-                              <AddPhotoAlternateIcon sx={{ fontSize: 16 }} />
-                              <input type="file" accept="image/*" onChange={handleBlogImageUpload} className="hidden" />
-                              Upload
-                            </label>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Tags</label>
-                          <input
-                            type="text"
-                            value={blog.tags}
-                            onChange={(e) => setBlog({ ...blog, tags: e.target.value })}
-                            placeholder="Waterproofing, Construction, Rubber"
-                            className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Content</label>
-                        <textarea
-                          rows={5}
-                          value={blog.content}
-                          onChange={(e) => setBlog({ ...blog, content: e.target.value })}
-                          placeholder="Technical article content..."
-                          className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2 text-[#0f1929] text-xs focus:bg-white focus:outline-none resize-y"
-                        />
-                      </div>
-
-                      <button
-                        onClick={saveBlog}
-                        disabled={isSaving}
-                        className="btn-3d-accent w-full py-3 rounded-xl text-white font-bold text-xs uppercase tracking-wider"
-                      >
-                        {isSaving ? "Saving..." : editingBlogId ? "Update Story" : "Publish Story"}
-                      </button>
-                    </div>
-                  </TiltCard3D>
-
-                  {/* Blog Articles Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {blogs.map((b) => (
-                      <TiltCard3D
-                        key={b._id}
-                        maxTilt={3}
-                        scale={1.01}
-                        className="rounded-2xl bg-white border border-[#e0e6ed] p-4 shadow-sm flex flex-col justify-between space-y-3 hover:border-[#ff8c73]"
-                      >
-                        <div>
-                          <img
-                            src={b.coverImage || "/products/Banner3.jpeg"}
-                            alt={b.title}
-                            className="w-full h-36 object-cover rounded-xl border border-[#e0e6ed] mb-2.5"
-                          />
-                          <h4 className="text-sm font-bold text-[#0a3d52] line-clamp-2 font-heading">{b.title}</h4>
-                          <p className="text-xs text-[#565e69] line-clamp-2 mt-1">{b.content}</p>
-                        </div>
-
-                        <div className="flex gap-2 pt-2 border-t border-[#e0e6ed]">
-                          <button
-                            onClick={() => togglePublish(b)}
-                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold border font-subheading ${
-                              b.published ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
-                            }`}
-                          >
-                            {b.published ? "Published" : "Draft"}
-                          </button>
-                          <button
-                            onClick={() => startEditBlog(b)}
-                            className="px-2.5 py-1.5 rounded-lg bg-[#f5f7fa] text-[#0a3d52] border border-[#e0e6ed] text-xs font-bold font-subheading"
-                          >
-                            <EditOutlinedIcon sx={{ fontSize: 13 }} />
-                          </button>
-                          <button
-                            onClick={() => deleteBlog(b._id)}
-                            className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold"
-                          >
-                            <DeleteIcon sx={{ fontSize: 13 }} />
-                          </button>
-                        </div>
-                      </TiltCard3D>
-                    ))}
-                  </div>
-                </div>
-              </TabWrapper3D>
-            )}
-
-            {/* ================= TAB 6: SUPPORT CHATS ================= */}
-            {activeTab === 6 && (
-              <TabWrapper3D tabKey={6}>
-                <div className="rounded-2xl bg-white border border-[#e0e6ed] p-5 sm:p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-[#0a3d52] mb-1 font-heading">Live Client Messenger</h2>
-                  <p className="text-xs text-[#565e69] mb-5">Socket connection with registered clients</p>
-                  <AdminMessengerTab token={token} showToast={showToast} />
-                </div>
-              </TabWrapper3D>
-            )}
-
-            {/* ================= TAB 7: GLOBAL BROADCAST ================= */}
-            {activeTab === 7 && (
-              <TabWrapper3D tabKey={7}>
-                <div className="rounded-2xl bg-white border border-[#e0e6ed] p-5 sm:p-6 shadow-sm">
-                  <AdminBroadcastTab token={token} showToast={showToast} />
-                </div>
-              </TabWrapper3D>
-            )}
-
-            {/* ================= TAB 8: PARTNER SUBMISSIONS ================= */}
-            {activeTab === 8 && (
-              <TabWrapper3D tabKey={8}>
-                <div className="space-y-5">
-                  <div>
-                    <h2 className="text-xl font-bold text-[#0a3d52] font-heading">Partner Product Submissions</h2>
-                    <p className="text-xs text-[#565e69]">Subowner catalog submissions awaiting admin review / publish</p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {reviewItems.map((item) => (
-                      <TiltCard3D
-                        key={item._id}
-                        maxTilt={3}
-                        scale={1.01}
-                        className="rounded-2xl bg-white border border-[#e0e6ed] p-4 shadow-sm flex flex-col justify-between space-y-3"
-                      >
-                        <div>
-                          <div className="flex justify-between items-center mb-1.5 gap-2">
-                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#f5f7fa] text-[#565e69] font-subheading">
-                              {item.status}
-                            </span>
-                            {item.hasAdminUnread ? (
-                              <span className="text-[10px] font-black uppercase text-rose-600">Unread</span>
-                            ) : null}
-                          </div>
-                          <h4 className="text-sm font-bold text-[#0a3d52] font-heading">{item.name || "Untitled product"}</h4>
-                          <p className="text-xs text-[#565e69] mt-1 line-clamp-3">{item.description || item.comment || "No description"}</p>
-                          <p className="text-xs font-bold text-[#0a3d52] mt-2">PKR {Number(item.price || 0).toLocaleString()} · Stock {item.stock ?? 0}</p>
-                        </div>
-                        <div className="pt-2 border-t border-[#e0e6ed] flex items-center justify-between gap-2">
-                          <span className="text-[11px] text-[#565e69]">
-                            By: <span className="text-[#0a3d52] font-bold">{item.submittedBy?.name || item.userId?.name || "Partner"}</span>
-                          </span>
-                          <Link to={`/admin/review/${item._id}`} className="text-xs font-bold text-[#ff6b4a] hover:underline">
-                            Open review
-                          </Link>
-                        </div>
-                      </TiltCard3D>
-                    ))}
-                    {!reviewItems.length && (
-                      <div className="col-span-full py-12 text-center text-[#565e69] font-bold border border-dashed border-[#e0e6ed] rounded-2xl bg-white">
-                        No partner submissions yet.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </TabWrapper3D>
-            )}
-
-            {/* ================= TAB 9: INSTANT ORDER LOOKUP ================= */}
-            {activeTab === 9 && (
-              <TabWrapper3D tabKey={9}>
-                <div className="space-y-5">
-                  <TiltCard3D
-                    maxTilt={2}
-                    scale={1}
-                    className="rounded-2xl bg-white border border-[#e0e6ed] p-6 shadow-sm"
-                  >
-                    <h2 className="text-xl font-bold text-[#0a3d52] mb-1 font-heading">Instant Order Lookup</h2>
-                    <p className="text-xs text-[#565e69] mb-4">Search by Order ID hash, customer name, or phone</p>
-
-                    <div className="relative">
-                      <SearchIcon sx={{ position: "absolute", left: 14, top: 12, color: "#565e69", fontSize: 20 }} />
-                      <input
-                        type="text"
-                        value={orderLookup.q}
-                        onChange={(e) => setOrderLookupQuery(e.target.value)}
-                        placeholder="Search order ID (e.g. 7F3A), name, or phone..."
-                        className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl pl-11 pr-4 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a] focus:ring-4 focus:ring-[#ff6b4a]/10 transition-all"
-                      />
-                    </div>
-                  </TiltCard3D>
-
-                  <div className="space-y-3">
-                    {orderLookup.filtered.map(render3DOrderCard)}
-                    {!orderLookup.filtered.length && (
-                      <div className="py-12 text-center text-[#565e69] font-bold border border-dashed border-[#e0e6ed] rounded-2xl bg-white">
-                        No orders match your search query.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </TabWrapper3D>
-            )}
-
-            {/* ================= TAB 10: CLIENT INQUIRIES ================= */}
-            {activeTab === 10 && (
-              <TabWrapper3D tabKey={10}>
-                <div className="space-y-5">
-                  <div>
-                    <h2 className="text-xl font-bold text-[#0a3d52] font-heading">Client Inquiries & Quotations</h2>
-                    <p className="text-xs text-[#565e69]">Inquiries received via contact page with direct reply</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {contactRequests.map((req) => (
-                      <TiltCard3D
-                        key={req._id}
-                        maxTilt={3}
-                        scale={1.01}
-                        className="rounded-2xl bg-white border border-[#e0e6ed] p-5 shadow-sm flex flex-col justify-between space-y-4"
-                      >
-                        <div>
-                          <div className="flex justify-between items-start mb-1.5">
-                            <div>
-                              <h4 className="text-sm font-bold text-[#0a3d52] font-heading">{req.name}</h4>
-                              <p className="text-xs text-[#ff6b4a] font-bold font-subheading">{req.subject || "Inquiry"}</p>
-                            </div>
-                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#f5f7fa] text-[#565e69] font-subheading">
-                              {req.status || "unread"}
-                            </span>
-                          </div>
-                          <p className="text-xs text-[#565e69] mt-2">{req.message}</p>
-                        </div>
-
-                        <div className="pt-3 border-t border-[#e0e6ed] flex justify-between items-center">
-                          <span className="text-[11px] text-[#565e69]">{req.email}</span>
-                          <button
-                            onClick={() => setReplyDialog({ open: true, request: req, reply: "" })}
-                            className="btn-3d-accent px-3.5 py-1.5 rounded-lg text-white text-xs font-bold flex items-center gap-1 font-subheading"
-                          >
-                            <SendIcon sx={{ fontSize: 12 }} /> Reply
-                          </button>
-                        </div>
-                      </TiltCard3D>
-                    ))}
-                    {!contactRequests.length && (
-                      <div className="col-span-full py-12 text-center text-[#565e69] font-bold border border-dashed border-[#e0e6ed] rounded-2xl bg-white">
-                        No customer inquiries found.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </TabWrapper3D>
-            )}
-
-            {activeTab === 12 && (
-              <TabWrapper3D tabKey={12}>
-                <AdminPaymentQueueTab
-                  token={token}
-                  orders={orderLookup.all || []}
-                  showToast={showToast}
-                  onUpdated={loadDashboardData}
-                  renderOrderCard={render3DOrderCard}
-                />
-              </TabWrapper3D>
-            )}
-
-            {activeTab === 13 && (
-              <TabWrapper3D tabKey={13}>
-                <AdminQuotesTab token={token} showToast={showToast} />
-              </TabWrapper3D>
-            )}
-
-            {activeTab === 16 && (
-              <TabWrapper3D tabKey={16}>
-                <AdminReviewsTab token={token} showToast={showToast} />
-              </TabWrapper3D>
-            )}
-
-            {activeTab === 14 && (
-              <TabWrapper3D tabKey={14}>
-                <AdminTicketsTab token={token} showToast={showToast} />
-              </TabWrapper3D>
-            )}
-
-            {activeTab === 15 && (
-              <TabWrapper3D tabKey={15}>
-                <AdminDocumentsTab token={token} showToast={showToast} />
-              </TabWrapper3D>
-            )}
-
-            {/* ================= TAB 11: SMTP CONFIG ================= */}
-            {activeTab === 11 && (
-              <TabWrapper3D tabKey={11}>
+          {/* ================= TAB 5: BLOGS & STORIES ================= */}
+          {activeTab === 5 && (
+            <TabWrapper3D tabKey={5}>
+              <div className="space-y-6">
+                {/* Blog Creator */}
                 <TiltCard3D
                   maxTilt={2}
                   scale={1}
-                  className="rounded-2xl bg-white border border-[#e0e6ed] p-6 sm:p-8 shadow-sm max-w-xl"
+                  className="rounded-2xl bg-white border border-[#e0e6ed] p-6 sm:p-8 shadow-sm"
                 >
-                  <h2 className="text-xl font-bold text-[#0a3d52] mb-1 font-heading">System SMTP Settings</h2>
-                  <p className="text-xs text-[#565e69] mb-5">
-                    Configure official Gmail SMTP credentials for automated quotation and reply emails
-                  </p>
+                  <div className="flex justify-between items-center mb-5">
+                    <div>
+                      <h2 className="text-xl font-bold text-[#0a3d52] font-heading">
+                        {editingBlogId ? "Edit Industry Story" : "Publish Article to Atlas DB"}
+                      </h2>
+                      <p className="text-xs text-[#565e69]">Publish rubber & chemical case studies</p>
+                    </div>
+                    {editingBlogId && (
+                      <button
+                        onClick={resetBlogForm}
+                        className="px-3 py-1 rounded-lg bg-[#f5f7fa] text-[#565e69] text-xs font-bold font-subheading"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
 
                   <div className="space-y-3.5">
                     <div>
-                      <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">SMTP Gmail Account</label>
+                      <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Article Title</label>
                       <input
-                        type="email"
-                        value={emailConfig.user}
-                        onChange={(e) => setEmailConfig({ ...emailConfig, user: e.target.value })}
-                        placeholder="e.g. sales@marblex.com"
+                        type="text"
+                        value={blog.title}
+                        onChange={(e) => setBlog({ ...blog, title: e.target.value })}
+                        placeholder="e.g. Modern Water Stopper Application Guide"
                         className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
                       />
                     </div>
 
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Cover Image</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={blog.coverImage}
+                            onChange={(e) => setBlog({ ...blog, coverImage: e.target.value })}
+                            placeholder="/products/Banner2.jpeg"
+                            className="flex-1 bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none"
+                          />
+                          <label className="cursor-pointer btn-3d-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1">
+                            <AddPhotoAlternateIcon sx={{ fontSize: 16 }} />
+                            <input type="file" accept="image/*" onChange={handleBlogImageUpload} className="hidden" />
+                            Upload
+                          </label>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Tags</label>
+                        <input
+                          type="text"
+                          value={blog.tags}
+                          onChange={(e) => setBlog({ ...blog, tags: e.target.value })}
+                          placeholder="Waterproofing, Construction, Rubber"
+                          className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
                     <div>
-                      <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">App Password</label>
-                      <input
-                        type="password"
-                        value={emailConfig.pass}
-                        onChange={(e) => setEmailConfig({ ...emailConfig, pass: e.target.value })}
-                        placeholder="16-character App Password"
-                        className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
+                      <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">Content</label>
+                      <textarea
+                        rows={5}
+                        value={blog.content}
+                        onChange={(e) => setBlog({ ...blog, content: e.target.value })}
+                        placeholder="Technical article content..."
+                        className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2 text-[#0f1929] text-xs focus:bg-white focus:outline-none resize-y"
                       />
                     </div>
 
                     <button
-                      onClick={handleSaveEmailConfig}
+                      onClick={saveBlog}
                       disabled={isSaving}
-                      className="btn-3d-navy w-full py-3 rounded-xl text-white font-bold text-xs uppercase tracking-wider"
+                      className="btn-3d-accent w-full py-3 rounded-xl text-white font-bold text-xs uppercase tracking-wider"
                     >
-                      {isSaving ? "Saving..." : "Save SMTP Settings"}
+                      {isSaving ? "Saving..." : editingBlogId ? "Update Story" : "Publish Story"}
                     </button>
                   </div>
                 </TiltCard3D>
-              </TabWrapper3D>
-            )}
 
-            {/* ================= TAB 17: ACCOUNT PROFILE ================= */}
-            {activeTab === 17 && (
-              <TabWrapper3D tabKey={17}>
-                <AdminProfileTab token={token} showToast={showToast} />
-              </TabWrapper3D>
-            )}
-          </div>
+                {/* Blog Articles Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {blogs.map((b) => (
+                    <TiltCard3D
+                      key={b._id}
+                      maxTilt={3}
+                      scale={1.01}
+                      className="rounded-2xl bg-white border border-[#e0e6ed] p-4 shadow-sm flex flex-col justify-between space-y-3 hover:border-[#ff8c73]"
+                    >
+                      <div>
+                        <img
+                          src={b.coverImage || "/products/Banner3.jpeg"}
+                          alt={b.title}
+                          className="w-full h-36 object-cover rounded-xl border border-[#e0e6ed] mb-2.5"
+                        />
+                        <h4 className="text-sm font-bold text-[#0a3d52] line-clamp-2 font-heading">{b.title}</h4>
+                        <p className="text-xs text-[#565e69] line-clamp-2 mt-1">{b.content}</p>
+                      </div>
+
+                      <div className="flex gap-2 pt-2 border-t border-[#e0e6ed]">
+                        <button
+                          onClick={() => togglePublish(b)}
+                          className={`flex-1 py-1.5 rounded-lg text-xs font-bold border font-subheading ${b.published ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                            }`}
+                        >
+                          {b.published ? "Published" : "Draft"}
+                        </button>
+                        <button
+                          onClick={() => startEditBlog(b)}
+                          className="px-2.5 py-1.5 rounded-lg bg-[#f5f7fa] text-[#0a3d52] border border-[#e0e6ed] text-xs font-bold font-subheading"
+                        >
+                          <EditOutlinedIcon sx={{ fontSize: 13 }} />
+                        </button>
+                        <button
+                          onClick={() => deleteBlog(b._id)}
+                          className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold"
+                        >
+                          <DeleteIcon sx={{ fontSize: 13 }} />
+                        </button>
+                      </div>
+                    </TiltCard3D>
+                  ))}
+                </div>
+              </div>
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 6: SUPPORT CHATS ================= */}
+          {activeTab === 6 && (
+            <TabWrapper3D tabKey={6}>
+              <div className="rounded-2xl bg-white border border-[#e0e6ed] p-5 sm:p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-[#0a3d52] mb-1 font-heading">Live Client Messenger</h2>
+                <p className="text-xs text-[#565e69] mb-5">Socket connection with registered clients</p>
+                <AdminMessengerTab token={token} showToast={showToast} />
+              </div>
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 7: GLOBAL BROADCAST ================= */}
+          {activeTab === 7 && (
+            <TabWrapper3D tabKey={7}>
+              <div className="rounded-2xl bg-white border border-[#e0e6ed] p-5 sm:p-6 shadow-sm">
+                <AdminBroadcastTab token={token} showToast={showToast} />
+              </div>
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 8: PARTNER SUBMISSIONS ================= */}
+          {activeTab === 8 && (
+            <TabWrapper3D tabKey={8}>
+              <AdminPartnerSubmissionsTab reviewItems={reviewItems} />
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 9: INSTANT ORDER LOOKUP ================= */}
+          {activeTab === 9 && (
+            <TabWrapper3D tabKey={9}>
+              <div className="space-y-5">
+                <TiltCard3D
+                  maxTilt={2}
+                  scale={1}
+                  className="rounded-2xl bg-white border border-[#e0e6ed] p-6 shadow-sm"
+                >
+                  <h2 className="text-xl font-bold text-[#0a3d52] mb-1 font-heading">Instant Order Lookup</h2>
+                  <p className="text-xs text-[#565e69] mb-4">Search by Order ID hash, customer name, or phone</p>
+
+                  <div className="relative">
+                    <SearchIcon sx={{ position: "absolute", left: 14, top: 12, color: "#565e69", fontSize: 20 }} />
+                    <input
+                      type="text"
+                      value={orderLookup.q}
+                      onChange={(e) => setOrderLookupQuery(e.target.value)}
+                      placeholder="Search order ID (e.g. 7F3A), name, or phone..."
+                      className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl pl-11 pr-4 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a] focus:ring-4 focus:ring-[#ff6b4a]/10 transition-all"
+                    />
+                  </div>
+                </TiltCard3D>
+
+                <div className="space-y-3">
+                  {orderLookup.filtered.map(render3DOrderCard)}
+                  {!orderLookup.filtered.length && (
+                    <div className="py-12 text-center text-[#565e69] font-bold border border-dashed border-[#e0e6ed] rounded-2xl bg-white">
+                      No orders match your search query.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 10: CLIENT INQUIRIES ================= */}
+          {activeTab === 10 && (
+            <TabWrapper3D tabKey={10}>
+              <div className="space-y-5">
+                <div>
+                  <h2 className="text-xl font-bold text-[#0a3d52] font-heading">Client Inquiries & Quotations</h2>
+                  <p className="text-xs text-[#565e69]">Inquiries received via contact page with direct reply</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {contactRequests.map((req) => (
+                    <TiltCard3D
+                      key={req._id}
+                      maxTilt={3}
+                      scale={1.01}
+                      className="rounded-2xl bg-white border border-[#e0e6ed] p-5 shadow-sm flex flex-col justify-between space-y-4"
+                    >
+                      <div>
+                        <div className="flex justify-between items-start mb-1.5">
+                          <div>
+                            <h4 className="text-sm font-bold text-[#0a3d52] font-heading">{req.name}</h4>
+                            <p className="text-xs text-[#ff6b4a] font-bold font-subheading">{req.subject || "Inquiry"}</p>
+                          </div>
+                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#f5f7fa] text-[#565e69] font-subheading">
+                            {req.status || "unread"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#565e69] mt-2">{req.message}</p>
+                      </div>
+
+                      <div className="pt-3 border-t border-[#e0e6ed] flex justify-between items-center">
+                        <span className="text-[11px] text-[#565e69]">{req.email}</span>
+                        <button
+                          onClick={() => setReplyDialog({ open: true, request: req, reply: "" })}
+                          className="btn-3d-accent px-3.5 py-1.5 rounded-lg text-white text-xs font-bold flex items-center gap-1 font-subheading"
+                        >
+                          <SendIcon sx={{ fontSize: 12 }} /> Reply
+                        </button>
+                      </div>
+                    </TiltCard3D>
+                  ))}
+                  {!contactRequests.length && (
+                    <div className="col-span-full py-12 text-center text-[#565e69] font-bold border border-dashed border-[#e0e6ed] rounded-2xl bg-white">
+                      No customer inquiries found.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabWrapper3D>
+          )}
+
+          {activeTab === 12 && (
+            <TabWrapper3D tabKey={12}>
+              <AdminPaymentQueueTab
+                token={token}
+                orders={orderLookup.all || []}
+                showToast={showToast}
+                onUpdated={loadDashboardData}
+                renderOrderCard={render3DOrderCard}
+              />
+            </TabWrapper3D>
+          )}
+
+          {activeTab === 13 && (
+            <TabWrapper3D tabKey={13}>
+              <AdminQuotesTab token={token} showToast={showToast} />
+            </TabWrapper3D>
+          )}
+
+          {activeTab === 16 && (
+            <TabWrapper3D tabKey={16}>
+              <AdminReviewsTab token={token} showToast={showToast} />
+            </TabWrapper3D>
+          )}
+
+          {activeTab === 14 && (
+            <TabWrapper3D tabKey={14}>
+              <AdminTicketsTab token={token} showToast={showToast} />
+            </TabWrapper3D>
+          )}
+
+          {activeTab === 15 && (
+            <TabWrapper3D tabKey={15}>
+              <AdminDocumentsTab token={token} showToast={showToast} />
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 11: SMTP CONFIG ================= */}
+          {activeTab === 11 && (
+            <TabWrapper3D tabKey={11}>
+              <TiltCard3D
+                maxTilt={2}
+                scale={1}
+                className="rounded-2xl bg-white border border-[#e0e6ed] p-6 sm:p-8 shadow-sm max-w-xl"
+              >
+                <h2 className="text-xl font-bold text-[#0a3d52] mb-1 font-heading">System SMTP Settings</h2>
+                <p className="text-xs text-[#565e69] mb-5">
+                  Configure official Gmail SMTP credentials for automated quotation and reply emails
+                </p>
+
+                <div className="space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">SMTP Gmail Account</label>
+                    <input
+                      type="email"
+                      value={emailConfig.user}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, user: e.target.value })}
+                      placeholder="e.g. sales@marblex.com"
+                      className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#0a3d52] mb-1 font-subheading">App Password</label>
+                    <input
+                      type="password"
+                      value={emailConfig.pass}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, pass: e.target.value })}
+                      placeholder="16-character App Password"
+                      className="w-full bg-[#f5f7fa] border border-[#e0e6ed] rounded-xl px-3.5 py-2.5 text-[#0f1929] text-xs focus:bg-white focus:outline-none focus:border-[#ff6b4a]"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleSaveEmailConfig}
+                    disabled={isSaving}
+                    className="btn-3d-navy w-full py-3 rounded-xl text-white font-bold text-xs uppercase tracking-wider"
+                  >
+                    {isSaving ? "Saving..." : "Save SMTP Settings"}
+                  </button>
+                </div>
+              </TiltCard3D>
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 17: ACCOUNT PROFILE ================= */}
+          {activeTab === 17 && (
+            <TabWrapper3D tabKey={17}>
+              <AdminProfileTab token={token} showToast={showToast} />
+            </TabWrapper3D>
+          )}
         </div>
-      </main>
+      </div>
+
+      <nav className="mx-bn" aria-label="Mobile admin navigation">
+        {bottomTabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={activeTab === t.id ? "on" : ""}
+            onClick={() => setActiveTab(t.id)}
+          >
+            <span>{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
+        <button type="button" id="mb2" onClick={() => setMobileMenuOpen(true)}>
+          <span>☰</span>
+          More
+        </button>
+      </nav>
 
       {/* Reply Dialog */}
       <Dialog

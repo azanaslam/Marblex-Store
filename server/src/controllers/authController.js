@@ -384,7 +384,15 @@ const googleAuth = async (req, res) => {
     }
     user.googleId = user.googleId || googleSub;
     user.authProvider = "google";
-    if (avatarUrl && !user.avatarUrl) user.avatarUrl = avatarUrl;
+    // Sync Google profile photo when empty, or when still using a Google-hosted image
+    if (
+      avatarUrl &&
+      (!user.avatarUrl ||
+        String(user.avatarUrl).includes("googleusercontent.com") ||
+        String(user.avatarUrl).includes("lh3.google"))
+    ) {
+      user.avatarUrl = avatarUrl;
+    }
     if (displayName && (!user.name || user.name === normalizedEmail.split("@")[0])) {
       user.name = displayName;
     }

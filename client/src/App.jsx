@@ -4,6 +4,7 @@ import { Box, CircularProgress, CssBaseline, ThemeProvider } from "@mui/material
 import { AppLayoutShell } from "./components/AppLayoutShell";
 import { BrandSplashPreloader } from "./components/BrandSplashPreloader";
 import { LenisScroll } from "./components/LenisScroll";
+import { RouteSeo } from "./components/RouteSeo";
 import { ShopPage } from "./pages/ShopPage";
 import { useCart } from "./hooks/useCart";
 import { appTheme } from "./theme/theme";
@@ -53,6 +54,7 @@ function App() {
       <ThemeProvider theme={appTheme}>
         <CssBaseline />
         <BrowserRouter>
+          <RouteSeo />
           <LenisScroll>
             <Routes>
               <Route

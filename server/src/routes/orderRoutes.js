@@ -2,7 +2,6 @@ const express = require("express");
 const {
   createOrder,
   verifyStripeSession,
-  stripeWebhook,
   getMyOrders,
   getMyOrderById,
   cancelMyOrder,
@@ -19,7 +18,7 @@ router.get("/payment-config", getPaymentConfig);
 router.post("/upload-proof", uploadPaymentProof);
 router.post("/", orderRateLimiter(), optionalAuth, createOrder);
 router.get("/verify-session/:sessionId", verifyStripeSession);
-router.post("/stripe-webhook", express.raw({ type: "application/json" }), stripeWebhook);
+// Stripe webhook is mounted in app.js with raw body (before express.json)
 router.get("/my", auth, getMyOrders);
 router.get("/my/:id/invoice", auth, getMyOrderInvoice);
 router.get("/my/:id", auth, getMyOrderById);
