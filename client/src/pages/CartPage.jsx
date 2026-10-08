@@ -337,26 +337,38 @@ export const CartPage = ({ cart = [], setCart }) => {
 
       if (channel === "whatsapp") {
         const list = cart
-          .map((item) => `• ${item.name} (x${item.quantity || 1}) - PKR ${item.price * (item.quantity || 1)}`)
-          .join("%0A");
+          .map((item) => {
+            let absImageUrl = "";
+            if (item.imageUrl) {
+              if (item.imageUrl.startsWith("data:image")) {
+                absImageUrl = "Preview on website";
+              } else {
+                absImageUrl = item.imageUrl.startsWith("http") ? item.imageUrl : window.location.origin + item.imageUrl;
+              }
+            }
+            return `• *${item.name}*\n  Qty: ${item.quantity || 1} | Price: PKR ${(item.price * (item.quantity || 1)).toLocaleString()}${absImageUrl ? `\n  Ref: ${absImageUrl}` : ""}`;
+          })
+          .join("\n\n");
 
         const waNum = paymentConfig.whatsapp?.number || res.data?.whatsappNumber || "923084585792";
         const orderNum = res.data?.orderNumber || "INQUIRY";
 
-        const msg =
-          `*MARBLEX ORDER INQUIRY [${orderNum}]*%0A` +
-          `==========================%0A` +
-          `*Customer:* ${form.customerName || "Customer"}%0A` +
-          `*Phone:* ${form.phone || "Not provided"}%0A` +
-          `*Email:* ${form.email || "Not provided"}%0A` +
-          (form.city ? `*City:* ${form.city}%0A` : "") +
-          (form.address ? `*Delivery Site:* ${form.address}%0A` : "") +
-          (form.areaSize ? `*Area Size:* ${form.areaSize} sq ft%0A` : "") +
-          `%0A*ORDERED PRODUCTS:*%0A${list}%0A%0A` +
-          `*ESTIMATED SUBTOTAL:* ${fmt(res.data?.subtotal || total)}%0A` +
-          (form.notes ? `*Notes:* ${form.notes}%0A` : "") +
-          `==========================%0A` +
+        const msgRaw = 
+          `*🟩 MARBLEX ORDER INQUIRY [${orderNum}]*\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `*Customer:* ${form.customerName || "Customer"}\n` +
+          `*Phone:* ${form.phone || "Not provided"}\n` +
+          `*Email:* ${form.email || "Not provided"}\n` +
+          (form.city ? `*City:* ${form.city}\n` : "") +
+          (form.address ? `*Delivery Site:* ${form.address}\n` : "") +
+          (form.areaSize ? `*Area Size:* ${form.areaSize} sq ft\n` : "") +
+          `\n*ORDERED PRODUCTS:*\n${list}\n\n` +
+          `*ESTIMATED SUBTOTAL:* ${fmt(res.data?.subtotal || total)}\n` +
+          (form.notes ? `*Notes:* ${form.notes}\n` : "") +
+          `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
           `_Please confirm delivery timeline and site supply logistics._`;
+
+        const msg = encodeURIComponent(msgRaw);
 
         window.open(`https://wa.me/${waNum}?text=${msg}`, "_blank");
         triggerToast("Order inquiry sent via WhatsApp!");

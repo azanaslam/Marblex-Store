@@ -274,9 +274,35 @@ export const ProductDetailPage = ({ addToCart }) => {
   }, [id]);
 
   const handleWhatsAppInquiry = () => {
-    const text = encodeURIComponent(
-      `Hello MARBLEX, I would like to inquire about ${product?.name || "Entryway Flooring System"} (Material: ${selectedMaterial}, Color: ${selectedColor}, Qty: ${quantity}, Price: PKR ${product?.price || 4000}). Please provide an instant quotation.`
-    );
+    const pName = product?.name || "Entryway Flooring System";
+    const pCategory = product?.category || "Engineered Solutions";
+    const pPrice = product?.price || 4000;
+    const imageUrl = product?.imageUrl || currentImage;
+    
+    // Do not include base64 images in whatsapp messages as they are too long
+    let absImageUrl = "";
+    if (imageUrl) {
+      if (imageUrl.startsWith("data:image")) {
+        absImageUrl = "Image preview available on website";
+      } else {
+        absImageUrl = imageUrl.startsWith("http") ? imageUrl : window.location.origin + imageUrl;
+      }
+    }
+
+    const textRaw = 
+      `*🟩 MARBLEX TECHNICAL INQUIRY*\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `*Product:* ${pName}\n` +
+      `*Category:* ${pCategory}\n` +
+      `*Material:* ${selectedMaterial}\n` +
+      `*Color Tone:* ${selectedColor}\n` +
+      `*Quantity:* ${quantity} Units\n` +
+      `*Est. Total:* PKR ${(pPrice * quantity).toLocaleString()}\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+      (absImageUrl ? `*Image Ref:* ${absImageUrl}\n\n` : `\n`) +
+      `_Hello Engineering Team, I would like an official quotation and technical consultation for the above specification._`;
+
+    const text = encodeURIComponent(textRaw);
     window.open(`https://wa.me/923084585792?text=${text}`, "_blank");
   };
 
