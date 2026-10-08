@@ -4,6 +4,9 @@ const apiRoutes = require("./routes");
 const { errorHandler } = require("./middleware/errorHandler");
 const { frontendUrl } = require("./config/env");
 const { stripeWebhook } = require("./controllers/orderController");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const mongoSanitize = require("express-mongo-sanitize");
 
 const app = express();
 
@@ -11,6 +14,20 @@ const allowedOrigins = String(frontendUrl || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+
+// Security Headers
+app.use(helmet());
+
+// Rate Limiting to prevent brute-force attacks
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // limit each IP to 200 requests per windowMs
+  message: "Too many requests from this IP, please try again later."
+});
+app.use("/api", limiter);
+
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
 
 app.use(
   cors({

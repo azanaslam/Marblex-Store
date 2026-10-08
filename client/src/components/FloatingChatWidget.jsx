@@ -76,19 +76,40 @@ function nextGreeting(prev) {
 function keyWhiteBackdrop(ctx, w, h) {
   const frame = ctx.getImageData(0, 0, w, h);
   const d = frame.data;
+  
+  // Sample the background color from a safe top-left pixel (x=4, y=4)
+  const bgIdx = (4 * w + 4) * 4;
+  const bgR = d[bgIdx];
+  const bgG = d[bgIdx + 1];
+  const bgB = d[bgIdx + 2];
+  
   for (let i = 0; i < d.length; i += 4) {
     const r = d[i];
     const g = d[i + 1];
     const b = d[i + 2];
-    const isOrange = r > 180 && g < 140 && b < 120 && r > g + 40;
-    if (isOrange) continue;
-    const maxc = Math.max(r, g, b);
-    const minc = Math.min(r, g, b);
-    const sat = maxc - minc;
-    if (minc > 228 && sat < 28) {
+    
+    // Protect orange/brown elements (robot accents)
+    if (r > 140 && g < 150 && b < 130 && r > g + 20) continue;
+    
+    // Protect very dark elements (robot joints/visor)
+    if (r < 70 && g < 70 && b < 70) continue;
+    
+    // Calculate Euclidean distance from the sampled background color
+    const dist = Math.sqrt(
+      (r - bgR) * (r - bgR) + 
+      (g - bgG) * (g - bgG) + 
+      (b - bgB) * (b - bgB)
+    );
+    
+    // Wide tolerance to completely obliterate the background
+    // Any pixel within a distance of 65 from the background color is removed.
+    if (dist < 65) {
       d[i + 3] = 0;
-    } else if (minc > 210 && sat < 18) {
-      d[i + 3] = Math.min(d[i + 3], 40);
+    } 
+    // Very tight feathering to keep edges smooth but not leave big transparent blocks
+    else if (dist < 90) {
+      const alpha = ((dist - 65) / 25) * 255;
+      d[i + 3] = Math.min(d[i + 3], alpha);
     }
   }
   ctx.putImageData(frame, 0, 0);
@@ -394,7 +415,7 @@ export const FloatingChatWidget = () => {
           position: "fixed",
           bottom: { xs: 186, sm: 150, md: 140 },
           top: "auto",
-          right: { xs: -8, sm: -12, md: -16 },
+          right: { xs: -24, sm: -32, md: -40 },
           zIndex: 10050,
           pointerEvents: "none",
         }}
