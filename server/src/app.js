@@ -15,6 +15,9 @@ const allowedOrigins = String(frontendUrl || "")
   .map((s) => s.trim())
   .filter(Boolean);
 
+// Trust first proxy (Render, Heroku, etc.) so rate-limit and IP detection work properly
+app.set("trust proxy", 1);
+
 // Security Headers
 app.use(helmet());
 
@@ -27,7 +30,19 @@ const limiter = rateLimit({
 app.use("/api", limiter);
 
 // Data sanitization against NoSQL query injection
-app.use(mongoSanitize());
+// In Express 5 req.query is a getter-only property on IncomingMessage; sanitize body and params or sanitize query in-place
+app.use((req, res, next) => {
+  if (req.body) mongoSanitize.sanitize(req.body);
+  if (req.params) mongoSanitize.sanitize(req.params);
+  if (req.query) {
+    try {
+      mongoSanitize.sanitize(req.query);
+    } catch (e) {
+      // ignore getter reassign error if any
+    }
+  }
+  next();
+});
 
 app.use(
   cors({
