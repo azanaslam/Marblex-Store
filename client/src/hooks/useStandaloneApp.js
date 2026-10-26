@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 
 export function getIsStandaloneApp() {
   if (typeof window === "undefined") return false;
+  // Dev/QA: ?app=1 or sessionStorage marblex_force_app=1 (browser test of installed-app UI)
+  try {
+    if (new URLSearchParams(window.location.search).get("app") === "1") return true;
+    if (sessionStorage.getItem("marblex_force_app") === "1") return true;
+  } catch {
+    /* ignore */
+  }
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
     window.matchMedia("(display-mode: fullscreen)").matches ||

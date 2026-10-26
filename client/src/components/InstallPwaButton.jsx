@@ -435,23 +435,24 @@ export function InstallPwaPrompt() {
                 id="pwa-help-title"
                 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#0a3d52" }}
               >
-                {isIos() ? "iPhone / iPad pe install" : "App install"}
+                {isIos() ? "Install on iPhone / iPad" : "Install app"}
               </h3>
               {isIos() ? (
                 <ol style={{ margin: "12px 0 0", paddingLeft: 18, fontSize: 13, color: "#475569" }}>
                   <li style={{ marginBottom: 8 }}>
-                    Share dabao <IosShareRoundedIcon sx={{ fontSize: 16 }} />
+                    Tap Share <IosShareRoundedIcon sx={{ fontSize: 16 }} />
                   </li>
                   <li style={{ marginBottom: 8 }}>
-                    <b>Add to Home Screen</b> select karo
+                    Choose <b>Add to Home Screen</b>
                   </li>
                   <li>
-                    <b>Add</b> — MARBLEX icon home pe aa jayega
+                    Tap <b>Add</b> — the MARBLEX icon will appear on your home screen
                   </li>
                 </ol>
               ) : (
                 <p style={{ margin: "12px 0 0", fontSize: 13, color: "#475569" }}>
-                  Chrome / Edge me <b>Install</b> dabao. Live site pe HTTPS zaroori hai.
+                  In Chrome or Edge, tap <b>Install</b> (or use Add to Home Screen). HTTPS is
+                  required on the live site.
                 </p>
               )}
               <button
@@ -470,7 +471,7 @@ export function InstallPwaPrompt() {
                   cursor: "pointer",
                 }}
               >
-                Samajh gaya
+                Got it
               </button>
             </div>
           </div>,
@@ -559,12 +560,12 @@ export function InstallPwaButton({
               role="dialog"
             >
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#0a3d52" }}>
-                {isIos() ? "iPhone / iPad pe install" : "App install"}
+                {isIos() ? "Install on iPhone / iPad" : "Install app"}
               </h3>
               <p style={{ margin: "12px 0 0", fontSize: 13, color: "#475569" }}>
                 {isIos()
                   ? "Share → Add to Home Screen → Add"
-                  : "Browser me Install / Add to Home Screen use karo."}
+                  : "Use Install or Add to Home Screen in your browser to add MARBLEX."}
               </p>
               <button
                 type="button"
@@ -580,7 +581,7 @@ export function InstallPwaButton({
                   padding: "10px 0",
                 }}
               >
-                Samajh gaya
+                Got it
               </button>
             </div>
           </div>,

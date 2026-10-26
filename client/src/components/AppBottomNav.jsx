@@ -4,7 +4,6 @@ import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import { Badge } from "@mui/material";
 
 const WA = "https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20need%20help%20from%20the%20app.";
@@ -17,6 +16,8 @@ export function AppBottomNav({
   isLoggedIn = false,
   isAdmin = false,
   isDark = false,
+  avatarUrl = "",
+  avatarInitial = "M",
 }) {
   const { pathname } = useLocation();
 
@@ -39,6 +40,8 @@ export function AppBottomNav({
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/portal") ||
     pathname.startsWith("/admin");
+
+  const photo = String(avatarUrl || "").trim();
 
   return (
     <nav
@@ -103,9 +106,32 @@ export function AppBottomNav({
           to={isLoggedIn ? dashPath : "/login"}
           className={itemCls(isDashboard)}
           aria-current={isDashboard ? "page" : undefined}
+          aria-label={
+            isLoggedIn
+              ? isAdmin
+                ? "Open admin console"
+                : "Open client portal"
+              : "Account"
+          }
         >
           {isLoggedIn ? (
-            <DashboardRoundedIcon sx={{ fontSize: 22 }} />
+            <span
+              className={`flex h-[22px] w-[22px] items-center justify-center overflow-hidden rounded-full text-[9px] font-extrabold text-white ring-2 ${
+                isDashboard
+                  ? isDark
+                    ? "ring-emerald-300/80"
+                    : "ring-[#0a3d52]/70"
+                  : isDark
+                    ? "ring-slate-600"
+                    : "ring-slate-300"
+              } bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a]`}
+            >
+              {photo ? (
+                <img src={photo} alt="" className="h-full w-full object-cover" />
+              ) : (
+                String(avatarInitial || "M").charAt(0).toUpperCase()
+              )}
+            </span>
           ) : (
             <PersonRoundedIcon sx={{ fontSize: 22 }} />
           )}

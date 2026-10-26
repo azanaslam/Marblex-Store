@@ -694,22 +694,7 @@ export const AppLayout = ({ cartCount, children }) => {
                     </RouterLink>
                   </div>
                 </div>
-              ) : isApp ? (
-                /* Installed app: avatar only → portal/admin (no dropdown; portal has those links) */
-                <RouterLink
-                  to={isAdmin ? "/admin" : "/dashboard"}
-                  onClick={() => setIsMenuOpen(false)}
-                  aria-label={isAdmin ? "Open admin console" : "Open client portal"}
-                  title={isAdmin ? "Admin console" : "Client portal"}
-                  className={`flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border transition ${
-                    isDark
-                      ? "border-slate-700 bg-[#0e2735] hover:border-emerald-500/40"
-                      : "border-slate-200 bg-[#f8fafc] hover:border-[#0a3d52]/35"
-                  }`}
-                >
-                  <AccountAvatar className="h-8 w-8 text-[11px]" />
-                </RouterLink>
-              ) : (
+              ) : isApp ? null : (
                 <div className="relative" ref={accountMenuRef}>
                   <div
                     className={`flex items-center rounded-full border transition-all ${accountMenuOpen
@@ -1042,6 +1027,8 @@ export const AppLayout = ({ cartCount, children }) => {
           isLoggedIn={isUserLoggedIn}
           isAdmin={isAdmin}
           isDark={isDark}
+          avatarUrl={accountAvatarUrl}
+          avatarInitial={accountInitial}
         />
       ) : null}
 
