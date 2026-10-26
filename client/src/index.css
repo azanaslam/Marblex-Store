@@ -416,6 +416,24 @@ html.lenis body {
   padding-bottom: 0.5rem;
 }
 
+/* App portal: iframe fills the shell under bottom tabs (no nested store chrome) */
+.is-marblex-app.portal-shell {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.is-marblex-app.portal-shell .page-content-portal,
+.is-marblex-app.portal-shell .mx-portal-host {
+  min-height: 0;
+  height: 100%;
+}
+
+.is-marblex-app.portal-shell .mx-portal-frame {
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
 /* Hide floating AI bot while mobile hamburger is open */
 body.marblex-menu-open .marblex-floating-chat {
   visibility: hidden !important;

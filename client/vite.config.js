@@ -107,7 +107,16 @@ export default defineConfig({
         // Phone push + notificationclick (file lives in public/)
         importScripts: ['push-handler.js'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/admin/],
+        // Never SPA-fallback the client portal HTML (or assets) into the iframe —
+        // that nested the whole store UI and caused a "double screen" in the installed app.
+        navigateFallbackDenylist: [
+          /^\/api/,
+          /^\/admin/,
+          /\/marblex-client-portal\.html/i,
+          /\.[a-z0-9]+$/i,
+        ],
+        // Cache-bust ?v= on portal must still hit the precached HTML
+        ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
         // Keep install size sane — exclude heavy bot frame dumps / big videos
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff2}'],
         globIgnores: [

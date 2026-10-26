@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { API_BASE_URL } from "../../config/constants";
 import { getAuthToken, getAuthUser, setAuthSession } from "../../auth/session";
+import { useStandaloneApp } from "../../hooks/useStandaloneApp";
 
 const pathToPortalView = (pathname) => {
   const segment = pathname.replace(/^\/dashboard\/?/, "").split("/")[0] || "";
@@ -31,6 +32,7 @@ const sameUser = (a, b) => {
 export const PortalHost = () => {
   const token = getAuthToken();
   const location = useLocation();
+  const isApp = useStandaloneApp();
   const iframeRef = useRef(null);
   const lastInitKeyRef = useRef("");
 
@@ -106,18 +108,31 @@ export const PortalHost = () => {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  // Installed app: fill viewport under bottom tabs. Browser: leave room for site chrome.
+  const frameStyle = isApp
+    ? {
+        minHeight: 0,
+        height: "100%",
+        background: "#06212b",
+      }
+    : {
+        minHeight: "min(100dvh - 7.25rem, 960px)",
+        height: "calc(100dvh - 7.25rem)",
+        background: "#06212b",
+      };
+
   return (
-    <div className="mx-portal-host relative flex w-full flex-1 flex-col overflow-hidden bg-[#06212b]">
+    <div
+      className={`mx-portal-host relative flex w-full flex-1 flex-col overflow-hidden bg-[#06212b] ${
+        isApp ? "min-h-0 h-full" : ""
+      }`}
+    >
       <iframe
         ref={iframeRef}
         title="MARBLEX Client Portal"
-        src="/marblex-client-portal.html?v=ord-m2"
+        src="/marblex-client-portal.html"
         className="mx-portal-frame block w-full flex-1 border-0"
-        style={{
-          minHeight: "min(100dvh - 7.25rem, 960px)",
-          height: "calc(100dvh - 7.25rem)",
-          background: "#06212b",
-        }}
+        style={frameStyle}
       />
     </div>
   );

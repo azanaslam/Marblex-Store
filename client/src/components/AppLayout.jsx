@@ -451,6 +451,32 @@ export const AppLayout = ({ cartCount, children }) => {
     );
   }
 
+  // Installed app + client portal: one full-screen portal (no site header stacked on top)
+  if (isApp && isPortalRoute) {
+    return (
+      <div
+        className={`flex min-h-dvh flex-col portal-shell is-marblex-app ${
+          isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
+        }`}
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <PwaUpdateToast />
+        <OfflineBanner />
+        <main className="page-content-portal relative z-10 flex min-h-0 w-full flex-1 flex-col pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
+          {children}
+        </main>
+        <AppBottomNav
+          cartCount={cartCount}
+          isLoggedIn={isUserLoggedIn}
+          isAdmin={isAdmin}
+          isDark={isDark}
+          avatarUrl={accountAvatarUrl}
+          avatarInitial={accountInitial}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className={`flex flex-col min-h-screen relative transition-colors duration-300 ${isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
