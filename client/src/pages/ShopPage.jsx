@@ -5,6 +5,16 @@ import { HeroBanner } from "../components/HeroBanner";
 import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 import { ProductCard } from "../components/ProductCard";
 import { WhatsAppNegotiationSection } from "../components/WhatsAppNegotiationSection";
+import {
+  ShopByProblemSection,
+  SiteSurveySection,
+  TechnicalLibrarySection,
+  ApplicationGuidesSection,
+  CertsWarrantySection,
+  IndustriesSection,
+  DispatchCitiesSection,
+  QuickCompareTeaser,
+} from "../components/home/HomeGrowthSections";
 import { beforeAfterPairs, galleryImages } from "../config/constants";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import EastIcon from "@mui/icons-material/East";
@@ -552,6 +562,14 @@ export const ShopPage = ({ addToCart }) => {
     if (catalogHeaderRef.current) {
       catalogHeaderRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  };
+
+  const handleShopByProblem = (catId) => {
+    handleSelectDivisionCategory(catId || "all");
+  };
+
+  const scrollToMethodology = () => {
+    methodologySectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const handleOpenProduct = useCallback(
@@ -1310,6 +1328,9 @@ export const ShopPage = ({ addToCart }) => {
         </div>
       </section>
       
+      {/* 3.5 Shop by problem (P0) */}
+      <ShopByProblemSection onSelectCategory={handleShopByProblem} />
+
       {/* 4. Clean Catalog Page Header */}
       <div 
         id="products-section"
@@ -1407,10 +1428,16 @@ export const ShopPage = ({ addToCart }) => {
 
       </div>{/* end overflow-x-clip (products zone) */}
 
+      {/* 6.4 Quick compare teaser */}
+      <QuickCompareTeaser products={filteredProducts?.length ? filteredProducts : products} />
+
       {/* 6.5 WhatsApp Bulk Negotiation & Direct Chat Desk (InnSpeed Style) */}
       <div className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2">
         <WhatsAppNegotiationSection products={products} />
       </div>
+
+      {/* 6.6 Free site survey booking */}
+      <SiteSurveySection />
 
       {/* 7. Interactive Material Coverage & Quantity Estimator — full bleed */}
       <section
@@ -1692,6 +1719,9 @@ export const ShopPage = ({ addToCart }) => {
         </div>
       </section>
 
+      {/* 8.5 Application guides / how-to */}
+      <ApplicationGuidesSection onViewMethodology={scrollToMethodology} />
+
       {/* 9. 4-Stage Application Methodology */}
       <section ref={methodologySectionRef} className="relative mt-16 overflow-x-clip sm:mt-24">
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-[min(100%,42rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-emerald-500/10 via-[#0a3d52]/5 to-transparent blur-3xl" />
@@ -1912,6 +1942,18 @@ export const ShopPage = ({ addToCart }) => {
           </div>
         </div>
       )}
+
+      {/* 10.5 Technical library */}
+      <TechnicalLibrarySection />
+
+      {/* 10.6 Certifications & warranty */}
+      <CertsWarrantySection />
+
+      {/* 10.7 Industries */}
+      <IndustriesSection onSelectCategory={handleShopByProblem} />
+
+      {/* 10.8 Dispatch cities + export */}
+      <DispatchCitiesSection />
 
       {/* 11. Contractor & Engineer Testimonials */}
       <section className="relative mt-16 overflow-hidden sm:mt-24">
