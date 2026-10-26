@@ -510,6 +510,7 @@ export function WhatsAppNegotiationSection({ products = [] }) {
 
   return (
     <section
+      id="whatsapp-negotiate"
       ref={sectionRef}
       className="relative overflow-hidden border-y border-[#0a3d52]/8 bg-gradient-to-b from-[#f6fafb] via-white to-[#eef5f8] py-10 transition-colors duration-300 dark:border-slate-800/80 dark:from-[#07151d] dark:via-[#0a1a23] dark:to-[#040e14] sm:py-14"
       aria-labelledby="wa-negotiate-heading"

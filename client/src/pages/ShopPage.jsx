@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { http } from "../api/http";
 import { HeroBanner } from "../components/HeroBanner";
 import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
@@ -520,6 +520,7 @@ const enterpriseMetrics = [
 
 export const ShopPage = ({ addToCart }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState(() => globalProductsCache || demoProducts);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [calcSurface, setCalcSurface] = useState("roof");
@@ -556,6 +557,26 @@ export const ShopPage = ({ addToCart }) => {
   });
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const reviewsTrackRef = useRef(null);
+
+  // PWA shortcut /?focus=whatsapp → scroll to negotiation desk
+  useEffect(() => {
+    if (searchParams.get("focus") !== "whatsapp") return undefined;
+    const timer = window.setTimeout(() => {
+      document.getElementById("whatsapp-negotiate")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("focus");
+          return next;
+        },
+        { replace: true }
+      );
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [searchParams, setSearchParams]);
 
   const handleSelectDivisionCategory = (catId) => {
     setSelectedCategory(catId);

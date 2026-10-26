@@ -30,6 +30,14 @@ import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
 import { SiteFooter } from "./SiteFooter";
+import { InstallPwaButton } from "./InstallPwaButton";
+import { AppBottomNav } from "./AppBottomNav";
+import { OfflineBanner } from "./OfflineBanner";
+import { PwaUpdateToast } from "./PwaUpdateToast";
+import { PullToRefresh } from "./PullToRefresh";
+import { PushEnableCard } from "./PushEnableCard";
+import { useStandaloneApp } from "../hooks/useStandaloneApp";
+import { useAppBadge } from "../hooks/useAppBadge";
 import {
   getUnseenBroadcasts,
   NOTIFS_CHANGED_EVENT,
@@ -424,6 +432,10 @@ export const AppLayout = ({ cartCount, children }) => {
       ? portalUnread
       : chatUnreadNav + broadcastUnread;
 
+  const isDark = themeMode === "dark";
+  const isApp = useStandaloneApp();
+  useAppBadge((Number(cartCount) || 0) + (Number(notifCount) || 0));
+
   if (isAdminRoute) {
     return (
       <div className="min-h-screen w-full bg-[#f5f7fa] text-[#0f1929] flex flex-col selection:bg-[#ff6b4a] selection:text-white">
@@ -432,16 +444,25 @@ export const AppLayout = ({ cartCount, children }) => {
     );
   }
 
-  const isDark = themeMode === "dark";
-
   return (
-    <div className={`flex flex-col min-h-screen relative transition-colors duration-300 ${isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
-      } ${isPortalRoute ? "portal-shell" : ""}`}>
+    <div
+      className={`flex flex-col min-h-screen relative transition-colors duration-300 ${isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
+      } ${isPortalRoute ? "portal-shell" : ""} ${isApp ? "is-marblex-app" : ""}`}
+      style={
+        isApp
+          ? {
+              paddingTop: "env(safe-area-inset-top)",
+            }
+          : undefined
+      }
+    >
+      <PwaUpdateToast />
+      <OfflineBanner />
 
-      {/* 1. Top Brand Announcement & Trust Badges Header */}
+      {/* 1. Top Brand Announcement & Trust Badges Header — hide chrome strip in installed app */}
       <div
         ref={announcementRef}
-        className="bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1 md:py-2 px-2 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden"
+        className={`${isApp ? "hidden" : ""} bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1 md:py-2 px-2 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden`}
       >
         {/* Desktop View (md and up) */}
         <div className="hidden md:flex max-w-[1440px] mx-auto items-center justify-between gap-6">
@@ -593,7 +614,10 @@ export const AppLayout = ({ cartCount, children }) => {
             </nav>
 
             {/* Action Buttons (Right) */}
-            <div ref={actionsRef} className="flex shrink-0 items-center gap-2.5 sm:gap-2.5 lg:gap-3">
+            <div ref={actionsRef} className="flex shrink-0 items-center gap-2 sm:gap-2.5 lg:gap-3">
+
+              {/* Install as app (PWA) — hide prompt chrome when already running as installed app */}
+              {!isApp ? <InstallPwaButton variant="nav" isDark={isDark} withPrompt /> : null}
 
               {/* Theme toggle — always in navbar */}
               <button
@@ -905,6 +929,13 @@ export const AppLayout = ({ cartCount, children }) => {
                   Call
                 </a>
               </div>
+              {!isApp ? (
+                <div onClick={() => setIsMenuOpen(false)}>
+                  <InstallPwaButton variant="menu" isDark={isDark} />
+                </div>
+              ) : (
+                <PushEnableCard isDark={isDark} />
+              )}
 
               {!isUserLoggedIn ? (
                 <RouterLink
@@ -922,20 +953,27 @@ export const AppLayout = ({ cartCount, children }) => {
       </div>
 
       {/* Main Content Area */}
-      <main className={`flex-grow flex flex-col relative z-10 w-full ${isPortalRoute ? "min-h-0" : ""}`}>
-        {isPortalRoute ? (
-          <div className="page-content-portal flex w-full min-h-0 flex-1 flex-col">{children}</div>
-        ) : (
-          <Container maxWidth={false} sx={{ py: { xs: 1.5, md: 2.5 }, px: { xs: 1.5, sm: 2, md: 4 } }} className="page-content">
-            {children}
-          </Container>
-        )}
-      </main>
+      <PullToRefresh disabled={isPortalRoute}>
+        <main
+          className={`flex-grow flex flex-col relative z-10 w-full ${isPortalRoute ? "min-h-0" : ""} ${
+            isApp ? "pb-[calc(4.25rem+env(safe-area-inset-bottom))] lg:pb-0" : ""
+          }`}
+        >
+          {isPortalRoute ? (
+            <div className="page-content-portal flex w-full min-h-0 flex-1 flex-col">{children}</div>
+          ) : (
+            <Container maxWidth={false} sx={{ py: { xs: 1.5, md: 2.5 }, px: { xs: 1.5, sm: 2, md: 4 } }} className="page-content">
+              {children}
+            </Container>
+          )}
+        </main>
+      </PullToRefresh>
 
       {/* Store footer / floating widgets stay off the portal workspace */}
       {!isPortalRoute && <SiteFooter />}
 
-      {!isPortalRoute && isUserLoggedIn && (
+      {/* Floating cart FAB — browser only; installed app uses bottom tab Cart */}
+      {!isPortalRoute && isUserLoggedIn && !isApp && (
         <RouterLink
           to="/cart"
           aria-label="Cart"
@@ -963,6 +1001,14 @@ export const AppLayout = ({ cartCount, children }) => {
           </Badge>
         </RouterLink>
       )}
+
+      {isApp && !isPortalRoute ? (
+        <AppBottomNav
+          cartCount={cartCount}
+          isLoggedIn={isUserLoggedIn}
+          isDark={isDark}
+        />
+      ) : null}
 
       <Suspense fallback={null}>
         <FloatingChatWidget />

@@ -1,0 +1,76 @@
+{
+  "id": "/",
+  "name": "MARBLEX Chemical & Rubber",
+  "short_name": "MARBLEX",
+  "description": "Construction chemicals, waterproofing, waterstops and industrial rubber — order and negotiate on WhatsApp.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a3d52",
+  "theme_color": "#0a3d52",
+  "lang": "en",
+  "categories": ["business", "shopping"],
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://www.marblex.com/manifest.webmanifest"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/logo-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/marblex-mark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Shop products",
+      "short_name": "Shop",
+      "url": "/",
+      "description": "Browse MARBLEX catalog"
+    },
+    {
+      "name": "WhatsApp desk",
+      "short_name": "WhatsApp",
+      "url": "/?focus=whatsapp",
+      "description": "Open WhatsApp negotiation desk"
+    },
+    {
+      "name": "Cart",
+      "short_name": "Cart",
+      "url": "/cart",
+      "description": "Review cart & checkout"
+    },
+    {
+      "name": "Contact",
+      "short_name": "Contact",
+      "url": "/contact"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}

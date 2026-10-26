@@ -26,6 +26,7 @@ const ContactPage = named(() => import("./pages/ContactPage"), "ContactPage");
 const AboutPage = named(() => import("./pages/AboutPage"), "AboutPage");
 const BlogDetailsPage = named(() => import("./pages/BlogDetailsPage"), "BlogDetailsPage");
 const PortalHost = named(() => import("./pages/portal/PortalHost"), "PortalHost");
+const ShareTargetPage = named(() => import("./pages/ShareTargetPage"), "ShareTargetPage");
 
 function RouteFallback() {
   return (
@@ -98,6 +99,7 @@ function App() {
                 <Route path="/blogs/:id" element={<BlogDetailsPage />} />
                 <Route path="/catalogs" element={<CatalogsPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/share" element={<ShareTargetPage />} />
                 <Route path="/dashboard/*" element={<PortalHost />} />
                 <Route path="/payment/success" element={<PaymentResultPage success />} />
                 <Route path="/payment/cancel" element={<PaymentResultPage success={false} />} />

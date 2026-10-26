@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
@@ -11,6 +11,8 @@ import ConstructionOutlinedIcon from "@mui/icons-material/ConstructionOutlined";
 import EngineeringOutlinedIcon from "@mui/icons-material/EngineeringOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
+import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
@@ -176,13 +178,37 @@ const INDUSTRIES = [
 ];
 
 const CITIES = [
-  { city: "Lahore", role: "Central plant & HQ", eta: "Same-day / 24h" },
-  { city: "Karachi", role: "South dispatch hub", eta: "24–48h" },
-  { city: "Islamabad", role: "North corridor", eta: "24–48h" },
-  { city: "Faisalabad", role: "Industrial belt", eta: "24–48h" },
-  { city: "Multan", role: "South Punjab", eta: "48h" },
-  { city: "Peshawar", role: "KP projects", eta: "48–72h" },
+  { city: "Lahore", role: "Central plant & HQ", eta: "Same-day / 24h", lat: 31.5204, lng: 74.3587 },
+  { city: "Karachi", role: "South dispatch hub", eta: "24–48h", lat: 24.8607, lng: 67.0011 },
+  { city: "Islamabad", role: "North corridor", eta: "24–48h", lat: 33.6844, lng: 73.0479 },
+  { city: "Faisalabad", role: "Industrial belt", eta: "24–48h", lat: 31.4504, lng: 73.135 },
+  { city: "Multan", role: "South Punjab", eta: "48h", lat: 30.1575, lng: 71.5249 },
+  { city: "Peshawar", role: "KP projects", eta: "48–72h", lat: 34.0151, lng: 71.5249 },
 ];
+
+function haversineKm(aLat, aLng, bLat, bLng) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+function nearestCity(lat, lng) {
+  let best = CITIES[0];
+  let bestD = Infinity;
+  for (const c of CITIES) {
+    const d = haversineKm(lat, lng, c.lat, c.lng);
+    if (d < bestD) {
+      bestD = d;
+      best = c;
+    }
+  }
+  return { city: best, km: Math.round(bestD) };
+}
 
 const SURFACES = [
   "Roof / Terrace",
@@ -254,6 +280,7 @@ export function ShopByProblemSection({ onSelectCategory }) {
 
 /** 2 — Free site survey booking (P0) */
 export function SiteSurveySection() {
+  const cameraRef = useRef(null);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -262,6 +289,28 @@ export function SiteSurveySection() {
     area: "",
     note: "",
   });
+  const [photos, setPhotos] = useState([]);
+
+  const onPhotosPicked = (e) => {
+    const files = Array.from(e.target.files || []).slice(0, 6);
+    const next = files.map((f) => ({
+      id: `${f.name}-${f.size}-${f.lastModified}`,
+      name: f.name,
+      preview: URL.createObjectURL(f),
+    }));
+    setPhotos((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.preview));
+      return next;
+    });
+    e.target.value = "";
+  };
+
+  const clearPhotos = () => {
+    setPhotos((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.preview));
+      return [];
+    });
+  };
 
   const openWhatsApp = () => {
     const msg = [
@@ -273,6 +322,9 @@ export function SiteSurveySection() {
       `🏗️ Surface: ${form.surface}`,
       `📐 Approx area: ${form.area || "—"} sq.ft`,
       form.note ? `📝 Note: ${form.note}` : null,
+      photos.length
+        ? `📷 Site photos on device: ${photos.length} (please attach in this chat)`
+        : null,
       "",
       "_Please schedule an engineer visit / digital survey._",
     ]
@@ -407,10 +459,57 @@ export function SiteSurveySection() {
               </div>
             </div>
 
-            <p className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-              <PhotoCameraOutlinedIcon sx={{ fontSize: 14 }} />
-              Tip: after opening WhatsApp, attach 2–3 site photos for faster diagnosis.
-            </p>
+            <div className="mt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Site photos (camera / gallery)
+                </label>
+                {photos.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={clearPhotos}
+                    className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-slate-500"
+                  >
+                    <DeleteOutlineRoundedIcon sx={{ fontSize: 14 }} />
+                    Clear
+                  </button>
+                ) : null}
+              </div>
+              <input
+                ref={cameraRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                className="hidden"
+                onChange={onPhotosPicked}
+              />
+              <button
+                type="button"
+                onClick={() => cameraRef.current?.click()}
+                className="mt-1.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#0a3d52]/35 bg-[#0a3d52]/5 px-3 py-3 text-[12px] font-bold text-[#0a3d52] transition hover:bg-[#0a3d52]/10 dark:border-emerald-500/40 dark:bg-emerald-950/20 dark:text-emerald-300"
+              >
+                <PhotoCameraOutlinedIcon sx={{ fontSize: 18 }} />
+                {photos.length ? `Add / replace photos (${photos.length})` : "Capture or pick site photos"}
+              </button>
+              {photos.length > 0 ? (
+                <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                  {photos.map((p) => (
+                    <img
+                      key={p.id}
+                      src={p.preview}
+                      alt={p.name}
+                      className="h-16 w-16 shrink-0 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-700"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <PhotoCameraOutlinedIcon sx={{ fontSize: 14 }} />
+                  Photos stay on your phone — attach them in WhatsApp after send.
+                </p>
+              )}
+            </div>
 
             <button
               type="button"
@@ -671,9 +770,39 @@ export function IndustriesSection({ onSelectCategory }) {
 
 /** 7 — Cities / dispatch (P1) + Export teaser */
 export function DispatchCitiesSection() {
+  const [geo, setGeo] = useState({ status: "idle", nearest: null, km: null, error: "" });
   const exportWa = waLink(
     "Hello MARBLEX Export Desk, I need GCC / international project pricing and logistics."
   );
+
+  const detectLocation = () => {
+    if (!navigator.geolocation) {
+      setGeo({ status: "error", nearest: null, km: null, error: "Geolocation not supported on this device." });
+      return;
+    }
+    setGeo((g) => ({ ...g, status: "loading", error: "" }));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { city, km } = nearestCity(pos.coords.latitude, pos.coords.longitude);
+        setGeo({ status: "ready", nearest: city.city, km, error: "" });
+      },
+      () => {
+        setGeo({
+          status: "error",
+          nearest: null,
+          km: null,
+          error: "Location permission denied — pick a city below or share pin on WhatsApp.",
+        });
+      },
+      { enableHighAccuracy: false, timeout: 12000, maximumAge: 60_000 }
+    );
+  };
+
+  const nearestWa =
+    geo.nearest &&
+    waLink(
+      `Hello MARBLEX Dispatch,\nMy site is near *${geo.nearest}* (~${geo.km} km from hub).\nPlease confirm ETA & stock for delivery.`
+    );
 
   return (
     <section className="my-14 scroll-reveal sm:my-20" aria-labelledby="dispatch-heading">
@@ -693,20 +822,65 @@ export function DispatchCitiesSection() {
             Typical lead times for stocked systems — confirm on WhatsApp for your site pin.
           </p>
 
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={detectLocation}
+              disabled={geo.status === "loading"}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#0a3d52]/25 bg-white px-3 py-2 text-[11px] font-bold text-[#0a3d52] transition hover:border-[#0a3d52]/50 dark:border-slate-600 dark:bg-[#0c222e] dark:text-emerald-300"
+            >
+              <MyLocationRoundedIcon sx={{ fontSize: 16 }} className={geo.status === "loading" ? "animate-pulse" : ""} />
+              {geo.status === "loading" ? "Detecting…" : "Use my location"}
+            </button>
+            {geo.status === "ready" && geo.nearest ? (
+              <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                Nearest hub: {geo.nearest} · ~{geo.km} km
+              </span>
+            ) : null}
+            {geo.status === "ready" && nearestWa ? (
+              <a
+                href={nearestWa}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600"
+              >
+                <WhatsAppIcon sx={{ fontSize: 14 }} />
+                Confirm ETA
+              </a>
+            ) : null}
+            {geo.error ? (
+              <p className="w-full text-[11px] font-medium text-amber-700 dark:text-amber-400">{geo.error}</p>
+            ) : null}
+          </div>
+
           <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {CITIES.map((c) => (
+            {CITIES.map((c) => {
+              const active = geo.nearest === c.city;
+              return (
               <div
                 key={c.city}
-                className="flex items-start gap-3 rounded-xl border border-slate-200/90 bg-white p-3.5 dark:border-slate-800 dark:bg-[#0c222e]"
+                className={`flex items-start gap-3 rounded-xl border p-3.5 transition ${
+                  active
+                    ? "border-emerald-500/50 bg-emerald-50/80 ring-1 ring-emerald-500/30 dark:border-emerald-500/40 dark:bg-emerald-950/30"
+                    : "border-slate-200/90 bg-white dark:border-slate-800 dark:bg-[#0c222e]"
+                }`}
               >
                 <LocationOnOutlinedIcon sx={{ fontSize: 18 }} className="mt-0.5 text-[#ff6b4a]" />
                 <div>
-                  <p className="text-[13px] font-bold text-[#0a3d52] dark:text-white">{c.city}</p>
+                  <p className="text-[13px] font-bold text-[#0a3d52] dark:text-white">
+                    {c.city}
+                    {active ? (
+                      <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-600">
+                        nearest
+                      </span>
+                    ) : null}
+                  </p>
                   <p className="text-[11px] text-slate-500">{c.role}</p>
                   <p className="mt-0.5 text-[11px] font-semibold text-emerald-600">{c.eta}</p>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
 

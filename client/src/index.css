@@ -406,5 +406,14 @@ html.lenis body {
   pointer-events: none;
 }
 
+/* Installed PWA shell — native app feel */
+.is-marblex-app {
+  overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.is-marblex-app .page-content {
+  padding-bottom: 0.5rem;
+}
 
 
