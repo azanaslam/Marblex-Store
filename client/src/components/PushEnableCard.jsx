@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
+import { subscribeWebPush } from "../push/webPush";
 
 const PREF_KEY = "marblex_push_pref";
 
 /**
- * Client-side notification opt-in (local + future Web Push ready).
- * Works great in installed PWA for order / quote reminders.
+ * Opt-in for phone notifications (works when app is closed).
+ * After enable → card disappears from hamburger.
  */
 export function PushEnableCard({ isDark = false }) {
   const [perm, setPerm] = useState(
@@ -19,6 +19,8 @@ export function PushEnableCard({ isDark = false }) {
       return false;
     }
   });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (typeof Notification !== "undefined") setPerm(Notification.permission);
@@ -26,18 +28,21 @@ export function PushEnableCard({ isDark = false }) {
 
   const enable = useCallback(async () => {
     if (typeof Notification === "undefined") return;
-    const result = await Notification.requestPermission();
-    setPerm(result);
-    if (result === "granted") {
-      try {
-        localStorage.setItem(PREF_KEY, "1");
-      } catch {
-        /* ignore */
+    setBusy(true);
+    setError("");
+    try {
+      const result = await Notification.requestPermission();
+      setPerm(result);
+      if (result !== "granted") {
+        setError("Permission denied. Allow notifications in phone settings.");
+        return;
       }
+      await subscribeWebPush();
       setEnabled(true);
       try {
+        // Local welcome only (also confirms OS permission works)
         new Notification("MARBLEX alerts on", {
-          body: "Order & quote updates is app me milenge.",
+          body: "You will get messages and updates even when the app is closed.",
           icon: "/logo-icon.png",
           badge: "/marblex-mark.png",
           tag: "marblex-welcome",
@@ -45,67 +50,65 @@ export function PushEnableCard({ isDark = false }) {
       } catch {
         /* ignore */
       }
+    } catch (e) {
+      setError(e?.message || "Could not enable push. Try again on HTTPS / installed app.");
+    } finally {
+      setBusy(false);
     }
   }, []);
 
-  const disable = () => {
-    try {
-      localStorage.setItem(PREF_KEY, "0");
-    } catch {
-      /* ignore */
-    }
-    setEnabled(false);
-  };
-
   if (typeof window === "undefined") return null;
+
+  if (enabled && perm === "granted") return null;
+
+  if (perm === "denied") {
+    return (
+      <div
+        className={`rounded-2xl border p-3.5 ${
+          isDark ? "border-slate-700 bg-[#0c222e]" : "border-slate-200 bg-white"
+        }`}
+      >
+        <p className="text-[11px] font-semibold text-amber-600">
+          Notifications blocked. Allow them in phone Settings → Apps → MARBLEX.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
       className={`rounded-2xl border p-4 ${
-        isDark
-          ? "border-slate-700 bg-[#0c222e]"
-          : "border-slate-200 bg-white shadow-sm"
+        isDark ? "border-slate-700 bg-[#0c222e]" : "border-slate-200 bg-white shadow-sm"
       }`}
     >
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600">
-          {enabled && perm === "granted" ? (
-            <NotificationsActiveRoundedIcon sx={{ fontSize: 22 }} />
-          ) : (
-            <NotificationsOffRoundedIcon sx={{ fontSize: 22 }} />
-          )}
+          <NotificationsOffRoundedIcon sx={{ fontSize: 22 }} />
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="font-heading text-sm font-bold text-[#0a3d52] dark:text-white">
             App notifications
           </h3>
           <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-            Quotes, dispatch alerts aur survey follow-ups — installed app me native feel.
+            Get chat replies and announcements on your phone — even when MARBLEX is closed.
           </p>
-          {perm === "denied" ? (
-            <p className="mt-2 text-[11px] font-semibold text-amber-600">
-              Browser ne block kiya — Settings → Notifications se allow karo.
-            </p>
-          ) : (
-            <button
-              type="button"
-              onClick={enabled ? disable : enable}
-              className={`mt-2.5 rounded-xl px-3 py-2 text-[11px] font-bold uppercase tracking-wide ${
-                enabled
-                  ? "border border-slate-200 text-slate-600 dark:border-slate-600 dark:text-slate-300"
-                  : "bg-[#0a3d52] text-white"
-              }`}
-            >
-              {enabled ? "Disable alerts" : "Enable alerts"}
-            </button>
-          )}
+          {error ? (
+            <p className="mt-2 text-[11px] font-semibold text-amber-600">{error}</p>
+          ) : null}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={enable}
+            className="mt-2.5 rounded-xl bg-[#0a3d52] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white disabled:opacity-60"
+          >
+            {busy ? "Enabling…" : "Enable alerts"}
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-/** Helper for other modules to fire a local notification if user opted in */
 export function notifyMarblex(title, body, tag = "marblex") {
   try {
     if (typeof Notification === "undefined") return;

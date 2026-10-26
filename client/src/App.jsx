@@ -5,6 +5,7 @@ import { AppLayoutShell } from "./components/AppLayoutShell";
 import { BrandSplashPreloader } from "./components/BrandSplashPreloader";
 import { LenisScroll } from "./components/LenisScroll";
 import { RouteSeo } from "./components/RouteSeo";
+import { PushNotificationBridge } from "./components/PushNotificationBridge";
 import { ShopPage } from "./pages/ShopPage";
 import { useCart } from "./hooks/useCart";
 import { appTheme } from "./theme/theme";
@@ -56,6 +57,7 @@ function App() {
         <CssBaseline />
         <BrowserRouter>
           <RouteSeo />
+          <PushNotificationBridge />
           <LenisScroll>
             <Routes>
               <Route

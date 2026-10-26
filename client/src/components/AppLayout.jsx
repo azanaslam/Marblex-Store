@@ -450,13 +450,7 @@ export const AppLayout = ({ cartCount, children }) => {
     <div
       className={`flex flex-col min-h-screen relative transition-colors duration-300 ${isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
       } ${isPortalRoute ? "portal-shell" : ""} ${isApp ? "is-marblex-app" : ""}`}
-      style={
-        isApp
-          ? {
-              paddingTop: "env(safe-area-inset-top)",
-            }
-          : undefined
-      }
+      style={undefined}
     >
       <PwaUpdateToast />
       <OfflineBanner />
@@ -464,7 +458,9 @@ export const AppLayout = ({ cartCount, children }) => {
       {/* 1. Top Brand Announcement & Trust Badges Header — hide chrome strip in installed app */}
       <div
         ref={announcementRef}
-        className={`${isApp ? "hidden" : ""} bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1 md:py-2 px-2 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden`}
+        className={`bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1 md:py-2 px-2 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden ${
+          isApp ? "pt-[max(0.25rem,env(safe-area-inset-top))]" : ""
+        }`}
       >
         {/* Desktop View (md and up) */}
         <div className="hidden md:flex max-w-[1440px] mx-auto items-center justify-between gap-6">
@@ -639,11 +635,16 @@ export const AppLayout = ({ cartCount, children }) => {
                 )}
               </button>
 
-              {/* Cart — desktop always visible; on mobile visible only when not logged in (shifts down to floating FAB when logged in) */}
+              {/* Cart — hidden in installed app (bottom tab has Cart); desktop/browser keep it */}
               <RouterLink
                 to="/cart"
                 aria-label="Cart"
-                className={`relative ${isUserLoggedIn ? "hidden sm:flex" : "flex"
+                className={`relative ${
+                  isApp
+                    ? "hidden"
+                    : isUserLoggedIn
+                      ? "hidden sm:flex"
+                      : "flex"
                   } w-9 h-9 sm:w-auto sm:h-auto items-center justify-center sm:justify-start gap-2 sm:px-3.5 sm:py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] ${isDark
                     ? "border-slate-700 bg-[#0e2735] text-white hover:border-[#ff6b4a]"
                     : "border-slate-200 bg-[#f8fafc] hover:border-slate-300 text-[#0a3d52]"
@@ -857,7 +858,7 @@ export const AppLayout = ({ cartCount, children }) => {
 
         <div
           ref={mobileMenuPanelRef}
-          className={`absolute inset-x-3 top-[4.75rem] bottom-[max(0.65rem,env(safe-area-inset-bottom))] flex max-h-[calc(100dvh-5.4rem)] flex-col overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(8,34,46,0.55)] transition-all duration-300 ease-out sm:inset-x-4 ${isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200/95 bg-white"
+          className={`absolute inset-x-3 top-[calc(env(safe-area-inset-top,0px)+5.85rem)] bottom-[max(0.65rem,env(safe-area-inset-bottom))] flex max-h-[calc(100dvh-6.5rem)] flex-col overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(8,34,46,0.55)] transition-all duration-300 ease-out sm:inset-x-4 sm:top-[calc(env(safe-area-inset-top,0px)+6.1rem)] ${isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200/95 bg-white"
             } ${isMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}
         >
           <div

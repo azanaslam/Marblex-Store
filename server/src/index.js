@@ -11,6 +11,7 @@ const { seedAdmin } = require("./utils/seedAdmin");
 const { seedProducts } = require("./utils/seedProducts");
 const { seedClientReviews } = require("./utils/seedClientReviews");
 const { initSocket } = require("./socket");
+const { configureWebPush, isPushConfigured } = require("./utils/webPush");
 
 process.on("uncaughtException", (err) => {
   console.error("UNCAUGHT EXCEPTION! Shutting down...");
@@ -24,6 +25,13 @@ const startServer = async () => {
     await seedAdmin();
     await seedProducts();
     await seedClientReviews();
+
+    configureWebPush();
+    if (isPushConfigured()) {
+      console.log("Web Push (VAPID) configured");
+    } else {
+      console.warn("Web Push disabled — set VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY in .env");
+    }
 
     const server = http.createServer(app);
     initSocket(server);

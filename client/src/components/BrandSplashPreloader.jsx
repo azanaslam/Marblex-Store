@@ -69,6 +69,13 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   }, [onComplete]);
 
   useEffect(() => {
+    // Hand off from HTML boot splash → animated BrandSplash
+    try {
+      document.getElementById("marblex-boot-splash")?.remove();
+    } catch {
+      /* ignore */
+    }
+
     // Safety fallback: auto-dismiss after sufficient duration
     const safetyTimer = setTimeout(() => {
       handleFinish();

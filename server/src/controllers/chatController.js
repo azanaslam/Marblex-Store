@@ -3,6 +3,7 @@ const User = require("../models/User");
 const DirectMessage = require("../models/DirectMessage");
 const Broadcast = require("../models/Broadcast");
 const { getIO } = require("../socket");
+const { sendPushToUser, sendPushToStaff, sendPushToAll } = require("../utils/webPush");
 
 const messageReactionPopulate = {
   path: "reactions.user",
@@ -45,6 +46,15 @@ const sendUserMessage = async (req, res) => {
     const io = getIO();
     io.to("role:staff").emit("new_message", populated);
     io.to(String(req.user.id)).emit("new_message", populated);
+
+    // Phone push even if admin app is closed
+    const preview = String(body).trim().slice(0, 120);
+    sendPushToStaff({
+      title: "New client message",
+      body: `${populated.sender?.name || "Client"}: ${preview}`,
+      url: "/admin",
+      tag: `chat-in-${msg._id}`,
+    }).catch(() => {});
 
     return res.status(201).json(populated);
   } catch (e) {
@@ -178,6 +188,15 @@ const sendAdminReply = async (req, res) => {
   const io = getIO();
   io.to("role:staff").emit("new_message", populated);
   io.to(String(userId)).emit("new_message", populated);
+
+  const preview = String(body).trim().slice(0, 120);
+  sendPushToUser(userId, {
+    title: "MARBLEX support replied",
+    body: preview,
+    url: "/dashboard",
+    tag: `chat-out-${msg._id}`,
+  }).catch(() => {});
+
   return res.status(201).json(populated);
 };
 
@@ -191,6 +210,15 @@ const createBroadcast = async (req, res) => {
     createdBy: req.user.id,
   });
   const populated = await Broadcast.findById(b._id).populate("createdBy", "name email");
+
+  const preview = String(message).trim().slice(0, 140);
+  sendPushToAll({
+    title: "MARBLEX announcement",
+    body: preview,
+    url: "/dashboard",
+    tag: `broadcast-${b._id}`,
+  }).catch(() => {});
+
   return res.status(201).json(populated);
 };
 

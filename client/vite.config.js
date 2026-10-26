@@ -25,7 +25,8 @@ export default defineConfig({
         description:
           'Construction chemicals, waterproofing, waterstops and industrial rubber — shop and negotiate on WhatsApp.',
         theme_color: '#0a3d52',
-        background_color: '#0a3d52',
+        // Match BrandSplash so OS splash ≠ white box on teal
+        background_color: '#f5f7fa',
         display: 'standalone',
         orientation: 'portrait-primary',
         start_url: '/',
@@ -41,20 +42,26 @@ export default defineConfig({
         ],
         icons: [
           {
-            src: '/logo-icon.png',
+            src: '/logo-icon-transparent.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/logo-icon.png',
+            src: '/logo-icon-transparent.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/marblex-mark.png',
+            src: '/logo-icon.png',
             sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: '/logo-icon.png',
+            sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
           },
@@ -97,6 +104,8 @@ export default defineConfig({
       },
       workbox: {
         clientsClaim: true,
+        // Phone push + notificationclick (file lives in public/)
+        importScripts: ['push-handler.js'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/, /^\/admin/],
         // Keep install size sane — exclude heavy bot frame dumps / big videos

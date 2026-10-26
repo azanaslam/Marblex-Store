@@ -38,6 +38,10 @@ module.exports = {
   smtpPass: process.env.SMTP_PASS || process.env.EMAIL_PASS || "",
   /** Google Identity Services — Web Client ID (same value on frontend) */
   googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || "",
+  /** Web Push VAPID (generate: npx web-push generate-vapid-keys) */
+  vapidPublicKey: process.env.VAPID_PUBLIC_KEY || "",
+  vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || "",
+  vapidSubject: process.env.VAPID_SUBJECT || "mailto:Marblexpak@gmail.com",
 };
 
 

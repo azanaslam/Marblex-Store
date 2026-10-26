@@ -484,6 +484,19 @@ const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { orderStatus } = req.body;
     const order = await Order.findByIdAndUpdate(id, { orderStatus }, { new: true });
+    if (order?.user && orderStatus) {
+      try {
+        const { sendPushToUser } = require("../utils/webPush");
+        sendPushToUser(order.user, {
+          title: "Order update",
+          body: `Your MARBLEX order is now: ${orderStatus}`,
+          url: "/dashboard",
+          tag: `order-${order._id}`,
+        }).catch(() => {});
+      } catch {
+        /* push optional */
+      }
+    }
     res.json({ success: true, order });
   } catch (error) {
     res.status(500).json({ message: error.message });
