@@ -438,6 +438,11 @@ export const AppLayout = ({ cartCount, children }) => {
   const isApp = useStandaloneApp();
   useAppBadge((Number(cartCount) || 0) + (Number(notifCount) || 0));
 
+  // Installed app: no account dropdown chrome
+  useEffect(() => {
+    if (isApp) setAccountMenuOpen(false);
+  }, [isApp]);
+
   if (isAdminRoute) {
     return (
       <div className="min-h-screen w-full bg-[#f5f7fa] text-[#0f1929] flex flex-col selection:bg-[#ff6b4a] selection:text-white">
@@ -689,6 +694,21 @@ export const AppLayout = ({ cartCount, children }) => {
                     </RouterLink>
                   </div>
                 </div>
+              ) : isApp ? (
+                /* Installed app: avatar only → portal/admin (no dropdown; portal has those links) */
+                <RouterLink
+                  to={isAdmin ? "/admin" : "/dashboard"}
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-label={isAdmin ? "Open admin console" : "Open client portal"}
+                  title={isAdmin ? "Admin console" : "Client portal"}
+                  className={`flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border transition ${
+                    isDark
+                      ? "border-slate-700 bg-[#0e2735] hover:border-emerald-500/40"
+                      : "border-slate-200 bg-[#f8fafc] hover:border-[#0a3d52]/35"
+                  }`}
+                >
+                  <AccountAvatar className="h-8 w-8 text-[11px]" />
+                </RouterLink>
               ) : (
                 <div className="relative" ref={accountMenuRef}>
                   <div
@@ -1020,6 +1040,7 @@ export const AppLayout = ({ cartCount, children }) => {
         <AppBottomNav
           cartCount={cartCount}
           isLoggedIn={isUserLoggedIn}
+          isAdmin={isAdmin}
           isDark={isDark}
         />
       ) : null}

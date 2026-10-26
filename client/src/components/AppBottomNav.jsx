@@ -4,6 +4,7 @@ import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import { Badge } from "@mui/material";
 
 const WA = "https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20need%20help%20from%20the%20app.";
@@ -11,7 +12,12 @@ const WA = "https://wa.me/923084585792?text=Hello%20MARBLEX%2C%20I%20need%20help
 /**
  * Native-style bottom tabs — only shown in installed PWA (standalone) mode.
  */
-export function AppBottomNav({ cartCount = 0, isLoggedIn = false, isDark = false }) {
+export function AppBottomNav({
+  cartCount = 0,
+  isLoggedIn = false,
+  isAdmin = false,
+  isDark = false,
+}) {
   const { pathname } = useLocation();
 
   const itemCls = (active) =>
@@ -27,10 +33,12 @@ export function AppBottomNav({ cartCount = 0, isLoggedIn = false, isDark = false
 
   const isHome = pathname === "/";
   const isCart = pathname.startsWith("/cart");
-  const isAccount =
+  const dashPath = isAdmin ? "/admin" : "/dashboard";
+  const isDashboard =
     pathname.startsWith("/login") ||
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/portal");
+    pathname.startsWith("/portal") ||
+    pathname.startsWith("/admin");
 
   return (
     <nav
@@ -86,23 +94,22 @@ export function AppBottomNav({ cartCount = 0, isLoggedIn = false, isDark = false
           Cart
         </RouterLink>
 
-        <a
-          href={WA}
-          target="_blank"
-          rel="noreferrer"
-          className={itemCls(false)}
-        >
+        <a href={WA} target="_blank" rel="noreferrer" className={itemCls(false)}>
           <WhatsAppIcon sx={{ fontSize: 22 }} className="text-emerald-500" />
           Chat
         </a>
 
         <RouterLink
-          to={isLoggedIn ? "/dashboard" : "/login"}
-          className={itemCls(isAccount)}
-          aria-current={isAccount ? "page" : undefined}
+          to={isLoggedIn ? dashPath : "/login"}
+          className={itemCls(isDashboard)}
+          aria-current={isDashboard ? "page" : undefined}
         >
-          <PersonRoundedIcon sx={{ fontSize: 22 }} />
-          Account
+          {isLoggedIn ? (
+            <DashboardRoundedIcon sx={{ fontSize: 22 }} />
+          ) : (
+            <PersonRoundedIcon sx={{ fontSize: 22 }} />
+          )}
+          {isLoggedIn ? "Dashboard" : "Account"}
         </RouterLink>
       </div>
     </nav>

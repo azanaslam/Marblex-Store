@@ -34,11 +34,16 @@ self.addEventListener("push", (event) => {
     badge: data.badge || "/marblex-mark.png",
     tag: data.tag || "marblex",
     renotify: true,
-    data: { url: data.url || "/" },
+    // Helps Android show under installed MARBLEX WebAPK, not a bare Chrome channel
+    lang: "en",
+    dir: "ltr",
+    data: { url: data.url || "/", source: "marblex-pwa" },
     vibrate: [120, 60, 120],
   };
 
-  event.waitUntil(self.registration.showNotification(data.title || "MARBLEX", options));
+  event.waitUntil(
+    self.registration.showNotification(data.title || "MARBLEX", options)
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {

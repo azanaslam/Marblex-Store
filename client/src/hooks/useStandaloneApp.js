@@ -5,7 +5,12 @@ export function getIsStandaloneApp() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
     window.matchMedia("(display-mode: fullscreen)").matches ||
-    window.navigator.standalone === true
+    window.matchMedia("(display-mode: minimal-ui)").matches ||
+    window.navigator.standalone === true ||
+    // Android WebAPK / TWA launch
+    (typeof document !== "undefined" &&
+      typeof document.referrer === "string" &&
+      document.referrer.startsWith("android-app://"))
   );
 }
 

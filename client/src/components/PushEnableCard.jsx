@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
-import { subscribeWebPush } from "../push/webPush";
+import { getIsStandaloneApp } from "../hooks/useStandaloneApp";
+import { showAppNotification, subscribeWebPush } from "../push/webPush";
 
 const PREF_KEY = "marblex_push_pref";
 
 /**
- * Opt-in for phone notifications (works when app is closed).
- * After enable → card disappears from hamburger.
+ * Opt-in ONLY inside the installed MARBLEX app (not Chrome browser tab).
+ * After enable → card disappears. Push then shows as MARBLEX on the phone.
  */
 export function PushEnableCard({ isDark = false }) {
   const [perm, setPerm] = useState(
@@ -21,6 +22,7 @@ export function PushEnableCard({ isDark = false }) {
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const isApp = getIsStandaloneApp();
 
   useEffect(() => {
     if (typeof Notification !== "undefined") setPerm(Notification.permission);
@@ -28,36 +30,37 @@ export function PushEnableCard({ isDark = false }) {
 
   const enable = useCallback(async () => {
     if (typeof Notification === "undefined") return;
+    if (!getIsStandaloneApp()) {
+      setError("Open MARBLEX from the home-screen app icon (not Chrome), then enable alerts.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
       const result = await Notification.requestPermission();
       setPerm(result);
       if (result !== "granted") {
-        setError("Permission denied. Allow notifications in phone settings.");
+        setError("Permission denied. In the popup choose Allow for MARBLEX.");
         return;
       }
-      await subscribeWebPush();
+      await subscribeWebPush({ forceFresh: true });
       setEnabled(true);
-      try {
-        // Local welcome only (also confirms OS permission works)
-        new Notification("MARBLEX alerts on", {
-          body: "You will get messages and updates even when the app is closed.",
-          icon: "/logo-icon.png",
-          badge: "/marblex-mark.png",
-          tag: "marblex-welcome",
-        });
-      } catch {
-        /* ignore */
-      }
+      // Must use Service Worker notification — page Notification() shows as Chrome
+      await showAppNotification("MARBLEX alerts on", {
+        body: "Messages and updates will appear as MARBLEX — even when the app is closed.",
+        tag: "marblex-welcome",
+      });
     } catch (e) {
-      setError(e?.message || "Could not enable push. Try again on HTTPS / installed app.");
+      setError(e?.message || "Could not enable app alerts. Open the installed MARBLEX app and try again.");
     } finally {
       setBusy(false);
     }
   }, []);
 
   if (typeof window === "undefined") return null;
+
+  // Never offer Chrome-tab push — that attributes to Google Chrome
+  if (!isApp) return null;
 
   if (enabled && perm === "granted") return null;
 
@@ -69,7 +72,7 @@ export function PushEnableCard({ isDark = false }) {
         }`}
       >
         <p className="text-[11px] font-semibold text-amber-600">
-          Notifications blocked. Allow them in phone Settings → Apps → MARBLEX.
+          Notifications blocked. Phone Settings → Apps → MARBLEX → Notifications → Allow.
         </p>
       </div>
     );
@@ -90,7 +93,8 @@ export function PushEnableCard({ isDark = false }) {
             App notifications
           </h3>
           <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-            Get chat replies and announcements on your phone — even when MARBLEX is closed.
+            Allow once — alerts show as <b>MARBLEX</b> on your phone (not Chrome), even when the
+            app is closed.
           </p>
           {error ? (
             <p className="mt-2 text-[11px] font-semibold text-amber-600">{error}</p>
@@ -114,12 +118,8 @@ export function notifyMarblex(title, body, tag = "marblex") {
     if (typeof Notification === "undefined") return;
     if (Notification.permission !== "granted") return;
     if (localStorage.getItem(PREF_KEY) !== "1") return;
-    new Notification(title, {
-      body,
-      icon: "/logo-icon.png",
-      badge: "/marblex-mark.png",
-      tag,
-    });
+    if (!getIsStandaloneApp()) return;
+    showAppNotification(title, { body, tag }).catch(() => {});
   } catch {
     /* ignore */
   }
