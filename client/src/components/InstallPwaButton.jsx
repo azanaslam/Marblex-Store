@@ -7,9 +7,8 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 const DISMISS_KEY = "marblex_pwa_prompt_dismissed";
 const INSTALLED_KEY = "marblex_pwa_installed";
-/** Homepage load ke baad popup delay */
 const PROMPT_DELAY_MS = 2800;
-const PROMPT_MS = 8000;
+const PROMPT_MS = 9000;
 
 function isIos() {
   if (typeof navigator === "undefined") return false;
@@ -42,7 +41,6 @@ function markInstalled() {
   }
 }
 
-/** Chromium: related webapp still on device? */
 async function relatedAppInstalled() {
   if (typeof navigator === "undefined" || !navigator.getInstalledRelatedApps) {
     return null;
@@ -55,12 +53,6 @@ async function relatedAppInstalled() {
   }
 }
 
-/**
- * Install state:
- * - standalone / related apps → installed (hide UI)
- * - beforeinstallprompt → NOT installed (user deleted / never installed) → show UI
- * - localStorage flag only until BIP / related-apps contradicts it
- */
 async function resolveInstalled(hasDeferredPrompt) {
   if (isStandalone()) return true;
   if (hasDeferredPrompt) {
@@ -83,13 +75,19 @@ async function resolveInstalled(hasDeferredPrompt) {
   }
 }
 
-/** Shared deferred prompt across multiple Install buttons */
 let sharedDeferred = null;
 const deferredListeners = new Set();
+const installedListeners = new Set();
+let sharedInstalled = typeof window !== "undefined" ? isStandalone() : false;
 
 function setSharedDeferred(event) {
   sharedDeferred = event;
   deferredListeners.forEach((fn) => fn(event));
+}
+
+function setSharedInstalled(value) {
+  sharedInstalled = value;
+  installedListeners.forEach((fn) => fn(value));
 }
 
 function subscribeDeferred(fn) {
@@ -98,74 +96,137 @@ function subscribeDeferred(fn) {
   return () => deferredListeners.delete(fn);
 }
 
-/**
- * Navbar / mobile Install control.
- * Pass `withPrompt` on ONE instance (navbar) so the toast popup is managed once.
- */
-export function InstallPwaButton({
-  variant = "nav",
-  isDark = false,
-  withPrompt = false,
-  fullWidth = false,
-}) {
-  const location = useLocation();
-  const isHome = location.pathname === "/";
-  const [deferred, setDeferred] = useState(sharedDeferred);
-  const [installed, setInstalled] = useState(() => isStandalone());
-  const [ready, setReady] = useState(false);
-  const [showIosHelp, setShowIosHelp] = useState(false);
-  const [bannerOpen, setBannerOpen] = useState(false);
+function subscribeInstalled(fn) {
+  installedListeners.add(fn);
+  fn(sharedInstalled);
+  return () => installedListeners.delete(fn);
+}
 
-  useEffect(() => subscribeDeferred(setDeferred), []);
+let bootstrapped = false;
+let readyFlag = false;
+const readyListeners = new Set();
+
+function setReadyFlag(v) {
+  readyFlag = v;
+  readyListeners.forEach((fn) => fn(v));
+}
+
+function subscribeReady(fn) {
+  readyListeners.add(fn);
+  fn(readyFlag);
+  return () => readyListeners.delete(fn);
+}
+
+function bootstrapInstallListeners() {
+  if (bootstrapped || typeof window === "undefined") return;
+  bootstrapped = true;
+
+  const sync = async () => {
+    const next = await resolveInstalled(!!sharedDeferred);
+    setSharedInstalled(next);
+    setReadyFlag(true);
+  };
+
+  sync();
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    clearInstalledFlag();
+    setSharedDeferred(e);
+    setSharedInstalled(false);
+    setReadyFlag(true);
+  });
+
+  window.addEventListener("appinstalled", () => {
+    markInstalled();
+    setSharedInstalled(true);
+    setSharedDeferred(null);
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") sync();
+  });
+}
+
+/** Mobile browser chrome ke upar bottom offset (iOS Chrome / Safari) */
+function useMobileBottomOffset() {
+  const [bottomPx, setBottomPx] = useState(88);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const sync = async () => {
-      const next = await resolveInstalled(!!sharedDeferred);
-      if (!cancelled) {
-        setInstalled(next);
-        setReady(true);
+    const sync = () => {
+      const vv = window.visualViewport;
+      if (!vv) {
+        setBottomPx(88);
+        return;
       }
+      const chromeGap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      // Chrome bottom bar (~56–72) + thoda gap — popup hamesha neeche
+      setBottomPx(Math.max(80, chromeGap + 16));
     };
-
     sync();
-
-    const onBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      // Browser says installable → app is NOT on device (or was removed)
-      clearInstalledFlag();
-      setSharedDeferred(e);
-      setInstalled(false);
-      setReady(true);
-    };
-
-    const onInstalled = () => {
-      markInstalled();
-      setInstalled(true);
-      setSharedDeferred(null);
-      setBannerOpen(false);
-      setShowIosHelp(false);
-    };
-
-    const onVisible = () => {
-      if (document.visibilityState === "visible") sync();
-    };
-
-    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-    window.addEventListener("appinstalled", onInstalled);
-    document.addEventListener("visibilitychange", onVisible);
+    window.visualViewport?.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("scroll", sync);
+    window.addEventListener("resize", sync);
+    window.addEventListener("orientationchange", sync);
     return () => {
-      cancelled = true;
-      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", onInstalled);
-      document.removeEventListener("visibilitychange", onVisible);
+      window.visualViewport?.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+      window.removeEventListener("orientationchange", sync);
     };
   }, []);
 
-  // Home page: kuch seconds baad install popup (sirf jab app installed na ho)
+  return bottomPx;
+}
+
+function useInstallState() {
+  const [deferred, setDeferred] = useState(sharedDeferred);
+  const [installed, setInstalled] = useState(() => sharedInstalled || isStandalone());
+  const [ready, setReady] = useState(readyFlag);
+
   useEffect(() => {
-    if (!withPrompt || !ready || installed || !isHome) {
+    bootstrapInstallListeners();
+    return subscribeDeferred(setDeferred);
+  }, []);
+  useEffect(() => subscribeInstalled(setInstalled), []);
+  useEffect(() => subscribeReady(setReady), []);
+
+  const requestInstall = useCallback(async () => {
+    const promptEvent = sharedDeferred || deferred;
+    if (promptEvent) {
+      promptEvent.prompt();
+      try {
+        const choice = await promptEvent.userChoice;
+        if (choice?.outcome === "accepted") {
+          markInstalled();
+          setSharedInstalled(true);
+        }
+      } catch {
+        /* dismissed */
+      }
+      setSharedDeferred(null);
+      return "prompted";
+    }
+    return "help";
+  }, [deferred]);
+
+  return { deferred, installed, ready, requestInstall };
+}
+
+/**
+ * Bottom install toast — mount OUTSIDE the animated header (AppLayout root).
+ * Always portals to document.body with visualViewport bottom offset.
+ */
+export function InstallPwaPrompt() {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+  const { installed, ready, requestInstall } = useInstallState();
+  const [bannerOpen, setBannerOpen] = useState(false);
+  const [showIosHelp, setShowIosHelp] = useState(false);
+  const bottomPx = useMobileBottomOffset();
+
+  useEffect(() => {
+    if (!ready || installed || !isHome || isStandalone()) {
       setBannerOpen(false);
       return undefined;
     }
@@ -192,7 +253,7 @@ export function InstallPwaButton({
       window.clearTimeout(showTimer);
       window.clearTimeout(hideTimer);
     };
-  }, [withPrompt, ready, installed, isHome]);
+  }, [ready, installed, isHome]);
 
   const dismissBanner = () => {
     setBannerOpen(false);
@@ -203,27 +264,240 @@ export function InstallPwaButton({
     }
   };
 
-  const handleInstall = useCallback(async () => {
-    const promptEvent = sharedDeferred || deferred;
-    if (promptEvent) {
-      promptEvent.prompt();
-      try {
-        const choice = await promptEvent.userChoice;
-        if (choice?.outcome === "accepted") {
-          markInstalled();
-          setInstalled(true);
-        }
-      } catch {
-        /* dismissed */
-      }
-      setSharedDeferred(null);
-      setBannerOpen(false);
-      return;
-    }
-    setShowIosHelp(true);
-  }, [deferred]);
+  const handleInstall = async () => {
+    const result = await requestInstall();
+    if (result === "help") setShowIosHelp(true);
+    else setBannerOpen(false);
+  };
 
-  // Installed / running as app → Install button & popup completely gone
+  if (typeof document === "undefined") return null;
+
+  return (
+    <>
+      {bannerOpen &&
+        !installed &&
+        createPortal(
+          <div
+            id="marblex-install-prompt"
+            className="marblex-install-prompt"
+            role="status"
+            style={{
+              position: "fixed",
+              left: 0,
+              right: 0,
+              top: "auto",
+              bottom: `${bottomPx}px`,
+              zIndex: 2147483000,
+              transform: "none",
+              pointerEvents: "none",
+              paddingLeft: 12,
+              paddingRight: 12,
+              display: "flex",
+              justifyContent: "center",
+              margin: 0,
+            }}
+          >
+            <style>{`
+              @keyframes marblexPwaUp {
+                from { opacity: 0; transform: translate3d(0, 20px, 0); }
+                to { opacity: 1; transform: translate3d(0, 0, 0); }
+              }
+              .marblex-install-prompt__card {
+                pointer-events: auto;
+                width: 100%;
+                max-width: 32rem;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                border-radius: 1rem;
+                border: 1px solid rgba(10, 61, 82, 0.15);
+                background: #fff;
+                padding: 0.85rem;
+                box-shadow: 0 16px 48px -12px rgba(10, 61, 82, 0.55);
+                animation: marblexPwaUp 0.35s ease-out;
+              }
+            `}</style>
+            <div className="marblex-install-prompt__card">
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  flexShrink: 0,
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  background: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                }}
+              >
+                <img
+                  src="/marblex-mark.png"
+                  alt=""
+                  style={{ width: "85%", height: "85%", objectFit: "contain" }}
+                />
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "#0a3d52",
+                    lineHeight: 1.25,
+                  }}
+                >
+                  Install MARBLEX App
+                </p>
+                <p
+                  style={{
+                    margin: "2px 0 0",
+                    fontSize: 11,
+                    color: "#64748b",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  Home screen pe rakho — faster, app jaisi feel.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleInstall}
+                style={{
+                  flexShrink: 0,
+                  border: "none",
+                  borderRadius: 12,
+                  background: "#0a3d52",
+                  color: "#fff",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                  padding: "10px 14px",
+                  cursor: "pointer",
+                }}
+              >
+                Install
+              </button>
+              <button
+                type="button"
+                onClick={dismissBanner}
+                aria-label="Dismiss"
+                style={{
+                  flexShrink: 0,
+                  border: "none",
+                  background: "transparent",
+                  color: "#94a3b8",
+                  padding: 4,
+                  cursor: "pointer",
+                  borderRadius: 999,
+                }}
+              >
+                <CloseRoundedIcon sx={{ fontSize: 18 }} />
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {showIosHelp &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 2147483001,
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.45)",
+              padding: 16,
+              transform: "none",
+            }}
+            onClick={() => setShowIosHelp(false)}
+            role="presentation"
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: 24 * 16,
+                borderRadius: 16,
+                background: "#fff",
+                padding: 20,
+                boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-labelledby="pwa-help-title"
+            >
+              <h3
+                id="pwa-help-title"
+                style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#0a3d52" }}
+              >
+                {isIos() ? "iPhone / iPad pe install" : "App install"}
+              </h3>
+              {isIos() ? (
+                <ol style={{ margin: "12px 0 0", paddingLeft: 18, fontSize: 13, color: "#475569" }}>
+                  <li style={{ marginBottom: 8 }}>
+                    Share dabao <IosShareRoundedIcon sx={{ fontSize: 16 }} />
+                  </li>
+                  <li style={{ marginBottom: 8 }}>
+                    <b>Add to Home Screen</b> select karo
+                  </li>
+                  <li>
+                    <b>Add</b> — MARBLEX icon home pe aa jayega
+                  </li>
+                </ol>
+              ) : (
+                <p style={{ margin: "12px 0 0", fontSize: 13, color: "#475569" }}>
+                  Chrome / Edge me <b>Install</b> dabao. Live site pe HTTPS zaroori hai.
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowIosHelp(false)}
+                style={{
+                  marginTop: 16,
+                  width: "100%",
+                  border: "none",
+                  borderRadius: 12,
+                  background: "#0a3d52",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  padding: "10px 0",
+                  cursor: "pointer",
+                }}
+              >
+                Samajh gaya
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
+  );
+}
+
+/**
+ * Navbar / mobile Install button only (no toast — toast is InstallPwaPrompt).
+ */
+export function InstallPwaButton({
+  variant = "nav",
+  isDark = false,
+  withPrompt = false, // kept for API compat; unused — prompt is InstallPwaPrompt
+  fullWidth = false,
+}) {
+  void withPrompt;
+  const { installed, ready, requestInstall } = useInstallState();
+  const [showIosHelp, setShowIosHelp] = useState(false);
+
+  const handleInstall = useCallback(async () => {
+    const result = await requestInstall();
+    if (result === "help") setShowIosHelp(true);
+  }, [requestInstall]);
+
   if (!ready || installed || isStandalone()) {
     return null;
   }
@@ -256,108 +530,55 @@ export function InstallPwaButton({
         </span>
       </button>
 
-      {/* Portal: header GSAP transform se fixed popup top pe chipak jata tha */}
-      {withPrompt &&
-        bannerOpen &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            className="pointer-events-none fixed inset-x-0 z-[10120] flex justify-center px-3 sm:px-4"
-            style={{
-              bottom: "max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 4.75rem))",
-            }}
-            role="status"
-          >
-            <style>{`
-              @keyframes pwaSlideUp {
-                from { opacity: 0; transform: translateY(18px); }
-                to { opacity: 1; transform: translateY(0); }
-              }
-            `}</style>
-            <div className="pointer-events-auto flex w-full max-w-lg animate-[pwaSlideUp_0.35s_ease-out] items-center gap-3 rounded-2xl border border-[#0a3d52]/15 bg-white p-3.5 shadow-[0_16px_48px_-12px_rgba(10,61,82,0.55)] dark:border-slate-700 dark:bg-[#0c222e]">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700">
-                <img src="/marblex-mark.png" alt="" className="h-[85%] w-[85%] object-contain" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-heading text-[13px] font-bold text-[#0a3d52] dark:text-white">
-                  Install MARBLEX App
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Home screen pe rakho — faster, app jaisi feel.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleInstall}
-                className="shrink-0 rounded-xl bg-[#0a3d52] px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white"
-              >
-                Install
-              </button>
-              <button
-                type="button"
-                onClick={dismissBanner}
-                className="shrink-0 rounded-full p-1 text-slate-400 hover:text-slate-600"
-                aria-label="Dismiss"
-              >
-                <CloseRoundedIcon sx={{ fontSize: 18 }} />
-              </button>
-            </div>
-          </div>,
-          document.body
-        )}
-
       {showIosHelp &&
         typeof document !== "undefined" &&
         createPortal(
           <div
-            className="fixed inset-0 z-[10130] flex items-end justify-center bg-black/45 p-4 sm:items-center"
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 2147483001,
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.45)",
+              padding: 16,
+            }}
             onClick={() => setShowIosHelp(false)}
             role="presentation"
           >
             <div
-              className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-[#0c222e]"
+              style={{
+                width: "100%",
+                maxWidth: 384,
+                borderRadius: 16,
+                background: "#fff",
+                padding: 20,
+              }}
               onClick={(e) => e.stopPropagation()}
               role="dialog"
-              aria-labelledby="pwa-help-title"
             >
-              <h3
-                id="pwa-help-title"
-                className="font-heading text-base font-extrabold text-[#0a3d52] dark:text-white"
-              >
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#0a3d52" }}>
                 {isIos() ? "iPhone / iPad pe install" : "App install"}
               </h3>
-              {isIos() ? (
-                <ol className="mt-3 space-y-2 text-[13px] text-slate-600 dark:text-slate-300">
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold text-[#ff6b4a]">1.</span>
-                    <span>
-                      Safari / Chrome me Share dabao{" "}
-                      <IosShareRoundedIcon sx={{ fontSize: 16 }} className="inline text-[#0a3d52]" />
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold text-[#ff6b4a]">2.</span>
-                    <span>
-                      <b>Add to Home Screen</b> select karo
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold text-[#ff6b4a]">3.</span>
-                    <span>
-                      <b>Add</b> — MARBLEX icon home pe aa jayega
-                    </span>
-                  </li>
-                </ol>
-              ) : (
-                <p className="mt-3 text-[13px] text-slate-600 dark:text-slate-300">
-                  Chrome / Edge me <b>Install</b> dabao. Agar prompt na aaye to address bar ke right
-                  pe install icon check karo. Live site pe HTTPS zaroori hai.
-                </p>
-              )}
+              <p style={{ margin: "12px 0 0", fontSize: 13, color: "#475569" }}>
+                {isIos()
+                  ? "Share → Add to Home Screen → Add"
+                  : "Browser me Install / Add to Home Screen use karo."}
+              </p>
               <button
                 type="button"
                 onClick={() => setShowIosHelp(false)}
-                className="mt-4 w-full rounded-xl bg-[#0a3d52] py-2.5 text-[13px] font-bold text-white"
+                style={{
+                  marginTop: 16,
+                  width: "100%",
+                  border: "none",
+                  borderRadius: 12,
+                  background: "#0a3d52",
+                  color: "#fff",
+                  fontWeight: 700,
+                  padding: "10px 0",
+                }}
               >
                 Samajh gaya
               </button>

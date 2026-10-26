@@ -30,7 +30,7 @@ import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
 import { SiteFooter } from "./SiteFooter";
-import { InstallPwaButton } from "./InstallPwaButton";
+import { InstallPwaButton, InstallPwaPrompt } from "./InstallPwaButton";
 import { AppBottomNav } from "./AppBottomNav";
 import { OfflineBanner } from "./OfflineBanner";
 import { PwaUpdateToast } from "./PwaUpdateToast";
@@ -619,7 +619,7 @@ export const AppLayout = ({ cartCount, children }) => {
             <div ref={actionsRef} className="flex shrink-0 items-center gap-2 sm:gap-2.5 lg:gap-3">
 
               {/* Install as app (PWA) — hide prompt chrome when already running as installed app */}
-              {!isApp ? <InstallPwaButton variant="nav" isDark={isDark} withPrompt /> : null}
+              {!isApp ? <InstallPwaButton variant="nav" isDark={isDark} /> : null}
 
               {/* Theme toggle — always in navbar */}
               <button
@@ -1026,6 +1026,9 @@ export const AppLayout = ({ cartCount, children }) => {
       <Suspense fallback={null}>
         <FloatingChatWidget />
       </Suspense>
+
+      {/* Install toast — OUTSIDE header (GSAP transform se top pe nahi chipkega) */}
+      {!isApp ? <InstallPwaPrompt /> : null}
     </div>
   );
 };

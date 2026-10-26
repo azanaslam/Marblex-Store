@@ -247,7 +247,7 @@ export const FloatingChatWidget = () => {
   const ease = "cubic-bezier(0.22, 1, 0.36, 1)";
 
   return (
-    <div className="marblex-floating-chat">
+    <>
       {/* ── Chat panel: fixed to viewport (NOT tied to bot Y offset) ── */}
       <Fade in={isOpen} timeout={{ enter: 380, exit: 280 }}>
         <Box
