@@ -180,8 +180,10 @@ export const AppLayout = ({ cartCount, children }) => {
     if (!isMenuOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("marblex-menu-open");
     return () => {
       document.body.style.overflow = prev;
+      document.body.classList.remove("marblex-menu-open");
     };
   }, [isMenuOpen]);
 
@@ -840,35 +842,38 @@ export const AppLayout = ({ cartCount, children }) => {
         </div>
       </header>
 
-      {/* Mobile Navigation — simple professional drawer */}
+      {/* Mobile Navigation — full sheet, sticky actions (no cut-off) */}
       <div
-        className={`lg:hidden fixed inset-0 z-[60] transition-[opacity,visibility] duration-300 ${isMenuOpen ? "pointer-events-auto visible opacity-100" : "pointer-events-none invisible opacity-0"
+        className={`lg:hidden fixed inset-0 z-[10100] transition-[opacity,visibility] duration-300 ${isMenuOpen ? "pointer-events-auto visible opacity-100" : "pointer-events-none invisible opacity-0"
           }`}
         aria-hidden={!isMenuOpen}
       >
         <button
           type="button"
           aria-label="Close menu backdrop"
-          className="absolute inset-0 bg-black/40"
+          className="absolute inset-0 bg-[#091b24]/55 backdrop-blur-[2px]"
           onClick={() => setIsMenuOpen(false)}
         />
 
         <div
           ref={mobileMenuPanelRef}
-          className={`absolute inset-x-3 top-[4.6rem] max-h-[min(78dvh,520px)] overflow-hidden rounded-2xl border shadow-xl transition-all duration-300 ease-out sm:inset-x-4 ${isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200 bg-white"
+          className={`absolute inset-x-3 top-[4.75rem] bottom-[max(0.65rem,env(safe-area-inset-bottom))] flex max-h-[calc(100dvh-5.4rem)] flex-col overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(8,34,46,0.55)] transition-all duration-300 ease-out sm:inset-x-4 ${isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200/95 bg-white"
             } ${isMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}
         >
-          <div ref={mobileMenuItemsRef} className="overflow-y-auto overscroll-contain px-3 py-3.5 sm:px-4">
-            <div data-mobile-nav-brand className="mb-3 flex items-center justify-between px-1">
-              <p className={`text-[11px] font-bold uppercase tracking-[0.16em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                Menu
+          <div
+            ref={mobileMenuItemsRef}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <div data-mobile-nav-brand className="shrink-0 border-b border-slate-100 px-4 pb-3 pt-3.5 dark:border-slate-800">
+              <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${isDark ? "text-emerald-400/80" : "text-[#0a3d52]/70"}`}>
+                MARBLEX
               </p>
-              <span className={`text-[10px] font-semibold ${isDark ? "text-slate-500" : "text-slate-400"}`}>
-                Quick links
-              </span>
+              <p className={`mt-0.5 font-heading text-[15px] font-extrabold ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
+                Navigate
+              </p>
             </div>
 
-            <nav className="flex flex-col gap-1">
+            <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-3">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = location.pathname === link.path;
@@ -878,38 +883,46 @@ export const AppLayout = ({ cartCount, children }) => {
                     to={link.path}
                     data-mobile-nav-item
                     onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition active:scale-[0.99] ${isActive
+                    className={`flex items-center gap-3 rounded-2xl px-3 py-3 transition active:scale-[0.99] ${isActive
                         ? isDark
-                          ? "bg-[#ff6b4a]/15 text-[#ff8c73]"
-                          : "bg-[#0a3d52]/8 text-[#0a3d52]"
+                          ? "bg-[#ff6b4a]/15 ring-1 ring-[#ff6b4a]/35 text-[#ff8c73]"
+                          : "bg-[#0a3d52]/10 ring-1 ring-[#0a3d52]/15 text-[#0a3d52]"
                         : isDark
                           ? "text-slate-200 hover:bg-white/5"
                           : "text-[#0a3d52] hover:bg-slate-50"
                       }`}
                   >
                     <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isActive
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isActive
                           ? isDark
-                            ? "bg-[#ff6b4a]/20 text-[#ff8c73]"
+                            ? "bg-[#ff6b4a]/25 text-[#ff8c73]"
                             : "bg-[#0a3d52] text-white"
                           : isDark
                             ? "bg-slate-800 text-slate-300"
                             : "bg-slate-100 text-[#0a3d52]"
                         }`}
                     >
-                      <Icon sx={{ fontSize: 18 }} />
+                      <Icon sx={{ fontSize: 20 }} />
                     </span>
-                    <span className="flex-1 text-[14px] font-semibold tracking-tight">{link.label}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[14px] font-bold tracking-tight">{link.label}</span>
+                      <span className={`mt-0.5 block truncate text-[11px] font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                        {link.desc}
+                      </span>
+                    </span>
                     <EastRoundedIcon
                       sx={{ fontSize: 16 }}
-                      className={isActive ? "opacity-80" : "opacity-30"}
+                      className={isActive ? "opacity-80" : "opacity-25"}
                     />
                   </RouterLink>
                 );
               })}
             </nav>
 
-            <div data-mobile-nav-footer className="mt-3 space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+            <div
+              data-mobile-nav-footer
+              className={`shrink-0 space-y-2 border-t px-3 pb-3.5 pt-3 ${isDark ? "border-slate-800 bg-[#0a1a23]/80" : "border-slate-100 bg-slate-50/90"}`}
+            >
               <div className="grid grid-cols-2 gap-2">
                 <a
                   href="https://wa.me/923084585792"

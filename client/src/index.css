@@ -416,4 +416,11 @@ html.lenis body {
   padding-bottom: 0.5rem;
 }
 
+/* Hide floating AI bot while mobile hamburger is open */
+body.marblex-menu-open .marblex-floating-chat {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
 

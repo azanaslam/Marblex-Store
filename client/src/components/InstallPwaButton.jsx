@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import GetAppRoundedIcon from "@mui/icons-material/GetAppRounded";
 import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
@@ -255,104 +256,115 @@ export function InstallPwaButton({
         </span>
       </button>
 
-      {withPrompt && bannerOpen ? (
-        <div
-          className="fixed inset-x-0 bottom-0 z-[90] animate-[pwaSlideUp_0.35s_ease-out] px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-4"
-          role="status"
-        >
-          <style>{`
-            @keyframes pwaSlideUp {
-              from { opacity: 0; transform: translateY(16px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-          `}</style>
-          <div className="mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-[#0a3d52]/15 bg-white/95 p-3 shadow-[0_12px_40px_-12px_rgba(10,61,82,0.45)] backdrop-blur-md dark:border-slate-700 dark:bg-[#0c222e]/95">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700">
-              <img src="/marblex-mark.png" alt="" className="h-[85%] w-[85%] object-contain" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-heading text-[13px] font-bold text-[#0a3d52] dark:text-white">
-                Install MARBLEX App
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Home screen pe rakho — faster, app jaisi feel.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleInstall}
-              className="shrink-0 rounded-xl bg-[#0a3d52] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white"
-            >
-              Install
-            </button>
-            <button
-              type="button"
-              onClick={dismissBanner}
-              className="shrink-0 rounded-full p-1 text-slate-400 hover:text-slate-600"
-              aria-label="Dismiss"
-            >
-              <CloseRoundedIcon sx={{ fontSize: 18 }} />
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {showIosHelp ? (
-        <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-4 sm:items-center"
-          onClick={() => setShowIosHelp(false)}
-          role="presentation"
-        >
+      {/* Portal: header GSAP transform se fixed popup top pe chipak jata tha */}
+      {withPrompt &&
+        bannerOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
           <div
-            className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-[#0c222e]"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-labelledby="pwa-help-title"
+            className="pointer-events-none fixed inset-x-0 z-[10120] flex justify-center px-3 sm:px-4"
+            style={{
+              bottom: "max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 4.75rem))",
+            }}
+            role="status"
           >
-            <h3
-              id="pwa-help-title"
-              className="font-heading text-base font-extrabold text-[#0a3d52] dark:text-white"
+            <style>{`
+              @keyframes pwaSlideUp {
+                from { opacity: 0; transform: translateY(18px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+            `}</style>
+            <div className="pointer-events-auto flex w-full max-w-lg animate-[pwaSlideUp_0.35s_ease-out] items-center gap-3 rounded-2xl border border-[#0a3d52]/15 bg-white p-3.5 shadow-[0_16px_48px_-12px_rgba(10,61,82,0.55)] dark:border-slate-700 dark:bg-[#0c222e]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700">
+                <img src="/marblex-mark.png" alt="" className="h-[85%] w-[85%] object-contain" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-heading text-[13px] font-bold text-[#0a3d52] dark:text-white">
+                  Install MARBLEX App
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Home screen pe rakho — faster, app jaisi feel.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleInstall}
+                className="shrink-0 rounded-xl bg-[#0a3d52] px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white"
+              >
+                Install
+              </button>
+              <button
+                type="button"
+                onClick={dismissBanner}
+                className="shrink-0 rounded-full p-1 text-slate-400 hover:text-slate-600"
+                aria-label="Dismiss"
+              >
+                <CloseRoundedIcon sx={{ fontSize: 18 }} />
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {showIosHelp &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[10130] flex items-end justify-center bg-black/45 p-4 sm:items-center"
+            onClick={() => setShowIosHelp(false)}
+            role="presentation"
+          >
+            <div
+              className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-[#0c222e]"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-labelledby="pwa-help-title"
             >
-              {isIos() ? "iPhone / iPad pe install" : "App install"}
-            </h3>
-            {isIos() ? (
-              <ol className="mt-3 space-y-2 text-[13px] text-slate-600 dark:text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-[#ff6b4a]">1.</span>
-                  <span>
-                    Safari me Share dabao{" "}
-                    <IosShareRoundedIcon sx={{ fontSize: 16 }} className="inline text-[#0a3d52]" />
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-[#ff6b4a]">2.</span>
-                  <span>
-                    <b>Add to Home Screen</b> select karo
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-[#ff6b4a]">3.</span>
-                  <span>
-                    <b>Add</b> — MARBLEX icon home pe aa jayega
-                  </span>
-                </li>
-              </ol>
-            ) : (
-              <p className="mt-3 text-[13px] text-slate-600 dark:text-slate-300">
-                Chrome / Edge me <b>Install</b> dabao. Agar prompt na aaye to address bar ke right
-                pe install icon check karo. Live site pe HTTPS zaroori hai.
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowIosHelp(false)}
-              className="mt-4 w-full rounded-xl bg-[#0a3d52] py-2.5 text-[13px] font-bold text-white"
-            >
-              Samajh gaya
-            </button>
-          </div>
-        </div>
-      ) : null}
+              <h3
+                id="pwa-help-title"
+                className="font-heading text-base font-extrabold text-[#0a3d52] dark:text-white"
+              >
+                {isIos() ? "iPhone / iPad pe install" : "App install"}
+              </h3>
+              {isIos() ? (
+                <ol className="mt-3 space-y-2 text-[13px] text-slate-600 dark:text-slate-300">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-[#ff6b4a]">1.</span>
+                    <span>
+                      Safari / Chrome me Share dabao{" "}
+                      <IosShareRoundedIcon sx={{ fontSize: 16 }} className="inline text-[#0a3d52]" />
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-[#ff6b4a]">2.</span>
+                    <span>
+                      <b>Add to Home Screen</b> select karo
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-[#ff6b4a]">3.</span>
+                    <span>
+                      <b>Add</b> — MARBLEX icon home pe aa jayega
+                    </span>
+                  </li>
+                </ol>
+              ) : (
+                <p className="mt-3 text-[13px] text-slate-600 dark:text-slate-300">
+                  Chrome / Edge me <b>Install</b> dabao. Agar prompt na aaye to address bar ke right
+                  pe install icon check karo. Live site pe HTTPS zaroori hai.
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowIosHelp(false)}
+                className="mt-4 w-full rounded-xl bg-[#0a3d52] py-2.5 text-[13px] font-bold text-white"
+              >
+                Samajh gaya
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }
