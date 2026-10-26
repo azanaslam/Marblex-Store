@@ -1446,6 +1446,103 @@ export const LoginPage = () => {
           font-size: 13px;
         }
 
+        /* Modern 2FA feedback notice */
+        .mx-feedback-notice {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin: 14px auto 4px;
+          padding: 7px 14px;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 1.4;
+          max-width: 100%;
+          text-align: center;
+          animation: mx-vin .35s ease both;
+          box-sizing: border-box;
+        }
+        .mx-feedback-notice.success {
+          background: rgba(16, 185, 129, 0.08);
+          color: #0d8a5f;
+          border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .mx-feedback-notice.error {
+          background: rgba(239, 68, 68, 0.08);
+          color: #d93838;
+          border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .mx-feedback-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .mx-feedback-notice.success .mx-feedback-dot {
+          background: #10b981;
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        .mx-feedback-notice.error .mx-feedback-dot {
+          background: #ef4444;
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Refined Back Button */
+        .mx-back-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          margin: 14px auto 0;
+          padding: 8px 16px;
+          border-radius: 10px;
+          border: 1px solid transparent;
+          background: transparent;
+          color: var(--mut);
+          font: 600 13px/1.2 Inter, sans-serif;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          width: fit-content;
+        }
+        .mx-back-btn svg {
+          transition: transform 0.2s ease;
+        }
+        .mx-back-btn:hover {
+          color: var(--ink);
+          background: var(--field);
+          border-color: var(--line);
+        }
+        .mx-back-btn:hover svg {
+          transform: translateX(-3px);
+        }
+
+        /* Refined 2FA Footer & Support note */
+        .mx-2fa-footer {
+          margin-top: 18px;
+          padding-top: 14px;
+          border-top: 1px dashed var(--line);
+          width: 100%;
+          text-align: center;
+        }
+        .mx-2fa-hint {
+          font-size: 11.5px;
+          color: var(--mut);
+          line-height: 1.55;
+          margin: 0;
+        }
+        .mx-support-link {
+          color: var(--ink);
+          font-weight: 600;
+          text-decoration: none;
+          transition: color 0.15s;
+          word-break: break-all;
+        }
+        .mx-support-link:hover {
+          color: var(--or);
+          text-decoration: underline;
+        }
+
         /* ================= FORGOT PASSWORD (V3) STYLES ================= */
         .mx-steps {
           display: flex;
@@ -3085,15 +3182,19 @@ export const LoginPage = () => {
                       )}
                     </button>
 
-                    <div
-                      className="mx-msg"
-                      style={{ color: vMsg.type === "success" ? "#16a672" : "var(--or)" }}
-                    >
-                      {vMsg.text}
-                    </div>
+                    {/* Feedback message (styled cleanly with soft badge / notice styling) */}
+                    {vMsg.text && (
+                      <div
+                        className={`mx-feedback-notice ${vMsg.type === "success" ? "success" : "error"}`}
+                        role="alert"
+                      >
+                        <span className="mx-feedback-dot" />
+                        <span className="mx-feedback-text">{vMsg.text}</span>
+                      </div>
+                    )}
 
                     <button
-                      className="mx-back"
+                      className="mx-back-btn"
                       type="button"
                       onClick={() => {
                         if (twoFaMethods.includes("authenticator") && twoFaMethods.length > 1) {
@@ -3108,14 +3209,32 @@ export const LoginPage = () => {
                         setVMsg({ text: "", type: "" });
                       }}
                     >
-                      ← {twoFaMethods.includes("authenticator") && twoFaMethods.length > 1 ? "Change method" : "Back to Sign In"}
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                      </svg>
+                      <span>{twoFaMethods.includes("authenticator") && twoFaMethods.length > 1 ? "Change method" : "Back to Sign In"}</span>
                     </button>
 
-                    <p className="mx-legal">
-                      {twoFaMethod === "email"
-                        ? <>Didn't get the code? Check spam or contact portal admin · <b>Marblexpak@gmail.com</b></>
-                        : <>Codes refresh every 30s in your authenticator app · <b>Marblexpak@gmail.com</b></>}
-                    </p>
+                    <div className="mx-2fa-footer">
+                      <p className="mx-2fa-hint">
+                        {twoFaMethod === "email" ? (
+                          <>
+                            Didn't get the code? Check your spam folder or reach out to portal support at{" "}
+                            <a href="mailto:Marblexpak@gmail.com" className="mx-support-link">
+                              Marblexpak@gmail.com
+                            </a>
+                          </>
+                        ) : (
+                          <>
+                            Codes refresh every 30s in your authenticator app. Need help? Contact{" "}
+                            <a href="mailto:Marblexpak@gmail.com" className="mx-support-link">
+                              Marblexpak@gmail.com
+                            </a>
+                          </>
+                        )}
+                      </p>
+                    </div>
                   </>
                 )}
               </div>

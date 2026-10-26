@@ -4,6 +4,7 @@ import { http } from "../api/http";
 import { HeroBanner } from "../components/HeroBanner";
 import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 import { ProductCard } from "../components/ProductCard";
+import { WhatsAppNegotiationSection } from "../components/WhatsAppNegotiationSection";
 import { beforeAfterPairs, galleryImages } from "../config/constants";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import EastIcon from "@mui/icons-material/East";
@@ -609,7 +610,7 @@ export const ShopPage = ({ addToCart }) => {
     return () => observer.disconnect();
   }, []);
 
-  // Specialized Capabilities Scroll Reveal Animation (Alternating Left & Right from Screen Edges)
+  // Specialized Capabilities Scroll Reveal Animation (Smooth subtle fade-in up)
   useEffect(() => {
     if (!capabilitiesSectionRef.current) return;
 
@@ -627,79 +628,43 @@ export const ShopPage = ({ addToCart }) => {
             if (entry.isIntersecting) {
               gsap.fromTo(
                 headerEl,
-                { opacity: 0, y: -45 },
-                { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }
               );
               headerObs.unobserve(entry.target);
             }
           });
         },
-        { threshold: 0.1, rootMargin: "0px 0px -35px 0px" }
+        { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
       );
       headerObs.observe(headerEl);
       observers.push(headerObs);
     }
 
-    const isMobile = window.matchMedia("(max-width: 639px)").matches;
-
-    if (isMobile) {
-      const mobileObs = new IntersectionObserver(
+    if (cards && cards.length) {
+      const cardsObs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (!entry.isIntersecting) return;
             gsap.fromTo(
               cards,
-              { opacity: 0, y: 22 },
+              { opacity: 0, y: 24 },
               {
                 opacity: 1,
                 y: 0,
-                duration: 0.7,
-                stagger: 0.07,
-                ease: "power3.out",
+                duration: 0.65,
+                stagger: 0.08,
+                ease: "power2.out",
                 clearProps: "transform",
               }
             );
-            mobileObs.unobserve(entry.target);
+            cardsObs.unobserve(entry.target);
           });
         },
-        { threshold: 0.2 }
+        { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
       );
-      mobileObs.observe(el);
-      observers.push(mobileObs);
-    } else {
-      cards.forEach((card, idx) => {
-        const isLeft = idx % 2 === 0;
-        const cardObserver = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                const screenW = window.innerWidth || 800;
-                const dist = Math.min(screenW * 0.95, 550);
-                gsap.fromTo(
-                  card,
-                  {
-                    opacity: 0,
-                    x: isLeft ? -dist : dist,
-                    scale: 0.94,
-                  },
-                  {
-                    opacity: 1,
-                    x: 0,
-                    scale: 1,
-                    duration: 1.1,
-                    ease: "power3.out",
-                    clearProps: "transform",
-                  }
-                );
-                cardObserver.unobserve(entry.target);
-              }
-            });
-          },
-          { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
-        );
-        cardObserver.observe(card);
-        observers.push(cardObserver);
-      });
+      cardsObs.observe(el);
+      observers.push(cardsObs);
     }
 
     return () => observers.forEach((obs) => obs.disconnect());
@@ -823,14 +788,13 @@ export const ShopPage = ({ addToCart }) => {
     };
   }, []);
 
-  // Field Proof & Case Studies Scroll Reveal (Card 1 from Left Screen Edge, Card 2 from Right Screen Edge)
+  // Field Proof & Case Studies Scroll Reveal (Smooth subtle fade-in up, no horizontal jumping)
   useEffect(() => {
     if (!caseStudiesSectionRef.current) return;
 
     const el = caseStudiesSectionRef.current;
     const headerEl = el.querySelector(".case-studies-header-anim");
-    const leftCard = el.querySelector(".case-study-left-anim");
-    const rightCard = el.querySelector(".case-study-right-anim");
+    const cards = el.querySelectorAll(".case-study-left-anim, .case-study-right-anim");
 
     const observers = [];
 
@@ -842,85 +806,43 @@ export const ShopPage = ({ addToCart }) => {
             if (entry.isIntersecting) {
               gsap.fromTo(
                 headerEl,
-                { opacity: 0, y: -45 },
-                { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }
               );
               headerObs.unobserve(entry.target);
             }
           });
         },
-        { threshold: 0.1, rootMargin: "0px 0px -35px 0px" }
+        { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
       );
       headerObs.observe(headerEl);
       observers.push(headerObs);
     }
 
-    // Left Card Observer (Animates from LEFT screen edge)
-    if (leftCard) {
-      const leftObs = new IntersectionObserver(
+    if (cards && cards.length) {
+      const cardsObs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const screenW = typeof window !== "undefined" ? window.innerWidth : 800;
-              const dist = Math.min(screenW * 0.95, 550);
-              gsap.fromTo(
-                leftCard,
-                {
-                  opacity: 0,
-                  x: -dist,
-                  scale: 0.94,
-                },
-                {
-                  opacity: 1,
-                  x: 0,
-                  scale: 1,
-                  duration: 1.15,
-                  ease: "power3.out",
-                  clearProps: "transform",
-                }
-              );
-              leftObs.unobserve(entry.target);
-            }
+            if (!entry.isIntersecting) return;
+            gsap.fromTo(
+              cards,
+              { opacity: 0, y: 25 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.7,
+                stagger: 0.1,
+                ease: "power2.out",
+                clearProps: "transform",
+              }
+            );
+            cardsObs.unobserve(entry.target);
           });
         },
-        { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
+        { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
       );
-      leftObs.observe(leftCard);
-      observers.push(leftObs);
-    }
-
-    // Right Card Observer (Animates from RIGHT screen edge)
-    if (rightCard) {
-      const rightObs = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const screenW = typeof window !== "undefined" ? window.innerWidth : 800;
-              const dist = Math.min(screenW * 0.95, 550);
-              gsap.fromTo(
-                rightCard,
-                {
-                  opacity: 0,
-                  x: dist,
-                  scale: 0.94,
-                },
-                {
-                  opacity: 1,
-                  x: 0,
-                  scale: 1,
-                  duration: 1.15,
-                  ease: "power3.out",
-                  clearProps: "transform",
-                }
-              );
-              rightObs.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
-      );
-      rightObs.observe(rightCard);
-      observers.push(rightObs);
+      cardsObs.observe(el);
+      observers.push(cardsObs);
     }
 
     return () => {
@@ -928,13 +850,15 @@ export const ShopPage = ({ addToCart }) => {
     };
   }, []);
 
-  // 4-Stage Certified Engineering Methodology Scroll Reveal (Cards from Left & Right Screen Edges)
+  // 4-Stage Certified Engineering Methodology Scroll Reveal (Clean gentle fade up)
   useEffect(() => {
     if (!methodologySectionRef.current) return;
 
     const el = methodologySectionRef.current;
     const headerEl = el.querySelector(".methodology-header-anim");
     const cards = el.querySelectorAll(".methodology-card-item");
+
+    const observers = [];
 
     // Header Observer
     if (headerEl) {
@@ -944,56 +868,47 @@ export const ShopPage = ({ addToCart }) => {
             if (entry.isIntersecting) {
               gsap.fromTo(
                 headerEl,
-                { opacity: 0, y: -45 },
-                { opacity: 1, y: 0, duration: 1.05, ease: "power3.out" }
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }
               );
               headerObserver.unobserve(entry.target);
             }
           });
         },
-        { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+        { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
       );
       headerObserver.observe(headerEl);
+      observers.push(headerObserver);
     }
 
-    // Individual Card Observers (Animates each card from Left or Right Screen Edge)
-    const cardObservers = [];
-    cards.forEach((card, idx) => {
-      const isLeft = idx % 2 === 0;
-      const cardObserver = new IntersectionObserver(
+    if (cards && cards.length) {
+      const cardsObs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const screenW = typeof window !== "undefined" ? window.innerWidth : 800;
-              const dist = Math.min(screenW * 0.95, 550);
-              gsap.fromTo(
-                card,
-                {
-                  opacity: 0,
-                  x: isLeft ? -dist : dist,
-                  scale: 0.94,
-                },
-                {
-                  opacity: 1,
-                  x: 0,
-                  scale: 1,
-                  duration: 1.1,
-                  ease: "power3.out",
-                  clearProps: "transform",
-                }
-              );
-              cardObserver.unobserve(entry.target);
-            }
+            if (!entry.isIntersecting) return;
+            gsap.fromTo(
+              cards,
+              { opacity: 0, y: 24 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.65,
+                stagger: 0.08,
+                ease: "power2.out",
+                clearProps: "transform",
+              }
+            );
+            cardsObs.unobserve(entry.target);
           });
         },
-        { threshold: 0.12, rootMargin: "0px 0px -35px 0px" }
+        { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
       );
-      cardObserver.observe(card);
-      cardObservers.push(cardObserver);
-    });
+      cardsObs.observe(el);
+      observers.push(cardsObs);
+    }
 
     return () => {
-      cardObservers.forEach((obs) => obs.disconnect());
+      observers.forEach((obs) => obs.disconnect());
     };
   }, []);
 
@@ -1491,6 +1406,11 @@ export const ShopPage = ({ addToCart }) => {
       </div>
 
       </div>{/* end overflow-x-clip (products zone) */}
+
+      {/* 6.5 WhatsApp Bulk Negotiation & Direct Chat Desk (InnSpeed Style) */}
+      <div className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2">
+        <WhatsAppNegotiationSection products={products} />
+      </div>
 
       {/* 7. Interactive Material Coverage & Quantity Estimator — full bleed */}
       <section
