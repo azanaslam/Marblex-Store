@@ -50,6 +50,84 @@ body.embedded .main{border-radius:0}
 body.embedded .top{border-radius:0;padding:10px 14px}
 body.embedded .app{height:100svh}
 }
+
+/* ── Installed app shell: one chrome layer, no double bottom bars ── */
+.ptabs{display:none}
+body.embedded.app-shell .bn,
+body.embedded.app-shell .fabw{display:none!important}
+body.embedded.app-shell #bl{display:grid!important}
+body.embedded.app-shell #np{display:none}
+body.embedded.app-shell #np.on{display:block!important}
+body.embedded.app-shell #qa{display:grid!important}
+body.embedded.app-shell .shop-link{display:none!important}
+body.embedded.app-shell .main{display:flex;flex-direction:column;min-height:0;height:100%}
+body.embedded.app-shell .top{
+  flex:none;
+  padding:8px 14px;
+  min-height:48px;
+  background:var(--card);
+  border-bottom:0;
+}
+body.embedded.app-shell .ctx small{display:none}
+body.embedded.app-shell .ctx b{font-size:17px;margin-top:0;letter-spacing:-.02em}
+body.embedded.app-shell .ptabs{
+  display:flex;
+  flex:none;
+  gap:6px;
+  padding:0 12px 12px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  background:var(--card);
+  border-bottom:1px solid var(--line);
+}
+body.embedded.app-shell .ptabs::-webkit-scrollbar{display:none}
+body.embedded.app-shell .ptabs button{
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  height:34px;
+  padding:0 13px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--field);
+  color:var(--mut);
+  font:600 12px Inter;
+  letter-spacing:.01em;
+  white-space:nowrap;
+  transition:background .2s,color .2s,border-color .2s,box-shadow .2s,transform .15s;
+}
+body.embedded.app-shell .ptabs button .ic{width:14px;height:14px}
+body.embedded.app-shell .ptabs button.on{
+  color:#fff;
+  border-color:transparent;
+  background:linear-gradient(135deg,var(--sd1),#0a5268);
+  box-shadow:0 8px 16px -10px rgba(6,33,43,.55);
+}
+body.embedded.app-shell .ptabs button:active{transform:scale(.97)}
+body.embedded.app-shell .body{
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  padding:14px 14px 28px!important;
+  -webkit-overflow-scrolling:touch;
+}
+body.embedded.app-shell .side{
+  width:min(300px,86vw);
+  padding:20px 14px calc(18px + env(safe-area-inset-bottom,0px));
+  box-shadow:18px 0 40px -20px rgba(0,0,0,.55);
+}
+body.embedded.app-shell .sec{margin-top:4px}
+body.embedded.app-shell .nv{padding:11px 14px;border-radius:12px;font-size:13px}
+body.embedded.app-shell .nv.on{
+  background:linear-gradient(135deg,var(--or),var(--or2));
+  box-shadow:0 10px 18px -8px rgba(241,91,55,.6);
+}
+body.embedded.app-shell #toasts{bottom:18px!important}
+body.embedded.app-shell .np{top:calc(env(safe-area-inset-top,0px) + 56px)}
+#qa{display:none;width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:linear-gradient(135deg,var(--or),var(--or2));color:#fff;place-items:center;box-shadow:0 8px 16px -8px rgba(241,91,55,.65)}
+#qa .ic{width:18px;height:18px;stroke:#fff}
 .side{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100svh - env(safe-area-inset-top,0px));background:linear-gradient(180deg,var(--sd1),var(--sd2));color:#fff;display:flex;flex-direction:column;padding:22px 16px;z-index:40}
 .prof{display:flex;gap:12px;align-items:center;padding:4px 8px 18px}
 .av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--or),var(--or2));display:grid;place-items:center;font:700 18px 'Space Grotesk';box-shadow:0 8px 18px -6px rgba(241,91,55,.7);overflow:hidden;color:#fff}
@@ -548,7 +626,7 @@ body.embedded .app{height:100svh}
     <div class="prof"><div class="av" id="av">A</div><div><b id="pn">Azzan</b><small id="pc">Chemical Industry</small></div></div>
     <div class="sec">CLIENT PORTAL</div>
     <nav id="nav"></nav>
-    <div class="sfoot"><button class="nv" id="th2"></button><button class="nv" data-a="shop" title="Back to Shop"><svg class="ic"><use href="#i-store"/></svg><span>Back to Shop</span></button><button class="nv red" data-a="out" title="Sign out"><svg class="ic"><use href="#i-out"/></svg><span>Sign out</span></button></div>
+    <div class="sfoot"><button class="nv" id="th2"></button><button class="nv shop-link" data-a="shop" title="Back to Shop"><svg class="ic"><use href="#i-store"/></svg><span>Back to Shop</span></button><button class="nv red" data-a="out" title="Sign out"><svg class="ic"><use href="#i-out"/></svg><span>Sign out</span></button></div>
   </aside>
   <div class="ov" id="ov"></div>
   <main class="main">
@@ -558,8 +636,9 @@ body.embedded .app{height:100svh}
       <div class="dk brand-block"><h1>MAR<span>BLEX</span> Client Portal</h1><p>Manage orders, quotes, documents, and support in one place.</p></div>
       <div class="ctx"><small>Workspace</small><b id="pgt">Overview</b></div>
       <button class="gs dk" id="gs"><svg class="ic"><use href="#i-search"/></svg><span>Search orders, documents, actions…</span><kbd>Ctrl K</kbd></button>
-      <div class="tr"><button class="ib mv" id="gs2" aria-label="Search"><svg class="ic"><use href="#i-search"/></svg></button><button class="ib dk" id="th" aria-label="Theme"></button><button class="ib" id="bl" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg><i class="dot" id="dot">3</i></button></div>
+      <div class="tr"><button class="ib mv" id="gs2" aria-label="Search"><svg class="ic"><use href="#i-search"/></svg></button><button class="ib dk" id="th" aria-label="Theme"></button><button class="ib" id="bl" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg><i class="dot" id="dot">3</i></button><button type="button" id="qa" aria-label="Quick actions"><svg class="ic"><use href="#i-plus"/></svg></button></div>
     </header>
+    <nav class="ptabs" id="ptabs" aria-label="Portal sections"></nav>
     <div class="body vw" id="view"></div>
   </main>
 </div>
@@ -894,6 +973,8 @@ docs:[
   {id:'d4',type:'TDS',title:'PVC Waterstop Technical Data',desc:'Technical specifications for PVC waterstop profiles.',url:'https://marblex-shop.vercel.app/catalogs'},
 ]};
 const NAV=[['overview','grid','Overview'],['orders','bag','Orders'],['quotes','clip','Quotes / RFQ'],['docs','doc','Documents'],['notifs','bell','Notifications'],['support','headset','Support'],['favs','heart','Favorites & Lists'],['account','user','Account']];
+/* Primary chips in app shell (secondary pages live in the drawer) */
+const TABS=[['overview','grid','Overview'],['orders','bag','Orders'],['quotes','clip','RFQ'],['docs','doc','Docs'],['support','headset','Support']];
 const H=(t,p,a='')=>`<div class="ph"><div><h2>${t}</h2><p>${p}</p></div>${a?`<div class="oa">${a}</div>`:''}</div>`;
 const T=(items,cur)=>`<div class="tabs">${items.map(([k,l])=>`<button class="tb${k===cur?' on':''}" data-tab="${k}">${l}</button>`).join('')}</div>`;
 const F=(id,l,v='',t='text',cls='',at='')=>`<div class="fl ${cls}"><input id="${id}" type="${t}" value="${esc(v)}" placeholder=" " ${at}><label for="${id}">${l}</label></div>`;
@@ -1622,8 +1703,15 @@ function side(){
 function go(v,keep){
 S.v=v;$('#side').classList.remove('open');$('#ov').classList.remove('on');
 $('#nav').innerHTML=NAV.map(n=>`<button class="nv${n[0]===v?' on':''}" data-go="${n[0]}" title="${n[2]}">${I(n[1])}<span>${n[2]}</span></button>`).join('');
-$('#pgt').textContent=NAV.find(n=>n[0]===v)[2];$('#np').classList.remove('on');$('#fabw').classList.remove('on');const pb=$('#pb');pb.classList.remove('go');void pb.offsetWidth;pb.classList.add('go');
-$('#bn').innerHTML=[['overview','grid','Home'],['orders','bag','Orders'],['quotes','clip','RFQ'],['support','headset','Support'],['more','menu','More']].map(n=>`<button class="${n[0]===v?'on':''}" ${n[0]==='more'?'data-a="more"':`data-go="${n[0]}"`}>${I(n[1])}${n[2]}</button>`).join('');
+const navLabel=(NAV.find(n=>n[0]===v)||NAV[0])[2];
+$('#pgt').textContent=navLabel;$('#np').classList.remove('on');$('#fabw').classList.remove('on');const pb=$('#pb');pb.classList.remove('go');void pb.offsetWidth;pb.classList.add('go');
+const tabOn=TABS.some(t=>t[0]===v)?v:'';
+const pt=$('#ptabs');
+if(pt)pt.innerHTML=TABS.map(n=>`<button type="button" class="${n[0]===tabOn?'on':''}" data-go="${n[0]}">${I(n[1])}<span>${n[2]}</span></button>`).join('');
+$('#bn').innerHTML=[['overview','grid','Overview'],['orders','bag','Orders'],['quotes','clip','RFQ'],['support','headset','Support'],['more','menu','More']].map(n=>{
+  const active=n[0]==='more'?false:n[0]===v;
+  return `<button type="button" class="${active?'on':''}" ${n[0]==='more'?'data-a="more"':`data-go="${n[0]}"`}>${I(n[1])}<span>${n[2]}</span></button>`;
+}).join('');
 const w=$('#view');w.innerHTML=V[v]();[...w.children].forEach((c,i)=>c.style.setProperty('--i',keep?0:i));P[v]&&P[v]();
 w.querySelectorAll('[data-n]').forEach(el=>{const n=+el.dataset.n;if(!n){el.textContent='0';return}let i=0;const step=Math.max(1,Math.ceil(n/18));(function s(){i=Math.min(n,i+step);el.textContent=i;if(i<n)setTimeout(s,40)})()});
 if(!keep)window.scrollTo({top:0,behavior:'smooth'})}
@@ -1672,7 +1760,7 @@ if(d.go){if(d.t)S.t.support=d.t;go(d.go);if(d.new==='rfq')rfq()}
 else if(d.nf){openNf(d.nf,d.ref,d.nid||(''+d.nf+'-'+(d.ref||'')));pushNotifs()}
 else if(d.det)det(d.det);
 else if(d.cp){try{navigator.clipboard.writeText('#'+d.cp)}catch(_){}toast('Order ID #'+d.cp+' copied')}
-else if(d.fa){$('#fabw').classList.remove('on');({rfq,tkt,list:newList,ds:reqDs})[d.fa]()}
+else if(d.fa){close();$('#fabw').classList.remove('on');({rfq,tkt,list:newList,ds:reqDs})[d.fa]()}
 else if(d.a==='more')openDrawer();
 else if(d.a==='shop')window.top.location.href='/';
 else if(d.a==='out')modal('Sign out?','<p class="mut">You will need to sign in again to access your portal.</p>',()=>{try{localStorage.removeItem('auth_token');localStorage.removeItem('auth_user');}catch(e){}window.top.location.href='/login';},'Sign out');
@@ -1687,6 +1775,20 @@ document.addEventListener('pointermove',e=>{const c=e.target.closest&&e.target.c
 const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;c.classList.add('on');c.style.transform=`perspective(900px) rotateY(${(x-.5)*7}deg) rotateX(${(.5-y)*7}deg) translateY(-3px)`;c.style.setProperty('--mx',x*100+'%');c.style.setProperty('--my',y*100+'%')});
 // shell
 const openDrawer=()=>{$('#side').classList.add('open');$('#ov').classList.add('on')};$('#av2').onclick=openDrawer;$('#fab').onclick=()=>$('#fabw').classList.toggle('on');
+const qa=$('#qa');if(qa)qa.onclick=(e)=>{e.stopPropagation();openQuickSheet()};
+function openQuickSheet(){
+  if(!document.body.classList.contains('app-shell')){$('#fabw').classList.toggle('on');return}
+  modal(
+    'Quick actions',
+    `<div class="rfq-form" style="gap:8px">
+      <button type="button" class="b" style="width:100%;justify-content:flex-start" data-x data-fa="rfq">${I('clip')} New RFQ</button>
+      <button type="button" class="g" style="width:100%;justify-content:flex-start" data-x data-fa="tkt">${I('headset')} New support ticket</button>
+      <button type="button" class="g" style="width:100%;justify-content:flex-start" data-x data-fa="list">${I('listp')} New project list</button>
+      <button type="button" class="g" style="width:100%;justify-content:flex-start" data-x data-fa="ds">${I('mail')} Request datasheet</button>
+    </div>`,
+    null
+  );
+}
 $('#mn').onclick=()=>{const a=$('.app');a.classList.toggle('col');try{localStorage.setItem('mx_col',a.classList.contains('col')?'1':'')}catch(_){}};$('#ov').onclick=()=>{$('#side').classList.remove('open');$('#ov').classList.remove('on')};
 function npDraw(){const it=unreadNotifs();
 $('#np').innerHTML=`<div class="nh"><b>Notifications</b><button class="t" id="mr">Mark all read</button></div>`+(it.length?it.slice(0,8).map(n=>`<button type="button" class="ni un" data-nf="${n.action}" data-ref="${esc(n.ref||'')}" data-nid="${esc(n.id)}" style="width:100%;border:0;background:none;cursor:pointer;text-align:left"><i>${I(n.icon)}</i><div><b>${esc(n.title)}</b><small>${esc(n.time)}</small></div></button>`).join(''):'<p class="mut" style="padding:14px">All caught up.</p>')+`<button class="g" style="width:100%;margin-top:8px" data-go="notifs">Open notification center</button>`;
@@ -1727,6 +1829,9 @@ window.addEventListener('message',e=>{
   if(e.data.type==='MARBLEX_PORTAL_REQUEST_UNREAD'){pushNotifs();return}
   if(e.data.type!=='MARBLEX_PORTAL_INIT')return;
   if(e.data.embedded)document.body.classList.add('embedded');
+  else document.body.classList.remove('embedded');
+  if(e.data.appShell)document.body.classList.add('app-shell');
+  else document.body.classList.remove('app-shell');
   if(e.data.theme)sT(e.data.theme);
   if(e.data.apiBase)API.base=String(e.data.apiBase).replace(/\/$/,'');
   if(e.data.token)API.token=e.data.token;

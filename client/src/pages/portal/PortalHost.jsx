@@ -57,13 +57,14 @@ export const PortalHost = () => {
 
     const user = getAuthUser();
     const view = pathToPortalView(location.pathname);
-    const initKey = `${token}|${location.pathname}`;
+    const initKey = `${token}|${location.pathname}|app:${isApp ? 1 : 0}`;
 
     const payload = {
       type: "MARBLEX_PORTAL_INIT",
       path: location.pathname,
       view,
       embedded: true,
+      appShell: isApp,
       theme: localStorage.getItem("marblex_theme") || "light",
       apiBase: API_BASE_URL,
       token,
@@ -102,7 +103,7 @@ export const PortalHost = () => {
     }
 
     return () => iframe.removeEventListener("load", onLoad);
-  }, [token, location.pathname]);
+  }, [token, location.pathname, isApp]);
 
   if (!token) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
