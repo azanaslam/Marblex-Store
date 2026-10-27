@@ -462,6 +462,9 @@ export const AppLayout = ({ cartCount, children }) => {
       >
         <PwaUpdateToast />
         <OfflineBanner />
+        <div className="shrink-0 px-3 pt-2">
+          <PushEnableCard isDark={isDark} />
+        </div>
         <main className="page-content-portal relative z-10 flex min-h-0 w-full flex-1 flex-col pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
           {children}
         </main>

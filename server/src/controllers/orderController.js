@@ -7,6 +7,23 @@ const paymentConfig = require("../config/paymentConfig");
 const { sendOrderConfirmationEmail, sendAdminOrderNotificationEmail } = require("../utils/sendEmail");
 const cloudinary = require("cloudinary").v2;
 
+const notifyAdminNewOrder = (order) => {
+  sendAdminOrderNotificationEmail(order).catch(() => {});
+  try {
+    const { sendPushToStaff } = require("../utils/webPush");
+    const num = order.orderNumber || String(order._id || "").slice(-6);
+    const amt = Number(order.subtotal || 0).toLocaleString("en-PK");
+    sendPushToStaff({
+      title: "New MARBLEX order",
+      body: `#${num} · PKR ${amt} · ${String(order.paymentMethod || "order").toUpperCase()}`,
+      url: "/admin?tab=1",
+      tag: `order-new-${order._id}`,
+    }).catch(() => {});
+  } catch {
+    /* push optional */
+  }
+};
+
 if (cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret) {
   cloudinary.config({
     cloud_name: cloudinaryCloudName,
@@ -197,7 +214,7 @@ const createOrder = async (req, res) => {
     if (orderChannel === "whatsapp") {
       // Send background emails
       sendOrderConfirmationEmail(order).catch(() => {});
-      sendAdminOrderNotificationEmail(order).catch(() => {});
+      notifyAdminNewOrder(order);
 
       return res.status(201).json({
         success: true,
@@ -263,7 +280,7 @@ const createOrder = async (req, res) => {
 
     // Website Order - COD & Manual Payments (Easypaisa, JazzCash, Bank Transfer)
     sendOrderConfirmationEmail(order).catch(() => {});
-    sendAdminOrderNotificationEmail(order).catch(() => {});
+    notifyAdminNewOrder(order);
 
     return res.status(201).json({
       success: true,
@@ -302,7 +319,7 @@ const verifyStripeSession = async (req, res) => {
       // Email only on first transition to paid (webhook may also fire)
       if (wasUnpaid) {
         sendOrderConfirmationEmail(order).catch(() => {});
-        sendAdminOrderNotificationEmail(order).catch(() => {});
+        notifyAdminNewOrder(order);
       }
     }
 
@@ -349,7 +366,7 @@ const stripeWebhook = async (req, res) => {
         await order.save();
 
         sendOrderConfirmationEmail(order).catch(() => {});
-        sendAdminOrderNotificationEmail(order).catch(() => {});
+        notifyAdminNewOrder(order);
       }
     }
   }
@@ -453,7 +470,7 @@ const getMyOrderInvoice = async (req, res) => {
     <div>
       <div><strong>Invoice / Order</strong> ${escapeHtml(orderNo)}</div>
       <div>Date: ${escapeHtml(dateStr)} (PKT)</div>
-      <div style="margin-top:8px"><span class="badge">${escapeHtml(order.orderStatus)} Â· ${escapeHtml(order.paymentStatus)}</span></div>
+      <div style="margin-top:8px"><span class="badge">${escapeHtml(order.orderStatus)} · ${escapeHtml(order.paymentStatus)}</span></div>
     </div>
     <div>
       <div><strong>Bill To</strong></div>
@@ -468,8 +485,8 @@ const getMyOrderInvoice = async (req, res) => {
     <tbody>${rows || `<tr><td colspan="4">No items</td></tr>`}</tbody>
   </table>
   <div class="total">Subtotal: <span class="accent">PKR ${Number(order.subtotal || 0).toLocaleString()}</span></div>
-  <p style="margin-top:28px;font-size:12px;color:#7a8c99">Payment: ${escapeHtml(String(order.paymentMethod || "").toUpperCase())}${order.transactionReference ? ` Â· Ref: ${escapeHtml(order.transactionReference)}` : ""}</p>
-  <p style="font-size:12px;color:#9aa9b4">40-Ferozpur Road, Lahore, Pakistan Â· Automated invoice from MARBLEX Client Portal</p>
+  <p style="margin-top:28px;font-size:12px;color:#7a8c99">Payment: ${escapeHtml(String(order.paymentMethod || "").toUpperCase())}${order.transactionReference ? ` · Ref: ${escapeHtml(order.transactionReference)}` : ""}</p>
+  <p style="font-size:12px;color:#9aa9b4">40-Ferozpur Road, Lahore, Pakistan · Automated invoice from MARBLEX Client Portal</p>
 </body></html>`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -490,7 +507,7 @@ const updateOrderStatus = async (req, res) => {
         sendPushToUser(order.user, {
           title: "Order update",
           body: `Your MARBLEX order is now: ${orderStatus}`,
-          url: "/dashboard",
+          url: "/dashboard/orders",
           tag: `order-${order._id}`,
         }).catch(() => {});
       } catch {

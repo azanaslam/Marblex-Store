@@ -190,7 +190,8 @@ export const LoginPage = () => {
     setAuthSession(authData);
     const chatUnread = Number(authData.chatUnread) || 0;
     if (authData.user.role === "admin") {
-      navigate("/admin", { replace: true, state: { chatUnread } });
+      // Always land on admin Home (tab 0). Unread chat is toast-only — never auto-open Messages.
+      navigate("/admin", { replace: true, state: { chatUnread, adminTab: 0 } });
     } else {
       // Always land on Overview after client login
       navigate("/dashboard", { replace: true });

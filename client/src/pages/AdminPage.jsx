@@ -40,15 +40,23 @@ import { AdminProfileTab } from "../components/AdminProfileTab";
 import { AdminCommandCenter } from "../components/AdminCommandCenter";
 import { AdminProductsTab } from "../components/AdminProductsTab";
 import { AdminPartnerSubmissionsTab } from "../components/AdminPartnerSubmissionsTab";
+import { PushEnableCard } from "../components/PushEnableCard";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
+import { useStandaloneApp } from "../hooks/useStandaloneApp";
 import { TiltCard3D } from "../components/admin3d/TiltCard3D";
 import { TabWrapper3D } from "../components/admin3d/TabWrapper3D";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
+import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import "../styles/admin-shell.css";
 
 export const AdminPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isApp = useStandaloneApp();
   const [token, setToken] = useState(getAuthToken());
   const [adminUser, setAdminUser] = useState(() => getAuthUser());
   const [activeTab, setActiveTab] = useState(0);
@@ -165,8 +173,20 @@ export const AdminPage = () => {
   }, []);
 
   useEffect(() => {
+    // Deep link from push / notification: /admin?tab=6
+    const tabQ = new URLSearchParams(location.search).get("tab");
+    if (tabQ != null && tabQ !== "") {
+      const t = Number(tabQ);
+      if (Number.isFinite(t)) {
+        setActiveTab(t);
+        navigate("/admin", { replace: true, state: {} });
+        return;
+      }
+    }
+
     const n = location.state?.chatUnread;
     const backTab = location.state?.adminTab;
+    // Only open Messages when explicitly requested (bell / deep link) — never on login
     if (typeof backTab === "number") {
       setActiveTab(backTab);
       if (typeof n === "number" && n > 0) {
@@ -177,10 +197,9 @@ export const AdminPage = () => {
     }
     if (typeof n === "number" && n > 0) {
       showToast("info", `You have ${n} unread message${n === 1 ? "" : "s"} from users.`);
-      setActiveTab(6);
       navigate("/admin", { replace: true, state: {} });
     }
-  }, [location.state, navigate]);
+  }, [location.state, location.search, navigate]);
 
   useEffect(() => {
     if (!token) return;
@@ -800,10 +819,10 @@ export const AdminPage = () => {
   }, [products, productFilter, productQuery]);
 
   const bottomTabs = [
-    { id: 0, label: "Home", icon: "🔥" },
-    { id: 1, label: "Orders", icon: "🧾" },
-    { id: 4, label: "Catalog", icon: "🛍️" },
-    { id: 3, label: "Clients", icon: "👥" },
+    { id: 0, label: "Home", Icon: DashboardRoundedIcon },
+    { id: 1, label: "Orders", Icon: ReceiptLongRoundedIcon },
+    { id: 6, label: "Chats", Icon: ChatBubbleOutlineRoundedIcon, badge: chatUnreadTotal },
+    { id: 4, label: "Catalog", Icon: Inventory2RoundedIcon },
   ];
 
   const renderNavButton = (item) => {
@@ -826,9 +845,12 @@ export const AdminPage = () => {
   };
 
   return (
-    <div className="mx-admin selection:bg-[#0b2f3d] selection:text-white">
-      {/* Homepage-style announcement strip */}
-      <div className="mx-ann">
+    <div
+      className={`mx-admin selection:bg-[#0b2f3d] selection:text-white ${isApp ? "mx-admin--app" : ""}`}
+      style={isApp ? { paddingTop: "env(safe-area-inset-top)" } : undefined}
+    >
+      {/* Homepage-style announcement strip — hide in installed app */}
+      <div className={`mx-ann ${isApp ? "mx-ann--app-hide" : ""}`}>
         <div className="mx-ann__inner mx-ann__desktop">
           <div className="mx-ann__brand">
             <span className="mx-ann__bolt">⚡</span>
@@ -1069,6 +1091,12 @@ export const AdminPage = () => {
         </Drawer>
 
         <div className="mx-main">
+          {isApp ? (
+            <div className="mx-push-banner mb-3">
+              <PushEnableCard />
+            </div>
+          ) : null}
+
           {/* ================= TAB 0: COMMAND CENTER / OVERVIEW ================= */}
           {activeTab === 0 && (
             <TabWrapper3D tabKey={0}>
@@ -1540,19 +1568,29 @@ export const AdminPage = () => {
       </div>
 
       <nav className="mx-bn" aria-label="Mobile admin navigation">
-        {bottomTabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={activeTab === t.id ? "on" : ""}
-            onClick={() => setActiveTab(t.id)}
-          >
-            <span>{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
-        <button type="button" id="mb2" onClick={() => setMobileMenuOpen(true)}>
-          <span>☰</span>
+        {bottomTabs.map((t) => {
+          const Icon = t.Icon;
+          const badge = Number(t.badge) || 0;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              className={activeTab === t.id ? "on" : ""}
+              onClick={() => setActiveTab(t.id)}
+              aria-label={badge > 0 ? `${t.label}, ${badge} unread` : t.label}
+            >
+              <span className="mx-bn__ico">
+                <Icon sx={{ fontSize: 22 }} />
+                {badge > 0 ? <em>{badge > 99 ? "99+" : badge}</em> : null}
+              </span>
+              {t.label}
+            </button>
+          );
+        })}
+        <button type="button" id="mb2" onClick={() => setMobileMenuOpen(true)} aria-label="More">
+          <span className="mx-bn__ico">
+            <MoreHorizRoundedIcon sx={{ fontSize: 22 }} />
+          </span>
           More
         </button>
       </nav>

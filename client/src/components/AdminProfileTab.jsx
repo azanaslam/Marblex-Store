@@ -6,6 +6,7 @@ import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import { authHeaders, http } from "../api/http";
 import { getAuthToken, getAuthUser, setAuthSession } from "../auth/session";
+import { PushEnableCard } from "./PushEnableCard";
 
 const fieldCls =
   "w-full bg-[#f4f7f9] border border-[#e2e8ec] rounded-xl px-3.5 py-2.5 text-[#0b2f3d] text-[13px] font-medium focus:bg-white focus:outline-none focus:border-[#ff6a45] transition";
@@ -266,6 +267,8 @@ export const AdminProfileTab = ({ token, showToast }) => {
 
   return (
     <div className="space-y-5 max-w-3xl pb-6">
+      <PushEnableCard />
+
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6b8190]">System · Identity</p>

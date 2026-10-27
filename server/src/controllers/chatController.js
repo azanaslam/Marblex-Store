@@ -52,7 +52,7 @@ const sendUserMessage = async (req, res) => {
     sendPushToStaff({
       title: "New client message",
       body: `${populated.sender?.name || "Client"}: ${preview}`,
-      url: "/admin",
+      url: "/admin?tab=6",
       tag: `chat-in-${msg._id}`,
     }).catch(() => {});
 
@@ -193,7 +193,7 @@ const sendAdminReply = async (req, res) => {
   sendPushToUser(userId, {
     title: "MARBLEX support replied",
     body: preview,
-    url: "/dashboard",
+    url: "/dashboard/support",
     tag: `chat-out-${msg._id}`,
   }).catch(() => {});
 
