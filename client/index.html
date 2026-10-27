@@ -74,16 +74,17 @@
     />
   </head>
   <body style="margin:0;background:#f5f7fa;">
-    <!-- Instant boot splash (matches BrandSplash) — removed when React mounts -->
-    <div id="marblex-boot-splash" style="position:fixed;inset:0;z-index:2147483646;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f5f7fa;font-family:'Space Grotesk',Poppins,system-ui,sans-serif;">
-      <div style="width:88px;height:72px;border-radius:18px;background:#fff;border:1px solid #e0e6ed;box-shadow:0 20px 45px -15px rgba(10,61,82,0.15);display:flex;align-items:center;justify-content:center;overflow:hidden;">
-        <img src="/logo-icon-transparent.png" alt="" width="72" height="58" style="object-fit:contain;" />
-      </div>
-      <div style="margin-top:18px;font-size:28px;font-weight:800;letter-spacing:-0.02em;line-height:1;">
-        <span style="color:#0a3d52;">MAR</span><span style="color:#ff6b4a;">BLEX</span>
-      </div>
-      <div style="margin-top:10px;width:120px;height:2px;border-radius:99px;background:linear-gradient(90deg,#0a3d52,#ff6b4a,#ff8c73);"></div>
-      <p style="margin:12px 0 0;font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#565e69;">Construction Chemical &amp; Rubber Industry</p>
+    <!-- Instant boot splash — full HD logo; removed when React mounts -->
+    <div id="marblex-boot-splash" style="position:fixed;inset:0;z-index:2147483646;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f5f7fa;padding:24px;">
+      <img
+        src="/logo.png"
+        alt="MARBLEX"
+        width="1000"
+        height="812"
+        decoding="async"
+        fetchpriority="high"
+        style="width:min(78vw,320px);height:auto;object-fit:contain;image-rendering:-webkit-optimize-contrast;"
+      />
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

@@ -9,14 +9,20 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      // prompt = user taps Update; new deploy pe app "Update required" dikhati hai
+      // prompt = user taps Update; installed app shows "Update required"
       registerType: 'prompt',
       includeAssets: [
         'favicon.svg',
+        'logo.png',
         'logo-icon.png',
         'logo-icon-transparent.png',
         'marblex-mark.png',
-        'logo.png',
+        'pwa-icon-192.png',
+        'pwa-icon-512.png',
+        'pwa-icon-1024.png',
+        'pwa-maskable-192.png',
+        'pwa-maskable-512.png',
+        'apple-touch-icon.png',
       ],
       manifest: {
         id: '/',
@@ -50,6 +56,12 @@ export default defineConfig({
           {
             src: '/pwa-icon-512.png',
             sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: '/pwa-icon-1024.png',
+            sizes: '1024x1024',
             type: 'image/png',
             purpose: 'any',
           },

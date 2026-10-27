@@ -148,7 +148,7 @@ function bootstrapInstallListeners() {
   });
 }
 
-/** Mobile browser chrome ke upar bottom offset (iOS Chrome / Safari) */
+/** Bottom offset above mobile browser chrome (iOS Chrome / Safari) */
 function useMobileBottomOffset() {
   const [bottomPx, setBottomPx] = useState(88);
 
@@ -160,7 +160,7 @@ function useMobileBottomOffset() {
         return;
       }
       const chromeGap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      // Chrome bottom bar (~56–72) + thoda gap — popup hamesha neeche
+      // Browser bottom chrome (~56–72) + gap so the toast sits above it
       setBottomPx(Math.max(80, chromeGap + 16));
     };
     sync();
@@ -320,8 +320,8 @@ export function InstallPwaPrompt() {
             <div className="marblex-install-prompt__card">
               <div
                 style={{
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   flexShrink: 0,
                   borderRadius: 12,
                   border: "1px solid #e2e8f0",
@@ -330,12 +330,15 @@ export function InstallPwaPrompt() {
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
+                  padding: 4,
                 }}
               >
                 <img
-                  src="/marblex-mark.png"
-                  alt=""
-                  style={{ width: "85%", height: "85%", objectFit: "contain" }}
+                  src="/logo.png"
+                  alt="MARBLEX"
+                  width={1000}
+                  height={812}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
                 />
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
