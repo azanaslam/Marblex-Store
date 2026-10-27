@@ -42,25 +42,25 @@ export default defineConfig({
         ],
         icons: [
           {
-            src: '/logo-icon-transparent.png',
+            src: '/pwa-icon-192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/logo-icon-transparent.png',
+            src: '/pwa-icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/logo-icon.png',
+            src: '/pwa-maskable-192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'maskable',
           },
           {
-            src: '/logo-icon.png',
+            src: '/pwa-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
@@ -111,7 +111,6 @@ export default defineConfig({
         // that nested the whole store UI and caused a "double screen" in the installed app.
         navigateFallbackDenylist: [
           /^\/api/,
-          /^\/admin/,
           /\/marblex-client-portal\.html/i,
           /\.[a-z0-9]+$/i,
         ],

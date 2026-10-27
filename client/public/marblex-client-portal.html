@@ -53,6 +53,9 @@ body.embedded .app{height:100svh}
 
 /* ── Installed app shell: one chrome layer, no double bottom bars ── */
 .ptabs{display:none}
+/* Embedded under store/app shell: never show a second bottom dock */
+body.embedded .bn,
+body.embedded .fabw{display:none!important}
 body.embedded.app-shell .bn,
 body.embedded.app-shell .fabw{display:none!important}
 body.embedded.app-shell #bl{display:grid!important}
@@ -650,7 +653,7 @@ body.embedded.app-shell .np{top:calc(env(safe-area-inset-top,0px) + 56px)}
 const $=s=>document.querySelector(s),I=(n,c='')=>`<svg class="ic ${c}"><use href="#i-${n}"/></svg>`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pk=n=>'PKR '+n.toLocaleString('en-US'),now=()=>new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})+' (PKT)';
-const API={base:'http://localhost:5000/api',token:''};
+const API={base:(typeof location!=='undefined'?location.origin:'')+'/api',token:''};
 const apiToken=()=>API.token||localStorage.getItem('auth_token')||'';
 const api=async(path,opts={})=>{
   const headers={'Content-Type':'application/json',...(opts.headers||{})};

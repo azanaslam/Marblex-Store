@@ -41,16 +41,18 @@ import { AdminCommandCenter } from "../components/AdminCommandCenter";
 import { AdminProductsTab } from "../components/AdminProductsTab";
 import { AdminPartnerSubmissionsTab } from "../components/AdminPartnerSubmissionsTab";
 import { PushEnableCard } from "../components/PushEnableCard";
+import { OfflineBanner } from "../components/OfflineBanner";
+import { PwaUpdateToast } from "../components/PwaUpdateToast";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
 import { useStandaloneApp } from "../hooks/useStandaloneApp";
+import { useAppBadge } from "../hooks/useAppBadge";
 import { TiltCard3D } from "../components/admin3d/TiltCard3D";
 import { TabWrapper3D } from "../components/admin3d/TabWrapper3D";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import "../styles/admin-shell.css";
 
 export const AdminPage = () => {
@@ -59,8 +61,24 @@ export const AdminPage = () => {
   const isApp = useStandaloneApp();
   const [token, setToken] = useState(getAuthToken());
   const [adminUser, setAdminUser] = useState(() => getAuthUser());
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const t = Number(sessionStorage.getItem("mx_admin_tab"));
+      return Number.isFinite(t) ? t : 0;
+    } catch {
+      return 0;
+    }
+  });
   const [chatUnreadTotal, setChatUnreadTotal] = useState(0);
+  useAppBadge(Number(chatUnreadTotal) || 0);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("mx_admin_tab", String(activeTab));
+    } catch {
+      /* ignore */
+    }
+  }, [activeTab]);
   const [overview, setOverview] = useState(null);
   const [websiteData, setWebsiteData] = useState({ totalOrders: 0, totalAmount: 0, orders: [] });
   const [whatsappData, setWhatsappData] = useState({ totalOrders: 0, totalAmount: 0, orders: [] });
@@ -179,7 +197,12 @@ export const AdminPage = () => {
       const t = Number(tabQ);
       if (Number.isFinite(t)) {
         setActiveTab(t);
-        navigate("/admin", { replace: true, state: {} });
+        try {
+          sessionStorage.setItem("mx_admin_tab", String(t));
+        } catch {
+          /* ignore */
+        }
+        navigate({ pathname: "/admin", search: "" }, { replace: true, state: {} });
         return;
       }
     }
@@ -844,11 +867,17 @@ export const AdminPage = () => {
     );
   };
 
+  const adminAvatarUrl = String(adminUser?.avatarUrl || "").trim();
+  const adminInitial = (adminUser?.name || "A").trim().charAt(0).toUpperCase() || "A";
+
   return (
     <div
       className={`mx-admin selection:bg-[#0b2f3d] selection:text-white ${isApp ? "mx-admin--app" : ""}`}
       style={isApp ? { paddingTop: "env(safe-area-inset-top)" } : undefined}
     >
+      <PwaUpdateToast />
+      <OfflineBanner />
+
       {/* Homepage-style announcement strip — hide in installed app */}
       <div className={`mx-ann ${isApp ? "mx-ann--app-hide" : ""}`}>
         <div className="mx-ann__inner mx-ann__desktop">
@@ -1587,9 +1616,13 @@ export const AdminPage = () => {
             </button>
           );
         })}
-        <button type="button" id="mb2" onClick={() => setMobileMenuOpen(true)} aria-label="More">
-          <span className="mx-bn__ico">
-            <MoreHorizRoundedIcon sx={{ fontSize: 22 }} />
+        <button type="button" id="mb2" onClick={() => setMobileMenuOpen(true)} aria-label="More menu">
+          <span className="mx-bn__ico mx-bn__avatar">
+            {adminAvatarUrl ? (
+              <img src={adminAvatarUrl} alt="" className="mx-bn__avatar-img" />
+            ) : (
+              <span className="mx-bn__avatar-fallback">{adminInitial}</span>
+            )}
           </span>
           More
         </button>

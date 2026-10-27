@@ -132,7 +132,21 @@ export const FloatingChatWidget = () => {
 
   const user = getAuthUser();
   const isAdmin = user?.role === "admin";
-  const showLauncher = !isAdmin;
+  // Installed app already has Chat in bottom tabs — hide floating bot launcher
+  const isStandaloneApp =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      window.matchMedia("(display-mode: minimal-ui)").matches ||
+      window.navigator.standalone === true ||
+      (() => {
+        try {
+          return sessionStorage.getItem("marblex_force_app") === "1";
+        } catch {
+          return false;
+        }
+      })());
+  const showLauncher = !isAdmin && !isStandaloneApp;
 
   useEffect(() => {
     if (!botVisible || isOpen) {

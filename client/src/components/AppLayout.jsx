@@ -493,7 +493,9 @@ export const AppLayout = ({ cartCount, children }) => {
       <div
         ref={announcementRef}
         className={`bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1 md:py-2 px-2 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden ${
-          isApp ? "pt-[max(0.25rem,env(safe-area-inset-top))]" : ""
+          isApp
+            ? "hidden"
+            : ""
         }`}
       >
         {/* Desktop View (md and up) */}
@@ -575,7 +577,7 @@ export const AppLayout = ({ cartCount, children }) => {
           : scrolled || isMenuOpen
             ? "bg-white/95 backdrop-blur-md border-slate-200/90 shadow-md shadow-[#0a3d52]/5 py-1.5 sm:py-2"
             : "bg-white border-slate-200/80 py-2 sm:py-2.5"
-          }`}
+          } ${isApp ? "pt-[max(0.35rem,env(safe-area-inset-top))]" : ""}`}
       >
         <div className="max-w-[1440px] mx-auto px-3 sm:px-4 md:px-8">
           <div className="flex items-center justify-between gap-2">

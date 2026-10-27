@@ -358,7 +358,7 @@ export function InstallPwaPrompt() {
                     lineHeight: 1.3,
                   }}
                 >
-                  Home screen pe rakho — faster, app jaisi feel.
+                  Add MARBLEX to your home screen for a faster, app-like experience.
                 </p>
               </div>
               <button

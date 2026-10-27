@@ -1,4 +1,10 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+// Production: prefer env. Fallback to same-origin /api (never ship a localhost default).
+const envApi = String(import.meta.env.VITE_API_BASE_URL || "").trim();
+export const API_BASE_URL =
+  envApi ||
+  (typeof window !== "undefined" && window.location?.origin
+    ? `${window.location.origin}/api`
+    : "/api");
 
 export const bannerImages = [
   "/products/Banner1.jpeg",
