@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
-    role: { type: String, enum: ["admin", "user", "subowner"], default: "user" },
+    role: { type: String, enum: ["admin", "user", "subowner", "dealer"], default: "user" },
     isBlocked: { type: Boolean, default: false },
     /** New signups are false until admin approves in dashboard. Admins ignore this. */
     isAccessGranted: { type: Boolean, default: false },
@@ -40,6 +40,12 @@ const userSchema = new mongoose.Schema(
     /** Google subject id when signed in via Google Identity */
     googleId: { type: String, default: null, sparse: true },
     authProvider: { type: String, enum: ["local", "google", "microsoft", "linkedin"], default: "local" },
+
+    // Phase 4: B2B & Dealer Configuration
+    dealerDiscountPercent: { type: Number, default: 0, min: 0, max: 100 },
+    creditLimit: { type: Number, default: 0, min: 0 },
+    creditUsed: { type: Number, default: 0, min: 0 },
+    paymentTermsDays: { type: Number, default: 30, min: 0 },
   },
   { timestamps: true }
 );

@@ -135,11 +135,21 @@ export const PortalQuotes = () => {
                     </Alert>
                   ) : null}
                 </Box>
-                {q.status === "quoted" && (
-                  <Button variant="contained" onClick={() => accept(q._id)}>
-                    Accept quote
-                  </Button>
-                )}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="flex-start">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      href={`/api/portal/quotes/${q._id}/print`}
+                      target="_blank"
+                    >
+                      Print PDF
+                    </Button>
+                    {q.status === "quoted" && (
+                      <Button variant="contained" color="success" size="small" onClick={() => accept(q._id)}>
+                        Accept quote
+                      </Button>
+                    )}
+                  </Stack>
               </Stack>
             </Paper>
           ))}

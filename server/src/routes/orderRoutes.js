@@ -6,6 +6,7 @@ const {
   getMyOrderById,
   cancelMyOrder,
   getMyOrderInvoice,
+  getMyOrderChallan,
   getPaymentConfig,
   uploadPaymentProof,
 } = require("../controllers/orderController");
@@ -22,6 +23,7 @@ router.get("/verify-session/:sessionId", verifyStripeSession);
 // Stripe webhook is mounted in app.js with raw body (before express.json)
 router.get("/my", auth, getMyOrders);
 router.get("/my/:id/invoice", auth, getMyOrderInvoice);
+router.get("/my/:id/challan", auth, getMyOrderChallan);
 router.get("/my/:id", auth, getMyOrderById);
 router.post("/my/:id/cancel", auth, cancelMyOrder);
 

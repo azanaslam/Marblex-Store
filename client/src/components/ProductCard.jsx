@@ -336,6 +336,11 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
             <span className="text-[17px] sm:text-[18.5px] lg:text-[15px] xl:text-[16.5px] font-black text-[#0a3d52] dark:text-white font-heading tracking-tight leading-none">
               {priceLabel}
             </span>
+            {product.isDealerPrice && (
+              <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                Dealer
+              </span>
+            )}
           </div>
 
           {/* Action Controls: mobile/tablet base unchanged; compact only on lg 4-col cards */}

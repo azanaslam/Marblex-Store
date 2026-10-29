@@ -16,6 +16,7 @@ router.delete("/sites/:siteId", portal.deleteDeliverySite);
 
 router.get("/quotes", portal.listMyQuotes);
 router.get("/quotes/:id", portal.getMyQuote);
+router.get("/quotes/:id/print", portal.getQuotePrintHtml);
 router.post("/quotes", validate(quoteSchema), portal.createQuote);
 router.post("/quotes/:id/accept", portal.acceptQuote);
 
@@ -38,6 +39,7 @@ router.post("/documents/request", portal.requestDocument);
 
 router.get("/admin/quotes", adminOnly, portal.adminListQuotes);
 router.patch("/admin/quotes/:id", adminOnly, portal.adminUpdateQuote);
+router.post("/admin/quotes/:id/convert-to-order", adminOnly, portal.adminConvertQuoteToOrder);
 router.get("/admin/tickets", adminOnly, portal.adminListTickets);
 router.post("/admin/tickets/:id/reply", adminOnly, portal.adminReplyTicket);
 router.get("/admin/documents", adminOnly, portal.adminListDocuments);

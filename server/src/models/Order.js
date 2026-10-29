@@ -114,7 +114,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["cod", "stripe", "easypaisa", "jazzcash", "bank_transfer"],
+      enum: ["cod", "stripe", "easypaisa", "jazzcash", "bank_transfer", "on_account"],
       default: "cod",
       index: true,
     },
@@ -154,6 +154,17 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "",
       trim: true,
+    },
+    // Phase 4: B2B Quote link & Dealer on-account
+    quoteId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Quote",
+      default: null,
+      index: true,
+    },
+    isDealerOrder: {
+      type: Boolean,
+      default: false,
     },
     stripeSessionId: {
       type: String,

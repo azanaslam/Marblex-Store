@@ -25,7 +25,14 @@ const auth = async (req, res, next) => {
     if (dbUser.role === "user" && dbUser.isAccessGranted === false) {
       return res.status(403).json({ message: "Your account is pending admin approval." });
     }
-    req.user = { id: dbUser._id, email: dbUser.email, role: dbUser.role };
+    req.user = {
+      id: dbUser._id,
+      email: dbUser.email,
+      role: dbUser.role,
+      dealerDiscountPercent: dbUser.dealerDiscountPercent || 0,
+      creditLimit: dbUser.creditLimit || 0,
+      creditUsed: dbUser.creditUsed || 0,
+    };
     return next();
   } catch (error) {
     return res.status(401).json({ message: "Invalid token" });
@@ -43,7 +50,14 @@ const optionalAuth = async (req, _, next) => {
       req.user = null;
       return next();
     }
-    req.user = { id: dbUser._id, email: dbUser.email, role: dbUser.role };
+    req.user = {
+      id: dbUser._id,
+      email: dbUser.email,
+      role: dbUser.role,
+      dealerDiscountPercent: dbUser.dealerDiscountPercent || 0,
+      creditLimit: dbUser.creditLimit || 0,
+      creditUsed: dbUser.creditUsed || 0,
+    };
   } catch (error) {
     req.user = null;
   }

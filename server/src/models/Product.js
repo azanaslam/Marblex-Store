@@ -7,6 +7,7 @@ const productSchema = new mongoose.Schema(
     extraImages: { type: [String], default: [] },
     description: { type: String, default: "" },
     price: { type: Number, required: true, min: 0 },
+    dealerPrice: { type: Number, default: 0, min: 0 }, // Phase 4: Explicit Dealer Price Override
     category: { type: String, default: "General", index: true },
     stock: { type: Number, default: 0, min: 0 },
     featured: { type: Boolean, default: false },
@@ -16,6 +17,7 @@ const productSchema = new mongoose.Schema(
         sku: { type: String, trim: true },
         label: { type: String, trim: true },
         price: { type: Number, min: 0 },
+        dealerPrice: { type: Number, default: 0, min: 0 },
         stock: { type: Number, min: 0 },
         image: { type: String, default: "" },
         bulkTiers: [

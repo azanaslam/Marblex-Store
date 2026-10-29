@@ -27,10 +27,11 @@ export const AdminCustomersTab = ({
   const [query, setQuery] = useState("");
 
   const counts = useMemo(() => {
-    const c = { all: users.length, pending: 0, active: 0, blocked: 0, subowner: 0 };
+    const c = { all: users.length, pending: 0, active: 0, blocked: 0, subowner: 0, dealer: 0 };
     users.forEach((u) => {
       if (u.isBlocked) c.blocked += 1;
       else if (isPending(u)) c.pending += 1;
+      else if (u.role === "dealer") c.dealer += 1;
       else if (u.role === "subowner") c.subowner += 1;
       else if (u.isAccessGranted !== false) c.active += 1;
     });
@@ -43,6 +44,7 @@ export const AdminCustomersTab = ({
       if (filter === "pending" && !isPending(u)) return false;
       if (filter === "active" && (u.isBlocked || isPending(u) || u.role === "admin")) return false;
       if (filter === "blocked" && !u.isBlocked) return false;
+      if (filter === "dealer" && u.role !== "dealer") return false;
       if (filter === "subowner" && u.role !== "subowner") return false;
       if (!q) return true;
       const hay = [u.name, u.email, u.company, u.city, u.phone, u.role]
@@ -56,6 +58,7 @@ export const AdminCustomersTab = ({
     { id: "all", label: `All (${counts.all})` },
     { id: "pending", label: `Pending (${counts.pending})` },
     { id: "active", label: `Active (${counts.active})` },
+    { id: "dealer", label: `Dealers (${counts.dealer})` },
     { id: "subowner", label: `Subowners (${counts.subowner})` },
     { id: "blocked", label: `Blocked (${counts.blocked})` },
   ];
@@ -90,6 +93,7 @@ export const AdminCustomersTab = ({
     if (user.isBlocked) return { label: "Blocked", cls: "bg-rose-50 text-rose-700 border-rose-100" };
     if (isPending(user)) return { label: "Pending", cls: "bg-amber-50 text-amber-800 border-amber-100" };
     if (user.role === "admin") return { label: "Admin", cls: "bg-[#0a3d52]/10 text-[#0a3d52] border-[#0a3d52]/15" };
+    if (user.role === "dealer") return { label: "Dealer / B2B", cls: "bg-amber-50 text-amber-900 border-amber-200 font-bold" };
     if (user.role === "subowner") return { label: "Subowner", cls: "bg-sky-50 text-sky-800 border-sky-100" };
     return { label: "Active", cls: "bg-emerald-50 text-emerald-800 border-emerald-100" };
   };
@@ -217,7 +221,7 @@ export const AdminCustomersTab = ({
                         role="group"
                         aria-label="Role"
                       >
-                        {["user", "subowner"].map((role) => {
+                        {["user", "dealer", "subowner"].map((role) => {
                           const active = (user.role === "subowner" ? "subowner" : "user") === role;
                           return (
                             <button
@@ -248,7 +252,7 @@ export const AdminCustomersTab = ({
                           role="group"
                           aria-label="Role"
                         >
-                          {["user", "subowner"].map((role) => {
+                          {["user", "dealer", "subowner"].map((role) => {
                             const active = (user.role === "subowner" ? "subowner" : "user") === role;
                             return (
                               <button

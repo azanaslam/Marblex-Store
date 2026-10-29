@@ -6,6 +6,8 @@ const quoteItemSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     quantity: { type: Number, required: true, min: 1 },
     unit: { type: String, default: "pcs", trim: true },
+    unitPrice: { type: Number, default: 0 },
+    lineTotal: { type: Number, default: 0 },
     notes: { type: String, default: "", trim: true },
   },
   { _id: false }
@@ -33,6 +35,12 @@ const quoteSchema = new mongoose.Schema(
     quotedAmount: { type: Number, default: null },
     adminNotes: { type: String, default: "", trim: true },
     quotedAt: { type: Date, default: null },
+    convertedOrderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true }
 );

@@ -41,6 +41,7 @@ router.get("/users/:id", auth, staffOnly, getUserById);
 router.patch("/users/:id/block", auth, adminOnly, toggleUserBlockStatus);
 router.patch("/users/:id/access", auth, adminOnly, toggleUserAccess);
 router.patch("/users/:id/role", auth, adminOnly, updateUserRole);
+router.post("/users/:id/dealer-payment", auth, adminOnly, require("../controllers/adminController").recordDealerPayment);
 router.get("/chat/threads", auth, staffOnly, getChatThreads);
 router.get("/chat/thread/:userId", auth, staffOnly, getThreadMessages);
 router.post("/chat/thread/:userId", auth, staffOnly, sendAdminReply);

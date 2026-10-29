@@ -237,8 +237,8 @@ const toggleUserAccess = async (req, res) => {
 const updateUserRole = async (req, res) => {
   const { id } = req.params;
   const nextRole = String(req.body?.role || "").trim().toLowerCase();
-  if (!["user", "subowner"].includes(nextRole)) {
-    return res.status(400).json({ message: "Role must be either user or subowner" });
+  if (!["user", "subowner", "dealer"].includes(nextRole)) {
+    return res.status(400).json({ message: "Role must be either user, dealer, or subowner" });
   }
 
   const user = await User.findById(id);
@@ -248,6 +248,15 @@ const updateUserRole = async (req, res) => {
   user.role = nextRole;
   if (user.isAccessGranted === false) {
     user.isAccessGranted = true;
+  }
+  if (req.body?.dealerDiscountPercent !== undefined) {
+    user.dealerDiscountPercent = Number(req.body.dealerDiscountPercent) || 0;
+  }
+  if (req.body?.creditLimit !== undefined) {
+    user.creditLimit = Number(req.body.creditLimit) || 0;
+  }
+  if (req.body?.paymentTermsDays !== undefined) {
+    user.paymentTermsDays = Number(req.body.paymentTermsDays) || 30;
   }
   await user.save();
 
@@ -264,6 +273,34 @@ const updateUserRole = async (req, res) => {
   });
 };
 
+/** Mark dealer credit payment received */
+const recordDealerPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const amount = Number(req.body?.amount) || 0;
+    if (amount <= 0) return res.status(400).json({ message: "Enter a valid positive payment amount" });
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.creditUsed = Math.max(0, (user.creditUsed || 0) - amount);
+    await user.save();
+
+    return res.json({
+      message: "Payment of PKR " + amount.toLocaleString() + " recorded. Remaining balance: PKR " + user.creditUsed.toLocaleString(),
+      user: {
+        id: user._id,
+        name: user.name,
+        role: user.role,
+        creditLimit: user.creditLimit,
+        creditUsed: user.creditUsed,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   getOverview,
   getAllBlogs,
@@ -277,6 +314,7 @@ module.exports = {
   toggleUserBlockStatus,
   toggleUserAccess,
   updateUserRole,
+  recordDealerPayment,
   getEmailConfig: async (req, res) => {
     try {
       const config = await Config.findOne({ key: "email_settings" });

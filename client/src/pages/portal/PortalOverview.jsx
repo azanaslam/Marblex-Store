@@ -114,7 +114,26 @@ export const PortalOverview = () => {
         </Typography>
         <Typography sx={{ mt: 0.5, fontSize: { xs: 24, md: 30 }, fontWeight: 800 }}>
           {profile.name || "Client"}
+          {profile.role === "dealer" && (
+            <Chip
+              size="small"
+              label="Approved Dealer"
+              sx={{ ml: 1.5, bgcolor: "#f59e0b", color: "#000", fontWeight: 800, fontSize: 11 }}
+            />
+          )}
         </Typography>
+        {profile.role === "dealer" && (
+          <Box sx={{ mt: 1, p: 1.5, borderRadius: 2, bgcolor: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 700 }}>
+              Dealer Credit Line: PKR {Number(profile.creditLimit || 0).toLocaleString()} | Outstanding Balance: PKR {Number(profile.creditUsed || 0).toLocaleString()} | Available: PKR {Math.max(0, (profile.creditLimit || 0) - (profile.creditUsed || 0)).toLocaleString()}
+            </Typography>
+            {profile.dealerDiscountPercent > 0 && (
+              <Typography sx={{ fontSize: 12, opacity: 0.85 }}>
+                Automatic Dealer Discount: {profile.dealerDiscountPercent}% applied sitewide
+              </Typography>
+            )}
+          </Box>
+        )}
         <Typography sx={{ mt: 0.5, opacity: 0.85, maxWidth: 560 }}>
           {profile.company
             ? `${profile.company} · ${profile.industryType || "Construction partner"}`

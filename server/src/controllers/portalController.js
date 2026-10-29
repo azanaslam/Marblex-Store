@@ -237,6 +237,81 @@ const acceptQuote = async (req, res) => {
   return res.json(quote);
 };
 
+/** Convert Quoted RFQ to Official Order (Admin Action) */
+const adminConvertQuoteToOrder = async (req, res) => {
+  try {
+    const quote = await Quote.findById(req.params.id);
+    if (!quote) return res.status(404).json({ message: "Quote not found" });
+    if (!["quoted", "accepted"].includes(quote.status)) {
+      return res.status(400).json({ message: "Only 'quoted' or 'accepted' quotes can be converted to orders" });
+    }
+
+    const totalAmount = Number(quote.quotedAmount) || 0;
+    const orderItems = (quote.items || []).map((item) => ({
+      productId: item.productId || undefined,
+      name: item.name,
+      price: item.unitPrice || Math.round(totalAmount / (quote.items.length || 1)),
+      quantity: item.quantity || 1,
+    }));
+
+    const orderNumber = "ORD-" + Math.floor(100000 + Math.random() * 900000);
+
+    const order = await Order.create({
+      orderNumber,
+      userId: quote.userId,
+      quoteId: quote._id,
+      customerName: quote.contactName,
+      email: quote.email,
+      phone: quote.phone,
+      city: quote.city || "Other",
+      address: quote.siteAddress || "Site Delivery",
+      notes: "Converted from quotation " + quote.quoteNumber + (quote.message ? " - " + quote.message : ""),
+      channel: "website",
+      paymentMethod: "cod",
+      paymentStatus: "pending",
+      orderStatus: "processing",
+      items: orderItems,
+      subtotal: totalAmount,
+      total: totalAmount,
+    });
+
+    quote.status = "converted";
+    quote.convertedOrderId = order._id;
+    await quote.save();
+
+    return res.json({
+      message: "Quote successfully converted to official Order #" + order.orderNumber,
+      order,
+      quote,
+    });
+  } catch (error) {
+    console.error("[Convert Quote]", error);
+    return res.status(500).json({ message: error.message || "Failed to convert quote" });
+  }
+};
+
+/** View Quote PDF / Printable HTML view */
+const getQuotePrintHtml = async (req, res) => {
+  try {
+    const quote = await Quote.findById(req.params.id);
+    if (!quote) return res.status(404).send("Quote not found");
+
+    const rows = (quote.items || [])
+      .map(
+        (i, idx) =>
+          `<tr><td style="padding:10px;border-bottom:1px solid #e2e8ec">${idx + 1}. ${i.name}</td><td style="padding:10px;border-bottom:1px solid #e2e8ec;text-align:center">${i.quantity} ${i.unit || "pcs"}</td><td style="padding:10px;border-bottom:1px solid #e2e8ec;text-align:right">PKR ${Number(i.unitPrice || 0).toLocaleString()}</td><td style="padding:10px;border-bottom:1px solid #e2e8ec;text-align:right;font-weight:bold">PKR ${Number(i.lineTotal || (i.unitPrice * i.quantity) || 0).toLocaleString()}</td></tr>`
+      )
+      .join("");
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Quotation ${quote.quoteNumber}</title><style>body{font-family:system-ui,-apple-system,sans-serif;margin:40px;color:#0b2f3c;line-height:1.5}.header{display:flex;justify-content:space-between;border-bottom:2px solid #0a3d52;padding-bottom:16px;margin-bottom:24px}.badge{background:#e0f2fe;color:#0284c7;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:bold}table{width:100%;border-collapse:collapse;margin:24px 0}th{background:#f8fafc;padding:10px;text-align:left;border-bottom:2px solid #cbd5e1;font-size:12px;text-transform:uppercase}.total-box{text-align:right;margin-top:20px;font-size:18px;font-weight:bold;color:#0a3d52}</style></head><body><div class="header"><div><h1 style="margin:0;color:#0a3d52">MARBLEX</h1><p style="margin:4px 0;font-size:13px;color:#64748b">Industrial Construction Chemical & Waterproofing</p></div><div style="text-align:right"><h2 style="margin:0;font-size:20px">${quote.quoteNumber}</h2><span class="badge">${String(quote.status).toUpperCase()}</span></div></div><div style="margin-bottom:20px;font-size:13px"><strong>Customer:</strong> ${quote.contactName} (${quote.company || "N/A"})<br/><strong>Phone:</strong> ${quote.phone} | <strong>Email:</strong> ${quote.email}<br/><strong>Project / Site:</strong> ${quote.projectName || "General"} - ${quote.siteAddress || quote.city}</div><table><thead><tr><th>Product Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody></table><div class="total-box">Quoted Amount: PKR ${Number(quote.quotedAmount || 0).toLocaleString()}</div><p style="margin-top:30px;font-size:11px;color:#94a3b8">This is an official computer-generated quotation from MARBLEX Engineering. Valid for 15 days.</p></body></html>`;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    return res.send(html);
+  } catch (error) {
+    return res.status(500).send("Error rendering quote");
+  }
+};
+
 /** Admin quote updates */
 const adminListQuotes = async (req, res) => {
   const quotes = await Quote.find().sort({ createdAt: -1 }).populate("userId", "name email company");
@@ -460,6 +535,8 @@ module.exports = {
   acceptQuote,
   adminListQuotes,
   adminUpdateQuote,
+  adminConvertQuoteToOrder,
+  getQuotePrintHtml,
   listMyTickets,
   getMyTicket,
   createTicket,

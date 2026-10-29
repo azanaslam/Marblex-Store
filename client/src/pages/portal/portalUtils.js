@@ -75,7 +75,10 @@ export const reorderToCart = (order) =>
   pushToCart(
     (order.items || []).map((item) => ({
       productId: item.productId || `${order._id}-${item.name}`,
+      cartId: item.variantSku ? `${item.productId || order._id}-${item.variantSku}` : (item.productId || `${order._id}-${item.name}`),
       name: item.name,
+      variantSku: item.variantSku,
+      variantLabel: item.variantLabel,
       price: item.price,
       quantity: Number(item.quantity) || 1,
       imageUrl: item.imageUrl || "",

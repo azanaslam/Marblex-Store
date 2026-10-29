@@ -51,6 +51,17 @@ export const AdminQuotesTab = ({ token, showToast }) => {
     });
   };
 
+  const handleConvertToOrder = async (quote) => {
+    if (!window.confirm(`Convert ${quote.quoteNumber} into a confirmed Order?`)) return;
+    try {
+      const res = await http.post(`/portal/admin/quotes/${quote._id}/convert-to-order`, {}, authHeaders(token));
+      showToast?.("success", res.data?.message || "Converted to order!");
+      await load();
+    } catch (err) {
+      showToast?.("error", err.response?.data?.message || "Failed to convert quote");
+    }
+  };
+
   const save = async () => {
     setSaving(true);
     try {
@@ -214,13 +225,32 @@ export const AdminQuotesTab = ({ token, showToast }) => {
                       ) : null}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => openEdit(q)}
-                      className="w-full sm:w-auto shrink-0 min-h-[44px] px-4 py-2.5 rounded-xl text-[13px] font-extrabold text-white bg-gradient-to-b from-[#ff8460] to-[#ff6a45] shadow-[0_4px_0_#c63f1d,0_10px_16px_-8px_rgba(255,106,69,.55)]"
-                    >
-                      Update quote
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                      <a
+                        href={`/api/portal/quotes/${q._id}/print`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center min-h-[42px] px-3.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200"
+                      >
+                        Print PDF
+                      </a>
+                      {["quoted", "accepted"].includes(q.status) && (
+                        <button
+                          type="button"
+                          onClick={() => handleConvertToOrder(q)}
+                          className="min-h-[42px] px-3.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          Convert to Order
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => openEdit(q)}
+                        className="min-h-[42px] px-4 rounded-xl text-xs font-extrabold text-white bg-[#0a3d52] hover:bg-[#082e3e]"
+                      >
+                        Update
+                      </button>
+                    </div>
                   </div>
                 </div>
               </article>

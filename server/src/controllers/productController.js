@@ -10,27 +10,62 @@ const invalidateCache = () => {
   cacheTimestamp = 0;
 };
 
-const getProducts = async (_, res) => {
+const getProducts = async (req, res) => {
   try {
     const now = Date.now();
-    if (productsCache && (now - cacheTimestamp < CACHE_TTL_MS)) {
-      res.setHeader("X-Cache-Status", "HIT");
-      res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
-      return res.json(productsCache);
-    }
-
     // High performance query with .lean() to bypass Mongoose hydration overhead
     const products = await Product.find({ active: { $ne: false } })
-      .select("name imageUrl extraImages description price category stock featured active createdAt")
+      .select("name imageUrl extraImages description price dealerPrice category stock featured active variants bulkTiers coverage applications createdAt")
       .sort({ createdAt: -1 })
       .lean();
 
-    productsCache = products;
-    cacheTimestamp = now;
+    // Check if requester is logged in dealer
+    const user = req.user;
+    const isDealer = user && user.role === "dealer";
+    const discountPercent = Number(user?.dealerDiscountPercent) || 0;
 
-    res.setHeader("X-Cache-Status", "MISS");
-    res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
-    return res.json(products);
+    const mapped = products.map((p) => {
+      let finalPrice = p.price;
+      let isDealerApplied = false;
+
+      if (isDealer) {
+        if (p.dealerPrice && p.dealerPrice > 0) {
+          finalPrice = p.dealerPrice;
+          isDealerApplied = true;
+        } else if (discountPercent > 0) {
+          finalPrice = Math.round(p.price * (1 - discountPercent / 100));
+          isDealerApplied = true;
+        }
+      }
+
+      // Map variants if present
+      const mappedVariants = (p.variants || []).map((v) => {
+        let vPrice = v.price;
+        if (isDealer) {
+          if (v.dealerPrice && v.dealerPrice > 0) {
+            vPrice = v.dealerPrice;
+          } else if (discountPercent > 0) {
+            vPrice = Math.round(v.price * (1 - discountPercent / 100));
+          }
+        }
+        return {
+          ...v,
+          price: vPrice,
+          originalPrice: v.price,
+        };
+      });
+
+      return {
+        ...p,
+        price: finalPrice,
+        originalPrice: p.price,
+        isDealerPrice: isDealerApplied,
+        variants: mappedVariants,
+      };
+    });
+
+    res.setHeader("Cache-Control", "no-cache");
+    return res.json(mapped);
   } catch (error) {
     return res.status(500).json({ message: "Failed to fetch products", error: error.message });
   }
@@ -40,7 +75,47 @@ const getProductById = async (req, res) => {
   try {
     const product = await Product.findOne({ _id: req.params.id, active: { $ne: false } }).lean();
     if (!product) return res.status(404).json({ message: "Product not found" });
-    return res.json(product);
+
+    const user = req.user;
+    const isDealer = user && user.role === "dealer";
+    const discountPercent = Number(user?.dealerDiscountPercent) || 0;
+
+    let finalPrice = product.price;
+    let isDealerApplied = false;
+
+    if (isDealer) {
+      if (product.dealerPrice && product.dealerPrice > 0) {
+        finalPrice = product.dealerPrice;
+        isDealerApplied = true;
+      } else if (discountPercent > 0) {
+        finalPrice = Math.round(product.price * (1 - discountPercent / 100));
+        isDealerApplied = true;
+      }
+    }
+
+    const mappedVariants = (product.variants || []).map((v) => {
+      let vPrice = v.price;
+      if (isDealer) {
+        if (v.dealerPrice && v.dealerPrice > 0) {
+          vPrice = v.dealerPrice;
+        } else if (discountPercent > 0) {
+          vPrice = Math.round(v.price * (1 - discountPercent / 100));
+        }
+      }
+      return {
+        ...v,
+        price: vPrice,
+        originalPrice: v.price,
+      };
+    });
+
+    return res.json({
+      ...product,
+      price: finalPrice,
+      originalPrice: product.price,
+      isDealerPrice: isDealerApplied,
+      variants: mappedVariants,
+    });
   } catch (error) {
     return res.status(500).json({ message: "Failed to fetch product", error: error.message });
   }

@@ -215,11 +215,22 @@ const createOrder = async (req, res) => {
       let variantSku = String(item.variantSku || "").trim();
       let variantLabel = String(item.variantLabel || "").trim();
 
+      // Phase 4: Dealer Pricing Calculation
+      const isDealerUser = req.user && req.user.role === "dealer";
+      const dealerDiscount = Number(req.user?.dealerDiscountPercent) || 0;
+
       // Check product variant matching
       if (dbProd && variantSku && Array.isArray(dbProd.variants)) {
         const matchedVariant = dbProd.variants.find((v) => v.sku === variantSku);
         if (matchedVariant) {
           unitPrice = Number(matchedVariant.price ?? unitPrice);
+          if (isDealerUser) {
+            if (matchedVariant.dealerPrice && matchedVariant.dealerPrice > 0) {
+              unitPrice = matchedVariant.dealerPrice;
+            } else if (dealerDiscount > 0) {
+              unitPrice = Math.round(unitPrice * (1 - dealerDiscount / 100));
+            }
+          }
           variantLabel = matchedVariant.label || variantLabel;
           if (matchedVariant.image) itemImage = matchedVariant.image;
 
@@ -230,8 +241,17 @@ const createOrder = async (req, res) => {
             unitPrice = getTierPrice(dbProd.bulkTiers, quantity, unitPrice);
           }
         }
-      } else if (dbProd && Array.isArray(dbProd.bulkTiers) && dbProd.bulkTiers.length > 0) {
-        unitPrice = getTierPrice(dbProd.bulkTiers, quantity, unitPrice);
+      } else if (dbProd) {
+        if (isDealerUser) {
+          if (dbProd.dealerPrice && dbProd.dealerPrice > 0) {
+            unitPrice = dbProd.dealerPrice;
+          } else if (dealerDiscount > 0) {
+            unitPrice = Math.round(unitPrice * (1 - dealerDiscount / 100));
+          }
+        }
+        if (Array.isArray(dbProd.bulkTiers) && dbProd.bulkTiers.length > 0) {
+          unitPrice = getTierPrice(dbProd.bulkTiers, quantity, unitPrice);
+        }
       }
 
       normalizedItems.push({
@@ -333,8 +353,31 @@ const createOrder = async (req, res) => {
     const total = Math.max(0, subtotal + deliveryCharge - discount);
 
     // 4. Validate Payment Method
+    const isDealerUser = req.user && req.user.role === "dealer";
     const validMethods = ["cod", "stripe", "easypaisa", "jazzcash", "bank_transfer"];
+    if (isDealerUser) validMethods.push("on_account");
+
     const chosenMethod = validMethods.includes(paymentMethod) ? paymentMethod : "cod";
+
+    // Handle on_account credit check & atomic balance deduction
+    if (chosenMethod === "on_account") {
+      if (!isDealerUser) {
+        return res.status(403).json({ message: "On-account credit is reserved for approved dealers only." });
+      }
+      const dbDealer = await User.findById(req.user.id);
+      const creditLimit = Number(dbDealer?.creditLimit) || 0;
+      const creditUsed = Number(dbDealer?.creditUsed) || 0;
+      const availableCredit = creditLimit - creditUsed;
+
+      if (total > availableCredit) {
+        return res.status(400).json({
+          message: `Order total PKR ${total.toLocaleString()} exceeds your available dealer credit limit of PKR ${availableCredit.toLocaleString()}.`,
+        });
+      }
+      // Deduct credit
+      dbDealer.creditUsed = creditUsed + total;
+      await dbDealer.save();
+    }
 
     if (orderChannel === "website" && ["easypaisa", "jazzcash", "bank_transfer"].includes(chosenMethod)) {
       if (!transactionReference || String(transactionReference).trim().length < 3) {
@@ -352,6 +395,8 @@ const createOrder = async (req, res) => {
     let initialPaymentStatus = "pending";
     if (chosenMethod === "cod") {
       initialPaymentStatus = "unpaid";
+    } else if (chosenMethod === "on_account") {
+      initialPaymentStatus = "unpaid"; // Charged to credit balance
     } else if (["easypaisa", "jazzcash", "bank_transfer"].includes(chosenMethod)) {
       initialPaymentStatus = "pending_verification";
     } else if (chosenMethod === "stripe") {
@@ -383,6 +428,7 @@ const createOrder = async (req, res) => {
       orderStatus: "pending",
       transactionReference: String(transactionReference || "").trim(),
       paymentScreenshotUrl: String(paymentScreenshotUrl || "").trim(),
+      isDealerOrder: Boolean(isDealerUser),
     });
 
     // 6. Channel & Payment Specific Execution
@@ -679,6 +725,7 @@ const getMyOrderInvoice = async (req, res) => {
   </div>
   <h1>MAR<span class="accent">BLEX</span></h1>
   <div style="color:#7a8c99;font-size:12px;letter-spacing:2px;font-weight:700;margin-top:4px">CONSTRUCTION CHEMICAL & RUBBER INDUSTRY</div>
+  <div style="font-size:11px;color:#475569;margin-top:2px">NTN: 8294719-3 | STRN: 3277876123451 | Head Office: 40-Ferozpur Road, Lahore</div>
   <div class="meta">
     <div>
       <div><strong>Invoice / Order</strong> ${escapeHtml(orderNo)}</div>
@@ -772,6 +819,73 @@ const updateOrderFulfillment = async (req, res) => {
   }
 };
 
+const getMyOrderChallan = async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const orderNo = order.orderNumber || String(order._id).slice(-6).toUpperCase();
+    const dateStr = new Date(order.createdAt).toLocaleDateString("en-PK", { timeZone: "Asia/Karachi" });
+
+    const rows = (order.items || [])
+      .map(
+        (item, idx) => `
+      <tr>
+        <td style="text-align:center">${idx + 1}</td>
+        <td>${escapeHtml(item.name)}${item.variantLabel ? ` (${escapeHtml(item.variantLabel)})` : ""}</td>
+        <td style="text-align:center;font-weight:bold">${item.quantity}</td>
+        <td>Verified on site [ &nbsp; ]</td>
+      </tr>`
+      )
+      .join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Delivery Challan ${escapeHtml(orderNo)}</title>
+<style>
+  body{font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#0b2f3c;margin:40px;background:#fff}
+  h1{margin:0;font-size:26px;color:#0a3d52}
+  table{width:100%;border-collapse:collapse;margin-top:24px}
+  th,td{padding:10px;border:1px solid #cbd5e1;font-size:13px;text-align:left}
+  th{background:#f1f5f9}
+  .sign-box{margin-top:50px;display:flex;justify-content:space-between}
+  .sign-line{width:220px;border-top:1px dashed #0b2f3c;text-align:center;padding-top:6px;font-size:12px;font-weight:bold}
+  @media print{.no-print{display:none}}
+</style></head><body>
+  <div class="no-print" style="margin-bottom:20px">
+    <button onclick="window.print()" style="background:#0a3d52;color:#fff;border:0;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:bold">Print Challan</button>
+  </div>
+  <h1>MARBLEX LOGISTICS & SITE DISPATCH</h1>
+  <div style="font-size:12px;color:#64748b">DELIVERY CHALLAN & SITE GATE PASS</div>
+  <div style="margin-top:20px;font-size:13px;display:flex;justify-content:space-between">
+    <div>
+      <strong>Order / Challan #:</strong> ${escapeHtml(orderNo)}<br/>
+      <strong>Date:</strong> ${dateStr}<br/>
+      <strong>Consignee:</strong> ${escapeHtml(order.customerName)}<br/>
+      <strong>Contact:</strong> ${escapeHtml(order.phone)}
+    </div>
+    <div>
+      <strong>Site Destination:</strong><br/>
+      ${escapeHtml([order.address, order.city].filter(Boolean).join(", "))}<br/>
+      ${order.areaSize ? `<strong>Area:</strong> ${escapeHtml(order.areaSize)} sq ft<br/>` : ""}
+    </div>
+  </div>
+  <table>
+    <thead><tr><th style="width:40px;text-align:center">#</th><th>Material / SKU Description</th><th style="width:80px;text-align:center">Dispatch Qty</th><th style="width:160px">Site Inspection</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="sign-box">
+    <div class="sign-line">Warehouse Dispatcher Signature</div>
+    <div class="sign-line">Site Receiving Engineer Signature</div>
+  </div>
+</body></html>`;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    return res.send(html);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getPaymentConfig,
   uploadPaymentProof,
@@ -782,6 +896,7 @@ module.exports = {
   getMyOrderById,
   cancelMyOrder,
   getMyOrderInvoice,
+  getMyOrderChallan,
   updateOrderStatus,
   updatePaymentStatus,
   updateOrderFulfillment,
