@@ -21,6 +21,8 @@ import { authHeaders, http } from "../api/http";
 import { getAuthToken } from "../auth/session";
 import { ProductDetailSkeleton } from "../components/LoaderSkeleton";
 import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
+import { setJsonLd, removeJsonLd } from "../utils/jsonLd";
+import { track } from "../analytics";
 import gsap from "gsap";
 
 const ASSURANCE = [
@@ -231,9 +233,96 @@ export const ProductDetailPage = ({ addToCart }) => {
     }
   }, [loading, product]);
 
-  const handleAddToCart = () => {
+  const hasStock = typeof product?.stock === "number" && product?.stock >= 0;
+  const isOutOfStock = hasStock && product.stock === 0;
+  const isLowStock = hasStock && product.stock > 0 && product.stock <= 5;
+
+  // SEO Product and Breadcrumbs JSON-LD Structured Data
+  useEffect(() => {
     if (!product) return;
+    const origin = window.location.origin;
+    const imgUrl = product.imageUrl
+      ? (product.imageUrl.startsWith("http") ? product.imageUrl : `${origin}${product.imageUrl}`)
+      : `${origin}/products/Banner1.jpeg`;
+
+    const productSchema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      image: [imgUrl],
+      description: product.description || "High-performance engineered solutions for waterproofing and industrial durability.",
+      sku: String(product._id || id),
+      brand: {
+        "@type": "Brand",
+        name: "MARBLEX",
+      },
+      offers: {
+        "@type": "Offer",
+        url: window.location.href,
+        priceCurrency: "PKR",
+        price: product.price || 0,
+        availability:
+          isOutOfStock
+            ? "https://schema.org/OutOfStock"
+            : "https://schema.org/InStock",
+        seller: {
+          "@type": "Organization",
+          name: "MARBLEX",
+        },
+      },
+    };
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: `${origin}/`,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Products",
+          item: `${origin}/`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: product.name,
+          item: window.location.href,
+        },
+      ],
+    };
+
+    setJsonLd("product-jsonld", productSchema);
+    setJsonLd("product-breadcrumbs-jsonld", breadcrumbSchema);
+
+    track("view_item", {
+      item_id: String(product._id || id),
+      item_name: product.name,
+      price: product.price,
+      currency: "PKR",
+    });
+
+    return () => {
+      removeJsonLd("product-jsonld");
+      removeJsonLd("product-breadcrumbs-jsonld");
+    };
+  }, [product, id, isOutOfStock]);
+
+  const handleAddToCart = () => {
+    if (!product || isOutOfStock) return;
     addToCart({ ...product, quantity, selectedMaterial, selectedColor });
+    track("add_to_cart", {
+      item_id: String(product._id || id),
+      item_name: product.name,
+      price: product.price,
+      quantity,
+      currency: "PKR",
+    });
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 2500);
   };
@@ -274,6 +363,11 @@ export const ProductDetailPage = ({ addToCart }) => {
   }, [id]);
 
   const handleWhatsAppInquiry = () => {
+    track("generate_lead", {
+      lead_type: "whatsapp_inquiry",
+      item_id: String(product?._id || id),
+      item_name: product?.name,
+    });
     const pName = product?.name || "Entryway Flooring System";
     const pCategory = product?.category || "Engineered Solutions";
     const pPrice = product?.price || 4000;
@@ -522,10 +616,22 @@ export const ProductDetailPage = ({ addToCart }) => {
               <span className="font-bold text-slate-800 dark:text-slate-200">4.9</span>
               <span className="text-slate-400">|</span>
               <span className="text-slate-500 underline dark:text-slate-400">128 contractor reviews</span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-0.5 text-[10.5px] font-extrabold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/50 dark:text-emerald-400 sm:ml-auto">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                In Stock & Ready
-              </span>
+              {isOutOfStock ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-rose-200/80 bg-rose-50 px-2.5 py-0.5 text-[10.5px] font-extrabold text-rose-700 dark:border-rose-800/40 dark:bg-rose-950/50 dark:text-rose-400 sm:ml-auto">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                  Out of Stock
+                </span>
+              ) : isLowStock ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-extrabold text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/50 dark:text-amber-400 sm:ml-auto">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+                  Only {product.stock} left in stock!
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-0.5 text-[10.5px] font-extrabold text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/50 dark:text-emerald-400 sm:ml-auto">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                  In Stock & Ready
+                </span>
+              )}
             </div>
           </div>
 
@@ -612,15 +718,19 @@ export const ProductDetailPage = ({ addToCart }) => {
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="no-shimmer flex h-full w-10 items-center justify-center text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                  disabled={quantity <= 1 || isOutOfStock}
+                  className="no-shimmer flex h-full w-10 items-center justify-center text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 disabled:opacity-30"
                 >
                   <RemoveIcon sx={{ fontSize: 14 }} />
                 </button>
-                <div className="flex flex-1 items-center justify-center text-sm font-bold text-slate-900 dark:text-white">{quantity}</div>
+                <div className="flex flex-1 items-center justify-center text-sm font-bold text-slate-900 dark:text-white">
+                  {isOutOfStock ? 0 : quantity}
+                </div>
                 <button
                   type="button"
-                  onClick={() => setQuantity((q) => q + 1)}
-                  className="no-shimmer flex h-full w-10 items-center justify-center text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                  onClick={() => setQuantity((q) => (hasStock && q >= product.stock ? q : q + 1))}
+                  disabled={isOutOfStock || (hasStock && quantity >= product.stock)}
+                  className="no-shimmer flex h-full w-10 items-center justify-center text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 disabled:opacity-30"
                 >
                   <AddIcon sx={{ fontSize: 14 }} />
                 </button>
@@ -635,10 +745,15 @@ export const ProductDetailPage = ({ addToCart }) => {
                     <button
                       type="button"
                       onClick={handleAddToCart}
-                      className="shimmer-btn flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0a3d52] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-[#0a3d52]/20 transition hover:bg-[#082e3e] active:scale-95"
+                      disabled={isOutOfStock}
+                      className={`flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-xs font-bold uppercase tracking-wider shadow-md transition ${
+                        isOutOfStock
+                          ? "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                          : "shimmer-btn bg-[#0a3d52] text-white hover:bg-[#082e3e] active:scale-95 shadow-[#0a3d52]/20"
+                      }`}
                     >
                       <ShoppingCartOutlinedIcon sx={{ fontSize: 18 }} />
-                      Add to Cart
+                      {isOutOfStock ? "Out of Stock" : "Add to Cart"}
                     </button>
                   </div>
                 </div>
@@ -693,15 +808,19 @@ export const ProductDetailPage = ({ addToCart }) => {
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="no-shimmer flex h-full w-10 items-center justify-center text-slate-600 dark:text-slate-300"
+                disabled={quantity <= 1 || isOutOfStock}
+                className="no-shimmer flex h-full w-10 items-center justify-center text-slate-600 dark:text-slate-300 disabled:opacity-30"
               >
                 <RemoveIcon sx={{ fontSize: 14 }} />
               </button>
-              <div className="flex flex-1 items-center justify-center text-sm font-bold text-slate-900 dark:text-white">{quantity}</div>
+              <div className="flex flex-1 items-center justify-center text-sm font-bold text-slate-900 dark:text-white">
+                {isOutOfStock ? 0 : quantity}
+              </div>
               <button
                 type="button"
-                onClick={() => setQuantity((q) => q + 1)}
-                className="no-shimmer flex h-full w-10 items-center justify-center text-slate-600 dark:text-slate-300"
+                onClick={() => setQuantity((q) => (hasStock && q >= product.stock ? q : q + 1))}
+                disabled={isOutOfStock || (hasStock && quantity >= product.stock)}
+                className="no-shimmer flex h-full w-10 items-center justify-center text-slate-600 dark:text-slate-300 disabled:opacity-30"
               >
                 <AddIcon sx={{ fontSize: 14 }} />
               </button>
@@ -949,11 +1068,16 @@ export const ProductDetailPage = ({ addToCart }) => {
           <button
             type="button"
             onClick={handleAddToCart}
-            className="shimmer-btn inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-[#0a3d52] px-3.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-md"
+            disabled={isOutOfStock}
+            className={`inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-[11px] font-bold uppercase tracking-wide shadow-md transition ${
+              isOutOfStock
+                ? "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                : "shimmer-btn bg-[#0a3d52] text-white active:scale-95"
+            }`}
           >
             <ShoppingCartOutlinedIcon sx={{ fontSize: 16 }} />
-            Add
-            <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px]">{quantity}</span>
+            {isOutOfStock ? "Out of Stock" : "Add"}
+            {!isOutOfStock && <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px]">{quantity}</span>}
           </button>
         </div>
       </div>

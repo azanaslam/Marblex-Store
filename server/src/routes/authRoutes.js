@@ -1,8 +1,10 @@
 const express = require("express");
 const { auth } = require("../middleware/auth");
+const { validate, registerSchema, loginSchema } = require("../middleware/validate");
 const {
   register,
   login,
+  logout,
   ssoLogin,
   googleAuth,
   getAuthConfig,
@@ -23,8 +25,9 @@ const {
 const router = express.Router();
 
 router.get("/config", getAuthConfig);
-router.post("/register", register);
-router.post("/login", login);
+router.post("/register", validate(registerSchema), register);
+router.post("/login", validate(loginSchema), login);
+router.post("/logout", logout);
 router.post("/sso-init", ssoLogin);
 router.post("/google", googleAuth);
 router.post("/verify-2fa", verify2FA);

@@ -12,7 +12,18 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   const accentLineRef = useRef(null);
   const subtitleRef = useRef(null);
   const badgeRef = useRef(null);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(() => {
+    try {
+      if (typeof window !== "undefined") {
+        if (window.__MARBLEX_INTRO_DONE__ === true || sessionStorage.getItem("marblex_intro_done") === "1") {
+          return false;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    return true;
+  });
 
   const marLetters = ["M", "A", "R"];
   const blexLetters = ["B", "L", "E", "X"];
@@ -71,6 +82,22 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   }, [onComplete]);
 
   useEffect(() => {
+    // If intro already ran in this session, immediately notify listeners & exit
+    try {
+      if (window.__MARBLEX_INTRO_DONE__ === true || sessionStorage.getItem("marblex_intro_done") === "1") {
+        window.__MARBLEX_INTRO_DONE__ = true;
+        window.dispatchEvent(new CustomEvent("marblex:intro_reveal"));
+        onComplete?.();
+        setVisible(false);
+        try {
+          document.getElementById("marblex-boot-splash")?.remove();
+        } catch {}
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+
     // Hand off from HTML boot splash → animated BrandSplash
     try {
       document.getElementById("marblex-boot-splash")?.remove();

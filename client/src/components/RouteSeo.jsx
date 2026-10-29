@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { track } from "../analytics";
 
 const SITE = "MARBLEX";
 const DEFAULT_DESC =
@@ -51,6 +52,17 @@ function upsertMeta(attr, key, content) {
   el.setAttribute("content", content);
 }
 
+function upsertCanonical(url) {
+  if (!url) return;
+  let el = document.head.querySelector("link[rel='canonical']");
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", "canonical");
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", url);
+}
+
 /** Sets document title + description per route (SPA SEO baseline). */
 export function RouteSeo() {
   const { pathname } = useLocation();
@@ -74,12 +86,22 @@ export function RouteSeo() {
     upsertMeta("name", "twitter:title", seo.title);
     upsertMeta("name", "twitter:description", seo.description);
 
+    // Dynamic self-referencing canonical URL without query parameters
+    const origin = window.location.origin;
+    const canonicalUrl = `${origin}${pathname}`;
+    upsertCanonical(canonicalUrl);
+    upsertMeta("property", "og:url", canonicalUrl);
+
     // Hide admin / private areas from indexing hints
     const noIndex =
       pathname.startsWith("/admin") ||
       pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/payment");
+      pathname.startsWith("/payment") ||
+      pathname.startsWith("/cart");
     upsertMeta("name", "robots", noIndex ? "noindex, nofollow" : "index, follow");
+
+    // Track page_view on every route change
+    track("page_view", { page_path: pathname, page_title: document.title });
   }, [pathname]);
 
   return null;

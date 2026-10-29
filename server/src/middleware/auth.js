@@ -2,9 +2,19 @@ const jwt = require("jsonwebtoken");
 const { jwtSecret } = require("../config/env");
 const User = require("../models/User");
 
-const auth = async (req, res, next) => {
+const extractToken = (req) => {
+  if (req.cookies && req.cookies.token) {
+    return req.cookies.token;
+  }
   const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  if (header.startsWith("Bearer ")) {
+    return header.slice(7);
+  }
+  return "";
+};
+
+const auth = async (req, res, next) => {
+  const token = extractToken(req);
   if (!token) return res.status(401).json({ message: "Unauthorized" });
 
   try {
@@ -23,8 +33,7 @@ const auth = async (req, res, next) => {
 };
 
 const optionalAuth = async (req, _, next) => {
-  const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const token = extractToken(req);
   if (!token) return next();
 
   try {

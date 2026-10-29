@@ -1,6 +1,7 @@
 import { memo, useState } from "react";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
+import { track } from "../analytics";
 
 // 1. Bespoke Vector Icons matching User Reference Images 1:1
 const WaterproofShieldIcon = ({ className = "w-4 h-4" }) => (
@@ -205,6 +206,10 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
   const imageSrc = product.imageUrl?.trim() || "/products/Banner1.jpeg";
   const { leftBadge, rightBadge, benefits } = getProductMeta(product, index);
 
+  const hasStock = typeof product.stock === "number" && product.stock >= 0;
+  const isOutOfStock = hasStock && product.stock === 0;
+  const isLowStock = hasStock && product.stock > 0 && product.stock <= 5;
+
   const handleDecrement = (e) => {
     e.stopPropagation();
     setQuantity((prev) => Math.max(1, prev - 1));
@@ -212,11 +217,22 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
 
   const handleIncrement = (e) => {
     e.stopPropagation();
-    setQuantity((prev) => prev + 1);
+    setQuantity((prev) => {
+      if (hasStock && prev >= product.stock) return prev;
+      return prev + 1;
+    });
   };
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
+    if (isOutOfStock) return;
+    track("add_to_cart", {
+      item_id: String(product._id || product.id || ""),
+      item_name: product.name,
+      price: product.price,
+      quantity,
+      currency: "PKR",
+    });
     onAddToCart({ ...product, quantity });
   };
 
@@ -240,9 +256,19 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
         />
 
         {/* Top Left Promo / Status Badge */}
-        <div className={`absolute top-3.5 left-3.5 px-2.5 py-0.5 rounded-md font-bold text-[9px] tracking-wider uppercase shadow-sm flex items-center gap-1 ${leftBadge.bg}`}>
-          <span>{leftBadge.text}</span>
-        </div>
+        {isOutOfStock ? (
+          <div className="absolute top-3.5 left-3.5 px-2.5 py-0.5 rounded-md font-black text-[9px] tracking-wider uppercase shadow-md flex items-center gap-1 bg-rose-600 text-white">
+            <span>OUT OF STOCK</span>
+          </div>
+        ) : isLowStock ? (
+          <div className="absolute top-3.5 left-3.5 px-2.5 py-0.5 rounded-md font-black text-[9px] tracking-wider uppercase shadow-md flex items-center gap-1 bg-amber-500 text-slate-900 animate-pulse">
+            <span>ONLY {product.stock} LEFT</span>
+          </div>
+        ) : (
+          <div className={`absolute top-3.5 left-3.5 px-2.5 py-0.5 rounded-md font-bold text-[9px] tracking-wider uppercase shadow-sm flex items-center gap-1 ${leftBadge.bg}`}>
+            <span>{leftBadge.text}</span>
+          </div>
+        )}
 
         {/* Top Right Brand Badge */}
         <div className={`absolute top-3.5 right-3.5 px-2 py-0.5 rounded font-bold text-[9px] tracking-widest uppercase shadow-sm ${rightBadge.bg}`}>
@@ -318,7 +344,7 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
               <button
                 type="button"
                 onClick={handleDecrement}
-                disabled={quantity <= 1}
+                disabled={quantity <= 1 || isOutOfStock}
                 className="w-5 lg:w-4 h-full flex items-center justify-center text-slate-500 hover:text-[#ff6b4a] dark:text-slate-400 dark:hover:text-[#ff6b4a] disabled:opacity-25 disabled:hover:text-slate-500 transition-colors font-bold text-xs"
                 title="Decrease quantity"
                 aria-label="Decrease quantity"
@@ -326,12 +352,13 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
                 −
               </button>
               <span className="w-5 lg:w-4 text-center text-[11px] lg:text-[10px] font-bold text-[#0a3d52] dark:text-slate-200 select-none">
-                {quantity}
+                {isOutOfStock ? 0 : quantity}
               </span>
               <button
                 type="button"
                 onClick={handleIncrement}
-                className="w-5 lg:w-4 h-full flex items-center justify-center text-slate-500 hover:text-[#ff6b4a] dark:text-slate-400 dark:hover:text-[#ff6b4a] transition-colors font-bold text-xs"
+                disabled={isOutOfStock || (hasStock && quantity >= product.stock)}
+                className="w-5 lg:w-4 h-full flex items-center justify-center text-slate-500 hover:text-[#ff6b4a] dark:text-slate-400 dark:hover:text-[#ff6b4a] disabled:opacity-25 disabled:hover:text-slate-500 transition-colors font-bold text-xs"
                 title="Increase quantity"
                 aria-label="Increase quantity"
               >
@@ -341,11 +368,16 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
 
             <button
               onClick={handleAddToCart}
-              className="shimmer-btn h-7 lg:h-6 px-2.5 sm:px-3 lg:px-2 xl:px-2.5 rounded-lg bg-[#0a3d52] hover:bg-[#0d4e68] active:bg-[#082a38] text-white font-bold text-[11px] lg:text-[10px] xl:text-[11px] flex items-center gap-1 lg:gap-0.5 shadow-sm transition active:scale-95 shrink-0 whitespace-nowrap"
+              disabled={isOutOfStock}
+              className={`h-7 lg:h-6 px-2.5 sm:px-3 lg:px-2 xl:px-2.5 rounded-lg font-bold text-[11px] lg:text-[10px] xl:text-[11px] flex items-center gap-1 lg:gap-0.5 shadow-sm transition shrink-0 whitespace-nowrap ${
+                isOutOfStock
+                  ? "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                  : "shimmer-btn bg-[#0a3d52] hover:bg-[#0d4e68] active:bg-[#082a38] text-white active:scale-95"
+              }`}
             >
               <ShoppingCartOutlinedIcon sx={{ fontSize: { xs: 13, lg: 11, xl: 13 } }} />
-              <span className="lg:hidden">Add to Cart</span>
-              <span className="hidden lg:inline">Add</span>
+              <span className="lg:hidden">{isOutOfStock ? "Out of Stock" : "Add to Cart"}</span>
+              <span className="hidden lg:inline">{isOutOfStock ? "Sold Out" : "Add"}</span>
             </button>
           </div>
 

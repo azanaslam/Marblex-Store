@@ -180,16 +180,29 @@ export const AdminProductsTab = ({
                       ) : null}
                     </div>
                     <div
-                      className={`absolute top-2 right-2 text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${
-                        Number(item.stock || 0) < 5
-                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                      className={`absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 rounded-md border flex items-center gap-1 shadow-sm ${
+                        Number(item.stock ?? 0) === 0
+                          ? "bg-rose-600 text-white border-rose-700"
+                          : Number(item.stock ?? 0) <= 5
+                          ? "bg-amber-500 text-slate-900 border-amber-600 animate-pulse"
                           : "bg-white/95 text-[#0a3d52] border-white/80"
                       }`}
                     >
-                      Stock {item.stock || 0}
+                      {Number(item.stock ?? 0) === 0 ? (
+                        <span>Out of stock</span>
+                      ) : Number(item.stock ?? 0) <= 5 ? (
+                        <span>⚠️ Low stock: {item.stock}</span>
+                      ) : (
+                        <span>Stock: {item.stock}</span>
+                      )}
                     </div>
                   </div>
                   <div className="p-3.5 flex flex-col flex-1">
+                    {Number(item.stock ?? 0) <= 5 && (
+                      <div className="mb-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-black uppercase tracking-wide bg-amber-50 border border-amber-300 text-amber-900">
+                        <span>⚠️ Low stock alert ({item.stock || 0} remaining)</span>
+                      </div>
+                    )}
                     <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
                       {item.category || "General"}
                     </p>

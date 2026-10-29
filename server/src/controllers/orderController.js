@@ -15,7 +15,7 @@ const notifyAdminNewOrder = (order) => {
     const amt = Number(order.subtotal || 0).toLocaleString("en-PK");
     sendPushToStaff({
       title: "New MARBLEX order",
-      body: `#${num} · PKR ${amt} · ${String(order.paymentMethod || "order").toUpperCase()}`,
+      body: `#${num} - PKR ${amt} - ${String(order.paymentMethod || "order").toUpperCase()}`,
       url: "/admin?tab=1",
       tag: `order-new-${order._id}`,
     }).catch(() => {});
@@ -33,6 +33,44 @@ if (cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret) {
 }
 
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
+
+// Atomic stock management helpers
+const decrementOrderStock = async (order) => {
+  if (!order || order.stockDeducted) return;
+  try {
+    for (const item of order.items || []) {
+      if (!item.productId) continue;
+      const prod = await Product.findById(item.productId).select("stock").lean();
+      if (prod && typeof prod.stock === "number" && prod.stock >= 0) {
+        await Product.findOneAndUpdate(
+          { _id: item.productId, stock: { $gte: item.quantity } },
+          { $inc: { stock: -item.quantity } }
+        );
+      }
+    }
+    order.stockDeducted = true;
+    await order.save();
+  } catch (err) {
+    console.error("Error decrementing stock for order", order._id, err);
+  }
+};
+
+const restoreOrderStock = async (order) => {
+  if (!order || !order.stockDeducted || order.stockRestored) return;
+  try {
+    for (const item of order.items || []) {
+      if (!item.productId) continue;
+      const prod = await Product.findById(item.productId).select("stock").lean();
+      if (prod && typeof prod.stock === "number") {
+        await Product.findByIdAndUpdate(item.productId, { $inc: { stock: item.quantity } });
+      }
+    }
+    order.stockRestored = true;
+    await order.save();
+  } catch (err) {
+    console.error("Error restoring stock for order", order._id, err);
+  }
+};
 
 // Validate Pakistani Phone Numbers (+923XXXXXXXXX, 03XXXXXXXXX, 923XXXXXXXXX, 03XX-XXXXXXX)
 const validatePkPhone = (phone) => {
@@ -159,6 +197,34 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "No valid products found in order" });
     }
 
+    // 3b. Verify Stock Availability (Undefined/null/negative stock is treated as unlimited for backwards compatibility)
+    const outOfStockItems = [];
+    for (const item of normalizedItems) {
+      if (item.productId) {
+        const dbProd = dbProductMap.get(String(item.productId));
+        if (dbProd && typeof dbProd.stock === "number" && dbProd.stock >= 0) {
+          if (dbProd.stock < item.quantity) {
+            outOfStockItems.push({
+              productId: dbProd._id,
+              name: dbProd.name,
+              available: dbProd.stock,
+              requested: item.quantity,
+            });
+          }
+        }
+      }
+    }
+
+    if (outOfStockItems.length > 0) {
+      const details = outOfStockItems
+        .map((i) => `"${i.name}" (only ${i.available} available, ${i.requested} requested)`)
+        .join(", ");
+      return res.status(400).json({
+        message: `Insufficient stock for: ${details}. Please adjust quantity before placing your order.`,
+        outOfStockItems,
+      });
+    }
+
     const subtotal = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     // 4. Validate Payment Method
@@ -212,6 +278,9 @@ const createOrder = async (req, res) => {
 
     // 6. Channel & Payment Specific Execution
     if (orderChannel === "whatsapp") {
+      // Deduct stock immediately for confirmed WhatsApp orders
+      await decrementOrderStock(order);
+
       // Send background emails
       sendOrderConfirmationEmail(order).catch(() => {});
       notifyAdminNewOrder(order);
@@ -279,6 +348,7 @@ const createOrder = async (req, res) => {
     }
 
     // Website Order - COD & Manual Payments (Easypaisa, JazzCash, Bank Transfer)
+    await decrementOrderStock(order);
     sendOrderConfirmationEmail(order).catch(() => {});
     notifyAdminNewOrder(order);
 
@@ -315,6 +385,7 @@ const verifyStripeSession = async (req, res) => {
       order.paymentStatus = "paid";
       order.stripePaymentIntentId = String(session.payment_intent || "");
       await order.save();
+      await decrementOrderStock(order);
 
       // Email only on first transition to paid (webhook may also fire)
       if (wasUnpaid) {
@@ -364,6 +435,7 @@ const stripeWebhook = async (req, res) => {
         order.paymentStatus = "paid";
         order.stripePaymentIntentId = String(session.payment_intent || "");
         await order.save();
+        await decrementOrderStock(order);
 
         sendOrderConfirmationEmail(order).catch(() => {});
         notifyAdminNewOrder(order);
@@ -412,6 +484,7 @@ const cancelMyOrder = async (req, res) => {
     }
     order.orderStatus = "cancelled";
     await order.save();
+    await restoreOrderStock(order);
     return res.json({ success: true, order });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -470,7 +543,7 @@ const getMyOrderInvoice = async (req, res) => {
     <div>
       <div><strong>Invoice / Order</strong> ${escapeHtml(orderNo)}</div>
       <div>Date: ${escapeHtml(dateStr)} (PKT)</div>
-      <div style="margin-top:8px"><span class="badge">${escapeHtml(order.orderStatus)} · ${escapeHtml(order.paymentStatus)}</span></div>
+      <div style="margin-top:8px"><span class="badge">${escapeHtml(order.orderStatus)} - ${escapeHtml(order.paymentStatus)}</span></div>
     </div>
     <div>
       <div><strong>Bill To</strong></div>
@@ -485,8 +558,8 @@ const getMyOrderInvoice = async (req, res) => {
     <tbody>${rows || `<tr><td colspan="4">No items</td></tr>`}</tbody>
   </table>
   <div class="total">Subtotal: <span class="accent">PKR ${Number(order.subtotal || 0).toLocaleString()}</span></div>
-  <p style="margin-top:28px;font-size:12px;color:#7a8c99">Payment: ${escapeHtml(String(order.paymentMethod || "").toUpperCase())}${order.transactionReference ? ` · Ref: ${escapeHtml(order.transactionReference)}` : ""}</p>
-  <p style="font-size:12px;color:#9aa9b4">40-Ferozpur Road, Lahore, Pakistan · Automated invoice from MARBLEX Client Portal</p>
+  <p style="margin-top:28px;font-size:12px;color:#7a8c99">Payment: ${escapeHtml(String(order.paymentMethod || "").toUpperCase())}${order.transactionReference ? ` - Ref: ${escapeHtml(order.transactionReference)}` : ""}</p>
+  <p style="font-size:12px;color:#9aa9b4">40-Ferozpur Road, Lahore, Pakistan - Automated invoice from MARBLEX Client Portal</p>
 </body></html>`;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -500,7 +573,15 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { orderStatus } = req.body;
-    const order = await Order.findByIdAndUpdate(id, { orderStatus }, { new: true });
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.orderStatus = orderStatus;
+    await order.save();
+
+    if (orderStatus === "cancelled") {
+      await restoreOrderStock(order);
+    }
     if (order?.user && orderStatus) {
       try {
         const { sendPushToUser } = require("../utils/webPush");

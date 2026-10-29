@@ -11,12 +11,13 @@ const {
 } = require("../controllers/orderController");
 const { auth, optionalAuth } = require("../middleware/auth");
 const { orderRateLimiter } = require("../middleware/rateLimiter");
+const { validate, orderSchema } = require("../middleware/validate");
 
 const router = express.Router();
 
 router.get("/payment-config", getPaymentConfig);
 router.post("/upload-proof", uploadPaymentProof);
-router.post("/", orderRateLimiter(), optionalAuth, createOrder);
+router.post("/", orderRateLimiter(), optionalAuth, validate(orderSchema), createOrder);
 router.get("/verify-session/:sessionId", verifyStripeSession);
 // Stripe webhook is mounted in app.js with raw body (before express.json)
 router.get("/my", auth, getMyOrders);

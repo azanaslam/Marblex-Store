@@ -132,15 +132,26 @@ export const useCart = () => {
   const addToCart = useCallback((product) => {
     const qtyToAdd = Math.max(1, parseInt(product.quantity, 10) || 1);
     const prodId = product._id || product.productId || product.id;
+    const stock = typeof product.stock === "number" && product.stock >= 0 ? product.stock : undefined;
 
     setCart((prev) => {
       const existing = prev.find((item) => (item.productId || item._id) === prodId);
       if (existing) {
+        const itemStock = stock !== undefined ? stock : existing.stock;
+        let nextQty = existing.quantity + qtyToAdd;
+        if (typeof itemStock === "number" && itemStock >= 0) {
+          nextQty = Math.min(nextQty, itemStock);
+        }
         return prev.map((item) =>
           (item.productId || item._id) === prodId
-            ? { ...item, quantity: item.quantity + qtyToAdd, imageUrl: item.imageUrl || product.imageUrl }
+            ? { ...item, quantity: nextQty, stock: itemStock, imageUrl: item.imageUrl || product.imageUrl }
             : item
         );
+      }
+      let finalQty = qtyToAdd;
+      if (typeof stock === "number" && stock >= 0) {
+        finalQty = Math.min(finalQty, stock);
+        if (finalQty <= 0) return prev;
       }
       return [
         ...prev,
@@ -148,7 +159,8 @@ export const useCart = () => {
           productId: prodId,
           name: product.name,
           price: product.price,
-          quantity: qtyToAdd,
+          quantity: finalQty,
+          stock,
           imageUrl: product.imageUrl,
         },
       ];

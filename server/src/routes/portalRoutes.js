@@ -1,5 +1,6 @@
 const express = require("express");
 const { auth, adminOnly } = require("../middleware/auth");
+const { validate, quoteSchema, ticketSchema } = require("../middleware/validate");
 const portal = require("../controllers/portalController");
 
 const router = express.Router();
@@ -15,12 +16,12 @@ router.delete("/sites/:siteId", portal.deleteDeliverySite);
 
 router.get("/quotes", portal.listMyQuotes);
 router.get("/quotes/:id", portal.getMyQuote);
-router.post("/quotes", portal.createQuote);
+router.post("/quotes", validate(quoteSchema), portal.createQuote);
 router.post("/quotes/:id/accept", portal.acceptQuote);
 
 router.get("/tickets", portal.listMyTickets);
 router.get("/tickets/:id", portal.getMyTicket);
-router.post("/tickets", portal.createTicket);
+router.post("/tickets", validate(ticketSchema), portal.createTicket);
 router.post("/tickets/:id/reply", portal.replyTicket);
 
 router.get("/favorites", portal.listFavorites);

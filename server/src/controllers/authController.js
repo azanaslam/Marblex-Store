@@ -31,7 +31,30 @@ const verifyTotpToken = (secret, code) => {
   });
 };
 
-const issueSessionPayload = async (user, req) => {
+const setAuthCookie = (res, token) => {
+  if (!res || !res.cookie) return;
+  const isProd = process.env.NODE_ENV === "production";
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "Lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: "/",
+  });
+};
+
+const clearAuthCookie = (res) => {
+  if (!res || !res.clearCookie) return;
+  const isProd = process.env.NODE_ENV === "production";
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "Lax",
+    path: "/",
+  });
+};
+
+const issueSessionPayload = async (user, req, res = null) => {
   const isNewlyVerified = !user.isEmailVerified;
   user.twoFactorCode = null;
   user.twoFactorExpires = null;
@@ -65,9 +88,14 @@ const issueSessionPayload = async (user, req) => {
     });
   }
 
+  const token = createToken({ id: user._id, email: user.email, role: user.role });
+  if (res) {
+    setAuthCookie(res, token);
+  }
+
   return {
     message: "Authentication successful.",
-    token: createToken({ id: user._id, email: user.email, role: user.role }),
+    token,
     user: {
       id: user._id,
       name: user.name,
@@ -218,7 +246,7 @@ const verify2FA = async (req, res) => {
     if (!verifyTotpToken(user.totpSecret, code)) {
       return res.status(400).json({ message: "Incorrect authenticator code. Please try again." });
     }
-    return res.json(await issueSessionPayload(user, req));
+    return res.json(await issueSessionPayload(user, req, res));
   }
 
   if (!user.twoFactorCode || !user.twoFactorExpires) {
@@ -233,7 +261,12 @@ const verify2FA = async (req, res) => {
     return res.status(400).json({ message: "Incorrect 6-digit verification code. Please check and try again." });
   }
 
-  return res.json(await issueSessionPayload(user, req));
+  return res.json(await issueSessionPayload(user, req, res));
+};
+
+const logout = async (req, res) => {
+  clearAuthCookie(res);
+  return res.json({ success: true, message: "Logged out successfully" });
 };
 
 const resend2FA = async (req, res) => {
@@ -695,6 +728,7 @@ module.exports = {
   confirmTotp,
   disableTotp,
   testEmailDelivery,
+  logout,
 };
 
 

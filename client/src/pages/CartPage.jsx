@@ -39,6 +39,7 @@ import selectedProductsBgImg from "../assets/selected-products-bg.jpg";
 import orderSummaryBgImg from "../assets/order-summary-bg.jpg";
 import onlinePaymentBgImg from "../assets/online-payment-bg.jpg";
 import deliveryInfoBgImg from "../assets/delivery-info-bg.jpg";
+import { track } from "../analytics";
 import gsap from "gsap";
 
 export const CartPage = ({ cart = [], setCart }) => {
@@ -155,6 +156,16 @@ export const CartPage = ({ cart = [], setCart }) => {
     return () => ctx.revert();
   }, []);
 
+  useEffect(() => {
+    if (cart.length > 0) {
+      track("begin_checkout", {
+        value: total,
+        currency: "PKR",
+        num_items: cart.length,
+      });
+    }
+  }, [cart.length, total]);
+
   const triggerToast = (msg) => {
     setToastMessage(msg);
     setShowToast(true);
@@ -233,7 +244,10 @@ export const CartPage = ({ cart = [], setCart }) => {
   const changeQty = (id, delta) => {
     const next = cart.map((item) => {
       if (item.productId === id || item._id === id) {
-        const nextQ = (item.quantity || 1) + delta;
+        let nextQ = (item.quantity || 1) + delta;
+        if (typeof item.stock === "number" && item.stock >= 0) {
+          nextQ = Math.min(nextQ, item.stock);
+        }
         return { ...item, quantity: Math.max(1, nextQ) };
       }
       return item;
@@ -371,6 +385,12 @@ export const CartPage = ({ cart = [], setCart }) => {
         const msg = encodeURIComponent(msgRaw);
 
         window.open(`https://wa.me/${waNum}?text=${msg}`, "_blank");
+        track("generate_lead", {
+          lead_type: "whatsapp_order",
+          order_id: res.data?.orderNumber || res.data?.orderId,
+          value: res.data?.subtotal || total,
+          currency: "PKR",
+        });
         triggerToast("Order inquiry sent via WhatsApp!");
         setCart([]);
         return;
@@ -378,11 +398,23 @@ export const CartPage = ({ cart = [], setCart }) => {
 
       // Website Order
       if (finalPaymentMethod === "stripe" && res.data?.checkoutUrl) {
+        track("purchase", {
+          transaction_id: res.data?.orderNumber || res.data?.orderId,
+          value: res.data?.subtotal || total,
+          currency: "PKR",
+          payment_method: "stripe",
+        });
         window.location.href = res.data.checkoutUrl;
         return;
       }
 
       // COD or Manual Payment Success
+      track("purchase", {
+        transaction_id: res.data?.orderNumber || res.data?.orderId,
+        value: res.data?.subtotal || total,
+        currency: "PKR",
+        payment_method: finalPaymentMethod,
+      });
       setCart([]);
       navigate("/payment/success", {
         state: {

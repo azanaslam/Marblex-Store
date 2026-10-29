@@ -127,10 +127,15 @@ export const HeroBanner = () => {
 
     window.addEventListener("marblex:intro_reveal", startPlayback);
 
-    // Fallback: If preloader already finished or user navigated from another page
-    const fallbackTimer = setTimeout(() => {
+    // If preloader already finished earlier, start playback immediately
+    if (typeof window !== "undefined" && (window.__MARBLEX_INTRO_DONE__ || sessionStorage.getItem("marblex_intro_done") === "1")) {
       startPlayback();
-    }, 1200);
+    } else {
+      // Fallback: If preloader already finished or user navigated from another page
+      const fallbackTimer = setTimeout(() => {
+        startPlayback();
+      }, 1200);
+    }
 
     return () => {
       window.removeEventListener("marblex:intro_reveal", startPlayback);

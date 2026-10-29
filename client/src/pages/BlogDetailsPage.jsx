@@ -13,6 +13,7 @@ import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import { http } from "../api/http";
 import { BlogDetailSkeleton } from "../components/LoaderSkeleton";
+import { setJsonLd, removeJsonLd } from "../utils/jsonLd";
 
 export const BlogDetailsPage = () => {
   const { id } = useParams();
@@ -35,6 +36,73 @@ export const BlogDetailsPage = () => {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!blog) return;
+    const origin = window.location.origin;
+    const imgUrl = blog.imageUrl
+      ? (blog.imageUrl.startsWith("http") ? blog.imageUrl : `${origin}${blog.imageUrl}`)
+      : `${origin}/logo.png`;
+
+    const articleSchema = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: blog.title,
+      description: blog.excerpt || blog.summary || String(blog.content || "").replace(/<[^>]*>?/gm, "").slice(0, 160),
+      image: [imgUrl],
+      datePublished: blog.createdAt,
+      dateModified: blog.updatedAt || blog.createdAt,
+      author: {
+        "@type": "Organization",
+        name: "MARBLEX Engineering Team",
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "MARBLEX",
+        logo: {
+          "@type": "ImageObject",
+          url: `${origin}/logo.png`,
+        },
+      },
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": window.location.href,
+      },
+    };
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: `${origin}/`,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Blogs & Insights",
+          item: `${origin}/blogs`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: blog.title,
+          item: window.location.href,
+        },
+      ],
+    };
+
+    setJsonLd("article-jsonld", articleSchema);
+    setJsonLd("blog-breadcrumbs-jsonld", breadcrumbSchema);
+
+    return () => {
+      removeJsonLd("article-jsonld");
+      removeJsonLd("blog-breadcrumbs-jsonld");
+    };
+  }, [blog, id]);
 
   const getReadingTime = (text) => {
     const words = text?.split(/\s+/).length || 0;

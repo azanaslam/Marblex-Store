@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /login
+Disallow: /cart
 
 Sitemap: https://www.marblex.com/sitemap.xml

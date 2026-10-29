@@ -24,7 +24,11 @@ const initSocket = (server) => {
     console.log("New client connected:", socket.id);
 
     const joinAuthedRooms = async () => {
-      const token = socket.handshake?.auth?.token;
+      let token = socket.handshake?.auth?.token;
+      if (!token && socket.handshake?.headers?.cookie) {
+        const match = socket.handshake.headers.cookie.match(/(?:^|;\s*)token=([^;]+)/);
+        if (match) token = decodeURIComponent(match[1]);
+      }
       if (!token) return;
 
       try {

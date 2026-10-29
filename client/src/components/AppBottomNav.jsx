@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Link as RouterLink, useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
@@ -23,6 +23,7 @@ export function AppBottomNav({
   avatarInitial = "M",
 }) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const navRef = useRef(null);
   const itemsRef = useRef([]);
   const hasAnimatedRef = useRef(false);
@@ -86,8 +87,11 @@ export function AppBottomNav({
     }
   }, []);
 
-  // ── Active tab tap feedback — quick elastic bounce ──
+  // ── Active tab tap feedback — native haptic + quick elastic bounce ──
   const handleTabTap = (el) => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try { navigator.vibrate(12); } catch {}
+    }
     if (!el) return;
     gsap.fromTo(
       el,
@@ -140,24 +144,31 @@ export function AppBottomNav({
             Home
           </RouterLink>
 
-          <a
-            href="/#shop-problem-heading"
+          <button
+            type="button"
             ref={(el) => (itemsRef.current[1] = el)}
             className={itemCls(false)}
             onClick={(e) => {
               handleTabTap(e.currentTarget);
               if (pathname === "/") {
-                e.preventDefault();
                 document.getElementById("shop-problem-heading")?.scrollIntoView({
                   behavior: "smooth",
                   block: "start",
                 });
+              } else {
+                navigate("/");
+                setTimeout(() => {
+                  document.getElementById("shop-problem-heading")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }, 120);
               }
             }}
           >
             <StorefrontRoundedIcon sx={{ fontSize: 22 }} />
             Shop
-          </a>
+          </button>
 
             <RouterLink
               to="/cart"

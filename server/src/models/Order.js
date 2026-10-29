@@ -141,6 +141,16 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    stockDeducted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    stockRestored: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   { timestamps: true }
 );
