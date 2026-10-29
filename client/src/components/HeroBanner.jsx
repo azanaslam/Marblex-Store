@@ -265,6 +265,7 @@ export const HeroBanner = () => {
         <div ref={bgWrapRef} className="hero-bgwrap absolute inset-0 -z-20 overflow-hidden bg-[#071822]">
           <video
             ref={videoRef}
+            autoPlay
             loop
             muted
             playsInline
@@ -278,7 +279,7 @@ export const HeroBanner = () => {
             className="absolute inset-0 w-full h-full object-cover object-[center_35%] sm:object-center scale-[1.01] contrast-[1.06] brightness-[0.96]"
           >
             <source
-              src="/hero/Workers_installing_Marblex_water…_20261001190558.mp4"
+              src="/hero/marblex_hero_waterproofing.mp4"
               type="video/mp4"
             />
           </video>

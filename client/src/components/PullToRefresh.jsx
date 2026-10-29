@@ -55,6 +55,7 @@ export function PullToRefresh({ children, disabled = false }) {
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       className="relative"
+      style={{ touchAction: "pan-y" }}
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 z-[50] flex justify-center transition-opacity"

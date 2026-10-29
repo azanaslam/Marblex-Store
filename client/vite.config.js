@@ -34,7 +34,9 @@ export default defineConfig({
         // Match BrandSplash so OS splash ≠ white box on teal
         background_color: '#f5f7fa',
         display: 'standalone',
+        display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
         orientation: 'portrait-primary',
+        dir: 'ltr',
         start_url: '/',
         scope: '/',
         lang: 'en',

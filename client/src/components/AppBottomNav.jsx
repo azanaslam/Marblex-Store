@@ -124,7 +124,7 @@ export function AppBottomNav({
           ? "border-slate-800 bg-[#0a1a23]/95"
           : "border-slate-200/90 bg-white/95"
         }`}
-      style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom))" }}
+      style={{ paddingBottom: "max(0.45rem, env(safe-area-inset-bottom, 0px))", WebkitBackdropFilter: "blur(20px)" }}
       aria-label="App navigation"
     >
       <div className="mx-auto flex h-[3.65rem] max-w-lg items-stretch px-1">

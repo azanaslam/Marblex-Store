@@ -467,3 +467,60 @@ body.marblex-menu-open .marblex-floating-chat {
 }
 
 
+
+
+/* ── Mobile PWA & iOS / iPad / Android Cross-Platform Compatibility ── */
+html {
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+/* Fast touch response: eliminate 300ms tap delay & accidental double-tap zoom on buttons */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* Prevent iOS Safari / PWA auto-zoom on form inputs (Safari forces zoom when font-size < 16px) */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Dynamic Viewport & smooth momentum scroll for iOS & Android */
+.is-marblex-app {
+  min-height: 100dvh;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS Safari backdrop blur hardware acceleration */
+@supports (-webkit-backdrop-filter: blur(20px)) {
+  .is-marblex-app nav[aria-label="App navigation"],
+  header {
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+/* Prevent accidental text highlight flicker on rapid mobile touch taps */
+.is-marblex-app a,
+.is-marblex-app button {
+  -webkit-touch-callout: none;
+  user-select: none;
+}

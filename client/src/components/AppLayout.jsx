@@ -458,14 +458,14 @@ export const AppLayout = ({ cartCount, children }) => {
         className={`flex min-h-dvh flex-col portal-shell is-marblex-app ${
           isDark ? "bg-[#091b24] text-slate-100" : "bg-[#f5f7fa] text-[#0f1929]"
         }`}
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <PwaUpdateToast />
         <OfflineBanner />
         <div className="shrink-0 px-3 pt-2">
           <PushEnableCard isDark={isDark} />
         </div>
-        <main className="page-content-portal relative z-10 flex min-h-0 w-full flex-1 flex-col pb-[calc(4.25rem+env(safe-area-inset-bottom))]">
+        <main className="page-content-portal relative z-10 flex min-h-0 w-full flex-1 flex-col pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))]">
           {children}
         </main>
         <AppBottomNav
@@ -577,7 +577,7 @@ export const AppLayout = ({ cartCount, children }) => {
           : scrolled || isMenuOpen
             ? "bg-white/95 backdrop-blur-md border-slate-200/90 shadow-md shadow-[#0a3d52]/5 py-1.5 sm:py-2"
             : "bg-white border-slate-200/80 py-2 sm:py-2.5"
-          } ${isApp ? "pt-[max(0.35rem,env(safe-area-inset-top))]" : ""}`}
+          } ${isApp ? "pt-[max(0.45rem,env(safe-area-inset-top,0px))]" : ""}`}
       >
         <div className="max-w-[1440px] mx-auto px-3 sm:px-4 md:px-8">
           <div className="flex items-center justify-between gap-2">
@@ -894,7 +894,7 @@ export const AppLayout = ({ cartCount, children }) => {
 
         <div
           ref={mobileMenuPanelRef}
-          className={`absolute inset-x-3 top-[calc(env(safe-area-inset-top,0px)+5.85rem)] bottom-[max(0.65rem,env(safe-area-inset-bottom))] flex max-h-[calc(100dvh-6.5rem)] flex-col overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(8,34,46,0.55)] transition-all duration-300 ease-out sm:inset-x-4 sm:top-[calc(env(safe-area-inset-top,0px)+6.1rem)] ${isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200/95 bg-white"
+          className={`absolute inset-x-3 top-[calc(env(safe-area-inset-top,0px)+5.85rem)] bottom-[max(0.65rem,env(safe-area-inset-bottom,0px))] flex max-h-[calc(100dvh-6.5rem)] flex-col overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(8,34,46,0.55)] transition-all duration-300 ease-out sm:inset-x-4 sm:top-[calc(env(safe-area-inset-top,0px)+6.1rem)] ${isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200/95 bg-white"
             } ${isMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}
         >
           <div
@@ -1006,7 +1006,7 @@ export const AppLayout = ({ cartCount, children }) => {
       <PullToRefresh disabled={isPortalRoute}>
         <main
           className={`flex-grow flex flex-col relative z-10 w-full ${isPortalRoute ? "min-h-0" : ""} ${
-            isApp ? "pb-[calc(4.25rem+env(safe-area-inset-bottom))] lg:pb-0" : ""
+            isApp ? "pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] lg:pb-0" : ""
           }`}
         >
           {isPortalRoute ? (
