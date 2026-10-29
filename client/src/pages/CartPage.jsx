@@ -86,6 +86,16 @@ export const CartPage = ({ cart = [], setCart }) => {
   const [showToast, setShowToast] = useState(false);
   const [loadingOrder, setLoadingOrder] = useState(false);
 
+  // Delivery & Shipping Rates
+  const [shippingRates, setShippingRates] = useState([]);
+  const [selectedRate, setSelectedRate] = useState(null);
+
+  // Coupons
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+
   // Fetch Payment Configuration on Mount
   useEffect(() => {
     http
@@ -98,7 +108,32 @@ export const CartPage = ({ cart = [], setCart }) => {
       .catch(() => {
         // use default fallback config
       });
+
+    http
+      .get("/shipping/rates")
+      .then((res) => {
+        if (res.data?.rates) {
+          setShippingRates(res.data.rates);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  // Auto-match shipping rate when city changes
+  useEffect(() => {
+    if (!shippingRates.length) return;
+    const norm = (form.city || "").trim().toLowerCase();
+    if (!norm) {
+      const defaultRate = shippingRates.find((r) => r.city.toLowerCase() === "other") || shippingRates[0];
+      setSelectedRate(defaultRate || null);
+      return;
+    }
+    const matched =
+      shippingRates.find((r) => r.city.toLowerCase() === norm) ||
+      shippingRates.find((r) => r.city.toLowerCase() === "other") ||
+      shippingRates[0];
+    setSelectedRate(matched || null);
+  }, [form.city, shippingRates]);
 
   // Pre-fill user profile if logged in
   useEffect(() => {
@@ -191,6 +226,62 @@ export const CartPage = ({ cart = [], setCart }) => {
     () => cart.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0),
     [cart]
   );
+
+  const deliveryCharge = useMemo(() => {
+    if (!selectedRate) return 0;
+    if (selectedRate.freeAbove && total >= selectedRate.freeAbove) return 0;
+    return Number(selectedRate.charge) || 0;
+  }, [selectedRate, total]);
+
+  const discount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.type === "percentage") {
+      let d = (total * (Number(appliedCoupon.value) || 0)) / 100;
+      if (appliedCoupon.maxDiscount && d > appliedCoupon.maxDiscount) {
+        d = appliedCoupon.maxDiscount;
+      }
+      return Math.round(d);
+    }
+    return Math.min(total, Number(appliedCoupon.value) || 0);
+  }, [appliedCoupon, total]);
+
+  const grandTotal = useMemo(() => {
+    return Math.max(0, total + deliveryCharge - discount);
+  }, [total, deliveryCharge, discount]);
+
+  const freeDeliveryShortfall = useMemo(() => {
+    if (!selectedRate || !selectedRate.freeAbove) return 0;
+    return Math.max(0, selectedRate.freeAbove - total);
+  }, [selectedRate, total]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setCouponError("");
+    setApplyingCoupon(true);
+    try {
+      const res = await http.post("/coupons/validate", {
+        code: couponInput.trim(),
+        cartTotal: total,
+      });
+      if (res.data?.valid) {
+        setAppliedCoupon(res.data.coupon);
+        triggerToast("Coupon " + res.data.coupon.code + " applied successfully!");
+      } else {
+        setCouponError(res.data?.message || "Invalid coupon");
+      }
+    } catch (err) {
+      setCouponError(err.response?.data?.message || "Failed to validate coupon");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError("");
+    triggerToast("Coupon removed");
+  };
 
   const totalItemsCount = useMemo(
     () => cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0),
@@ -335,9 +426,14 @@ export const CartPage = ({ cart = [], setCart }) => {
         paymentMethod: finalPaymentMethod,
         transactionReference: transactionRef.trim(),
         paymentScreenshotUrl: proofImageBase64,
+        couponCode: appliedCoupon?.code || undefined,
+        deliveryCharge,
+        discount,
         items: cart.map((item) => ({
           productId: item.productId || item._id,
           name: item.name,
+          variantSku: item.variantSku || undefined,
+          variantLabel: item.variantLabel || undefined,
           price: item.price,
           quantity: item.quantity || 1,
           imageUrl: item.imageUrl,
@@ -360,7 +456,8 @@ export const CartPage = ({ cart = [], setCart }) => {
                 absImageUrl = item.imageUrl.startsWith("http") ? item.imageUrl : window.location.origin + item.imageUrl;
               }
             }
-            return `• *${item.name}*\n  Qty: ${item.quantity || 1} | Price: PKR ${(item.price * (item.quantity || 1)).toLocaleString()}${absImageUrl ? `\n  Ref: ${absImageUrl}` : ""}`;
+            const varLabel = item.variantLabel ? ` (${item.variantLabel})` : "";
+            return `• *${item.name}${varLabel}*\n  Qty: ${item.quantity || 1} | Price: PKR ${(item.price * (item.quantity || 1)).toLocaleString()}${absImageUrl ? `\n  Ref: ${absImageUrl}` : ""}`;
           })
           .join("\n\n");
 
@@ -377,7 +474,10 @@ export const CartPage = ({ cart = [], setCart }) => {
           (form.address ? `*Delivery Site:* ${form.address}\n` : "") +
           (form.areaSize ? `*Area Size:* ${form.areaSize} sq ft\n` : "") +
           `\n*ORDERED PRODUCTS:*\n${list}\n\n` +
-          `*ESTIMATED SUBTOTAL:* ${fmt(res.data?.subtotal || total)}\n` +
+          `*SUBTOTAL:* ${fmt(res.data?.subtotal || total)}\n` +
+          `*DELIVERY:* ${deliveryCharge === 0 ? "FREE" : fmt(deliveryCharge)}\n` +
+          (discount > 0 ? `*DISCOUNT (${appliedCoupon?.code}):* -${fmt(discount)}\n` : "") +
+          `*GRAND TOTAL:* ${fmt(res.data?.total || grandTotal)}\n` +
           (form.notes ? `*Notes:* ${form.notes}\n` : "") +
           `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
           `_Please confirm delivery timeline and site supply logistics._`;
@@ -588,6 +688,13 @@ export const CartPage = ({ cart = [], setCart }) => {
                                 {item.name}
                               </h3>
                             </RouterLink>
+                            {item.variantLabel && (
+                              <div className="mt-0.5">
+                                <span className="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                  Variant: {item.variantLabel}
+                                </span>
+                              </div>
+                            )}
 
                             <button
                               onClick={() => removeItem(itemId)}
@@ -600,6 +707,11 @@ export const CartPage = ({ cart = [], setCart }) => {
 
                           <div className="flex items-center flex-wrap gap-2 text-xs sm:text-[12.5px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                             <span>{fmt(itemPrice)} each</span>
+                            {item.bulkTierApplied && (
+                              <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40 px-1.5 py-0.5 rounded">
+                                Bulk Tier Applied
+                              </span>
+                            )}
                             <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 px-1.5 py-0.5 rounded">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                               Ready for dispatch
@@ -1188,17 +1300,28 @@ export const CartPage = ({ cart = [], setCart }) => {
                 )}
               </div>
 
-              {/* City */}
+              {/* City with Popular Suggestions & Live Shipping Rate */}
               <div>
-                <label className="block text-xs sm:text-[12.5px] font-bold mb-1.5 text-slate-700 dark:text-slate-200">
-                  City / Region *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs sm:text-[12.5px] font-bold text-slate-700 dark:text-slate-200">
+                    City / Region *
+                  </label>
+                  {selectedRate && (
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      {selectedRate.charge === 0 || (selectedRate.freeAbove && total >= selectedRate.freeAbove)
+                        ? "Free Delivery"
+                        : `Delivery: Rs ${selectedRate.charge}`}
+                      {selectedRate.etaDays ? ` (${selectedRate.etaDays})` : ""}
+                    </span>
+                  )}
+                </div>
                 <div className="relative group/city">
                   <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within/city:text-[#0a3d52] dark:group-focus-within/city:text-sky-400 transition-colors">
                     <LocationCityOutlinedIcon sx={{ fontSize: 19 }} />
                   </div>
                   <input
                     type="text"
+                    list="city-suggestions"
                     placeholder="e.g. Lahore, Karachi, Islamabad"
                     value={form.city}
                     onBlur={() => setTouched((prev) => ({ ...prev, city: true }))}
@@ -1209,6 +1332,30 @@ export const CartPage = ({ cart = [], setCart }) => {
                         : "border-slate-200/90 dark:border-[#1f3d4a] bg-white/95 dark:bg-[#0e222b]/95 text-slate-800 dark:text-white placeholder:text-slate-400 focus:border-[#0a3d52] dark:focus:border-sky-400 focus:bg-white dark:focus:bg-[#112832] focus:ring-2 focus:ring-[#0a3d52]/10"
                     }`}
                   />
+                  <datalist id="city-suggestions">
+                    {shippingRates.map((r) => (
+                      <option key={r._id || r.city} value={r.city}>
+                        {r.city} - {r.charge === 0 ? "Free Delivery" : `Rs ${r.charge}`}
+                      </option>
+                    ))}
+                  </datalist>
+                </div>
+                {/* Popular City Quick-Select Buttons */}
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {shippingRates.slice(0, 5).map((r) => (
+                    <button
+                      type="button"
+                      key={r.city}
+                      onClick={() => setForm((prev) => ({ ...prev, city: r.city }))}
+                      className={`text-[11px] px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+                        form.city.toLowerCase() === r.city.toLowerCase()
+                          ? "bg-[#0a3d52] text-white border-[#0a3d52] dark:bg-sky-500 dark:border-sky-500"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400"
+                      }`}
+                    >
+                      {r.city}
+                    </button>
+                  ))}
                 </div>
                 {touched.city && errors.city && (
                   <p className="text-[11.5px] text-rose-500 dark:text-rose-400 mt-1 font-medium">
@@ -1330,6 +1477,31 @@ export const CartPage = ({ cart = [], setCart }) => {
           </div>
 
           <div className="relative z-10 p-4 sm:p-6 space-y-3">
+            {/* Free Delivery Progress */}
+            {selectedRate && selectedRate.freeAbove > 0 && (
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#0e222b] border border-slate-200/80 dark:border-[#1f3d4a] text-xs">
+                {freeDeliveryShortfall > 0 ? (
+                  <div>
+                    <div className="flex justify-between text-slate-600 dark:text-slate-300 mb-1 font-medium">
+                      <span>Add <strong>{fmt(freeDeliveryShortfall)}</strong> for FREE delivery</span>
+                      <span className="font-bold">{Math.round((total / selectedRate.freeAbove) * 100)}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 transition-all duration-300"
+                        style={{ width: `${Math.min(100, (total / selectedRate.freeAbove) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+                    <span>🎉</span>
+                    <span>FREE Delivery Unlocked!</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-between text-xs sm:text-sm text-slate-500 dark:text-slate-400">
               <span>Items Subtotal</span>
               <b className="text-slate-800 dark:text-white font-semibold">{fmt(total)}</b>
@@ -1337,10 +1509,51 @@ export const CartPage = ({ cart = [], setCart }) => {
 
             <div className="flex justify-between text-xs sm:text-sm text-slate-500 dark:text-slate-400">
               <span>Delivery Charges</span>
-              <b className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                Confirmed by our team
+              <b className={deliveryCharge === 0 ? "text-emerald-600 dark:text-emerald-400 font-semibold" : "text-slate-800 dark:text-white font-semibold"}>
+                {deliveryCharge === 0 ? "FREE" : fmt(deliveryCharge)}
               </b>
             </div>
+
+            {discount > 0 && (
+              <div className="flex justify-between text-xs sm:text-sm text-emerald-600 dark:text-emerald-400">
+                <span className="flex items-center gap-1">
+                  <span>Coupon ({appliedCoupon?.code})</span>
+                  <button
+                    onClick={handleRemoveCoupon}
+                    className="text-xs text-rose-500 hover:underline cursor-pointer"
+                  >
+                    (Remove)
+                  </button>
+                </span>
+                <b className="font-semibold">-{fmt(discount)}</b>
+              </div>
+            )}
+
+            {/* Coupon Code Input */}
+            {!appliedCoupon && (
+              <div className="pt-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Coupon / Promo Code"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs uppercase font-mono bg-white dark:bg-[#081822] text-slate-800 dark:text-white outline-none focus:border-[#0a3d52] dark:focus:border-sky-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={!couponInput.trim() || applyingCoupon}
+                    className="px-3 py-1.5 rounded-lg bg-[#0a3d52] dark:bg-sky-500 text-white font-bold text-xs hover:opacity-90 disabled:opacity-40 cursor-pointer"
+                  >
+                    {applyingCoupon ? "..." : "Apply"}
+                  </button>
+                </div>
+                {couponError && (
+                  <p className="text-[11px] text-rose-500 dark:text-rose-400 mt-1">{couponError}</p>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-between text-xs sm:text-sm text-slate-500 dark:text-slate-400">
               <span>Payment Mode</span>
@@ -1361,7 +1574,7 @@ export const CartPage = ({ cart = [], setCart }) => {
                 className="text-xl sm:text-2xl md:text-[24px] font-black text-[#0a3d52] dark:text-sky-400"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
               >
-                {fmt(total)}
+                {fmt(grandTotal)}
               </span>
             </div>
           </div>

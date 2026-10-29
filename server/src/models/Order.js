@@ -7,6 +7,8 @@ const orderItemSchema = new mongoose.Schema(
     imageUrl: { type: String, default: "", trim: true },
     price: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
+    variantSku: { type: String, default: "", trim: true },
+    variantLabel: { type: String, default: "", trim: true },
   },
   { _id: false }
 );
@@ -87,6 +89,27 @@ const orderSchema = new mongoose.Schema(
     subtotal: {
       type: Number,
       required: true,
+      min: 0,
+    },
+    deliveryCharge: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    discount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    couponCode: {
+      type: String,
+      default: "",
+      uppercase: true,
+      trim: true,
+    },
+    total: {
+      type: Number,
+      default: 0,
       min: 0,
     },
     paymentMethod: {

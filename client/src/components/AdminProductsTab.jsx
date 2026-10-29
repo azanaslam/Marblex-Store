@@ -1,7 +1,10 @@
+import { useState } from "react";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveCircleOutlineRoundedIcon from "@mui/icons-material/RemoveCircleOutlineRounded";
 
 const fieldClass =
   "w-full rounded-xl border border-[#e2e8ec] bg-[#f8fafc] px-3.5 py-2.5 text-[13px] font-semibold text-[#0a3d52] outline-none focus:border-[#ffb39a] focus:bg-white";
@@ -44,6 +47,50 @@ export const AdminProductsTab = ({
     { id: "hidden", label: "Hidden", count: products.filter((p) => p.active === false).length },
   ];
 
+  // Variant Helpers
+  const addVariantRow = () => {
+    const list = [...(product.variants || [])];
+    list.push({
+      sku: `SKU-${Date.now().toString().slice(-4)}`,
+      label: "",
+      price: product.price || 0,
+      stock: product.stock || 0,
+    });
+    setProduct({ ...product, variants: list });
+  };
+
+  const updateVariantRow = (idx, field, value) => {
+    const list = [...(product.variants || [])];
+    list[idx] = { ...list[idx], [field]: value };
+    setProduct({ ...product, variants: list });
+  };
+
+  const removeVariantRow = (idx) => {
+    const list = (product.variants || []).filter((_, i) => i !== idx);
+    setProduct({ ...product, variants: list });
+  };
+
+  // Bulk Tier Helpers
+  const addBulkTierRow = () => {
+    const list = [...(product.bulkTiers || [])];
+    list.push({
+      minQty: 10,
+      price: Math.max(0, (product.price || 100) - 100),
+    });
+    setProduct({ ...product, bulkTiers: list });
+  };
+
+  const updateBulkTierRow = (idx, field, value) => {
+    const list = [...(product.bulkTiers || [])];
+    list[idx] = { ...list[idx], [field]: Number(value) };
+    setProduct({ ...product, bulkTiers: list });
+  };
+
+  const removeBulkTierRow = (idx) => {
+    const list = (product.bulkTiers || []).filter((_, i) => i !== idx);
+    setProduct({ ...product, bulkTiers: list });
+  };
+
   return (
     <div ref={topRef} className="space-y-4 sm:space-y-5 scroll-mt-24">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
@@ -58,7 +105,7 @@ export const AdminProductsTab = ({
             Products Catalog
           </h2>
           <p className="text-[12px] sm:text-xs text-[#6b8190] mt-1">
-            Manage inventory, publish SKUs, and edit live storefront products
+            Manage inventory, variants, wholesale bulk tiers, and storefront products
           </p>
         </div>
         <button
@@ -98,145 +145,124 @@ export const AdminProductsTab = ({
 
       {productStudioTab === "inventory" ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {[
-              { label: "Total", value: stats.total, tone: "text-[#0a3d52]" },
-              { label: "Active", value: stats.active, tone: "text-emerald-700" },
-              { label: "Featured", value: stats.featured, tone: "text-violet-700" },
-              { label: "Low stock", value: stats.low, tone: "text-amber-700" },
-            ].map((s) => (
-              <div key={s.label} className="rounded-xl border border-[#e2e8ec] bg-white px-3 py-2.5">
-                <p className="text-[10px] font-extrabold uppercase tracking-wide text-[#94a3b8]">{s.label}</p>
-                <p className={`text-lg font-black mt-0.5 tabular-nums ${s.tone}`}>{s.value}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-            <label className="flex-1 flex items-center gap-2 rounded-xl border border-[#e2e8ec] bg-white px-3 py-2.5">
-              <SearchIcon sx={{ fontSize: 16, color: "#94a3b8" }} />
-              <input
-                value={productQuery}
-                onChange={(e) => setProductQuery(e.target.value)}
-                placeholder="Search by name or category…"
-                className="w-full bg-transparent outline-none text-[13px] font-semibold text-[#0a3d52]"
-              />
-            </label>
-            <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+          {/* Inventory Filters & Search */}
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <div className="flex flex-wrap gap-1.5">
               {filters.map((f) => (
                 <button
                   key={f.id}
                   type="button"
                   onClick={() => setProductFilter(f.id)}
-                  className={`shrink-0 min-h-[38px] px-3 rounded-full text-[12px] font-extrabold border ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     productFilter === f.id
-                      ? "bg-[#0a3d52] text-white border-[#0a3d52]"
-                      : "bg-white text-[#6b8190] border-[#e2e8ec]"
+                      ? "bg-[#0a3d52] text-white shadow-sm"
+                      : "bg-white border border-[#e2e8ec] text-[#6b8190] hover:text-[#0a3d52]"
                   }`}
                 >
-                  {f.label}
-                  <span className="ml-1 opacity-80">{f.count}</span>
+                  {f.label} ({f.count})
                 </button>
               ))}
             </div>
+            <div className="relative min-w-[220px]">
+              <SearchIcon
+                sx={{ fontSize: 18 }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={productQuery}
+                onChange={(e) => setProductQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-[#e2e8ec] bg-white text-xs text-[#0a3d52] outline-none focus:border-[#ff6b4a]"
+              />
+            </div>
           </div>
 
-          {filteredProducts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[#d5dee4] bg-white px-5 py-14 text-center">
-              <p className="text-[15px] font-extrabold text-[#0a3d52]">No products found</p>
-              <p className="text-xs text-[#6b8190] mt-1">Try another filter or add a new SKU.</p>
-              <button
-                type="button"
-                onClick={onOpenNew}
-                className="mt-4 min-h-[40px] px-4 rounded-xl text-[13px] font-extrabold text-white bg-[#ff6a45]"
-              >
-                Add product
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-              {filteredProducts.map((item) => (
-                <article
-                  key={item._id}
-                  className="rounded-2xl bg-white border border-[#e2e8ec] overflow-hidden flex flex-col shadow-[0_8px_20px_-16px_rgba(11,47,61,.28)]"
+          {/* Product Inventory Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {filteredProducts.map((p) => {
+              const isLow = Number(p.stock || 0) < 5;
+              const hasVariants = Array.isArray(p.variants) && p.variants.length > 0;
+              const hasTiers = Array.isArray(p.bulkTiers) && p.bulkTiers.length > 0;
+
+              return (
+                <div
+                  key={p._id}
+                  className="rounded-2xl border border-[#e2e8ec] bg-white p-3.5 shadow-xs flex flex-col justify-between gap-3 hover:border-[#ffb39a] transition-colors"
                 >
-                  <div className="relative aspect-[16/10] bg-[#eef2f5]">
+                  <div className="flex gap-3">
                     <img
-                      src={item.imageUrl || "/products/Banner1.jpeg"}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
+                      src={p.imageUrl || "/products/Banner1.jpeg"}
+                      alt={p.name}
+                      className="w-16 h-16 rounded-xl object-cover border border-slate-100 shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.src = "/products/Banner1.jpeg";
+                      }}
                     />
-                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" />
-                    <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                      {item.featured ? (
-                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-[#ff6b4a] text-white">
-                          Featured
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-xs sm:text-sm text-[#0a3d52] truncate mb-0.5">
+                        {p.name}
+                      </h4>
+                      <p className="text-[11px] text-slate-400 font-medium">{p.category || "General"}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="font-extrabold text-xs text-[#0a3d52]">
+                          PKR {Number(p.price || 0).toLocaleString()}
                         </span>
-                      ) : null}
-                      {item.active === false ? (
-                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-slate-900/85 text-white">
-                          Hidden
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            isLow
+                              ? "bg-rose-50 text-rose-600 border border-rose-200"
+                              : "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                          }`}
+                        >
+                          Stock: {p.stock || 0}
                         </span>
-                      ) : null}
+                      </div>
                     </div>
-                    <div
-                      className={`absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 rounded-md border flex items-center gap-1 shadow-sm ${
-                        Number(item.stock ?? 0) === 0
-                          ? "bg-rose-600 text-white border-rose-700"
-                          : Number(item.stock ?? 0) <= 5
-                          ? "bg-amber-500 text-slate-900 border-amber-600 animate-pulse"
-                          : "bg-white/95 text-[#0a3d52] border-white/80"
-                      }`}
-                    >
-                      {Number(item.stock ?? 0) === 0 ? (
-                        <span>Out of stock</span>
-                      ) : Number(item.stock ?? 0) <= 5 ? (
-                        <span>⚠️ Low stock: {item.stock}</span>
-                      ) : (
-                        <span>Stock: {item.stock}</span>
+                  </div>
+
+                  {/* Badges for variants & tiers */}
+                  {(hasVariants || hasTiers) && (
+                    <div className="flex flex-wrap gap-1 pt-1 border-t border-slate-100">
+                      {hasVariants && (
+                        <span className="text-[10px] font-semibold bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full border border-sky-200">
+                          {p.variants.length} Variants
+                        </span>
+                      )}
+                      {hasTiers && (
+                        <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">
+                          {p.bulkTiers.length} Bulk Tiers
+                        </span>
                       )}
                     </div>
+                  )}
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(p)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-bold text-[#0a3d52] bg-slate-100 hover:bg-slate-200 flex items-center gap-1 cursor-pointer"
+                    >
+                      <EditOutlinedIcon sx={{ fontSize: 14 }} />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(p._id)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 flex items-center gap-1 cursor-pointer"
+                    >
+                      <DeleteIcon sx={{ fontSize: 14 }} />
+                      Delete
+                    </button>
                   </div>
-                  <div className="p-3.5 flex flex-col flex-1">
-                    {Number(item.stock ?? 0) <= 5 && (
-                      <div className="mb-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-black uppercase tracking-wide bg-amber-50 border border-amber-300 text-amber-900">
-                        <span>⚠️ Low stock alert ({item.stock || 0} remaining)</span>
-                      </div>
-                    )}
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
-                      {item.category || "General"}
-                    </p>
-                    <h4 className="text-[14px] font-extrabold text-[#0a3d52] leading-snug mt-0.5 line-clamp-2">
-                      {item.name}
-                    </h4>
-                    <p className="text-[15px] font-black text-[#ff6b4a] mt-2 tabular-nums">
-                      PKR {Number(item.price || 0).toLocaleString()}
-                    </p>
-                    <div className="mt-auto pt-3 grid grid-cols-[1fr_auto] gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onEdit(item)}
-                        className="min-h-[42px] rounded-xl bg-[#0a3d52] text-white text-[12px] font-extrabold flex items-center justify-center gap-1.5 shadow-[0_3px_0_#07202b]"
-                      >
-                        <EditOutlinedIcon sx={{ fontSize: 15 }} /> Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(item._id)}
-                        className="min-h-[42px] min-w-[42px] rounded-xl bg-rose-50 text-rose-600 border border-rose-200 grid place-items-center"
-                        aria-label="Delete product"
-                      >
-                        <DeleteIcon sx={{ fontSize: 16 }} />
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+                </div>
+              );
+            })}
+          </div>
         </>
       ) : (
-        <section className="rounded-2xl border border-[#e2e8ec] bg-white overflow-hidden shadow-[0_12px_28px_-18px_rgba(11,47,61,.28)]">
+        /* Editor Mode */
+        <div className="rounded-2xl border border-[#e2e8ec] bg-white shadow-sm overflow-hidden">
           <div className="px-3.5 sm:px-5 pt-4 pb-3 border-b border-[#eef2f5] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h3 className="text-[15px] font-extrabold text-[#0a3d52]">
@@ -253,7 +279,7 @@ export const AdminProductsTab = ({
                   onReset();
                   setProductStudioTab("inventory");
                 }}
-                className="min-h-[36px] px-3 rounded-lg text-[12px] font-extrabold text-[#6b8190] bg-[#f8fafc] border border-[#e2e8ec]"
+                className="min-h-[36px] px-3 rounded-lg text-[12px] font-extrabold text-[#6b8190] bg-[#f8fafc] border border-[#e2e8ec] cursor-pointer"
               >
                 Back to inventory
               </button>
@@ -261,7 +287,7 @@ export const AdminProductsTab = ({
                 <button
                   type="button"
                   onClick={onReset}
-                  className="min-h-[36px] px-3 rounded-lg text-[12px] font-extrabold text-[#0a3d52] bg-white border border-[#e2e8ec]"
+                  className="min-h-[36px] px-3 rounded-lg text-[12px] font-extrabold text-[#0a3d52] bg-white border border-[#e2e8ec] cursor-pointer"
                 >
                   Clear / new
                 </button>
@@ -274,6 +300,8 @@ export const AdminProductsTab = ({
             <div className="inline-flex w-full sm:w-auto gap-1 p-1 rounded-xl bg-[#f1f5f9]">
               {[
                 { id: "basics", label: "Basics" },
+                { id: "variants", label: "Variants" },
+                { id: "bulkTiers", label: "Bulk Tiers" },
                 { id: "media", label: "Media" },
                 { id: "details", label: "Details" },
               ].map((s) => (
@@ -281,11 +309,13 @@ export const AdminProductsTab = ({
                   key={s.id}
                   type="button"
                   onClick={() => setEditorSection(s.id)}
-                  className={`flex-1 sm:flex-none min-h-[36px] px-3 rounded-lg text-[12px] font-extrabold ${
+                  className={`flex-1 sm:flex-none min-h-[36px] px-3 rounded-lg text-[12px] font-extrabold cursor-pointer ${
                     editorSection === s.id ? "bg-white text-[#0a3d52] shadow-sm" : "text-[#6b8190]"
                   }`}
                 >
                   {s.label}
+                  {s.id === "variants" && (product.variants?.length || 0) > 0 && ` (${product.variants.length})`}
+                  {s.id === "bulkTiers" && (product.bulkTiers?.length || 0) > 0 && ` (${product.bulkTiers.length})`}
                 </button>
               ))}
             </div>
@@ -293,11 +323,12 @@ export const AdminProductsTab = ({
 
           <div className="p-3.5 sm:p-5 grid grid-cols-1 lg:grid-cols-[minmax(0,1.5fr)_280px] gap-4">
             <div className="space-y-3">
+              {/* SECTION: BASICS */}
               {editorSection === "basics" ? (
                 <>
                   <label className="block">
                     <span className="block text-[10px] font-extrabold uppercase tracking-wide text-[#6b8190] mb-1">
-                      Product name
+                      Product name *
                     </span>
                     <input
                       type="text"
@@ -310,7 +341,7 @@ export const AdminProductsTab = ({
                   <div className="grid grid-cols-2 gap-2.5">
                     <label className="block">
                       <span className="block text-[10px] font-extrabold uppercase tracking-wide text-[#6b8190] mb-1">
-                        Price (PKR)
+                        Base Price (PKR) *
                       </span>
                       <input
                         type="number"
@@ -321,7 +352,7 @@ export const AdminProductsTab = ({
                     </label>
                     <label className="block">
                       <span className="block text-[10px] font-extrabold uppercase tracking-wide text-[#6b8190] mb-1">
-                        Stock
+                        Base Stock *
                       </span>
                       <input
                         type="number"
@@ -365,6 +396,161 @@ export const AdminProductsTab = ({
                 </>
               ) : null}
 
+              {/* SECTION: VARIANTS */}
+              {editorSection === "variants" ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-xs sm:text-sm text-[#0a3d52]">Product Variants</h4>
+                      <p className="text-[11px] text-slate-500">
+                        Add package sizes (e.g. 5kg, 20kg), dimensions, or specifications with custom price & stock.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addVariantRow}
+                      className="px-3 py-1.5 rounded-lg bg-[#0a3d52] text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <AddIcon sx={{ fontSize: 16 }} />
+                      Add Variant
+                    </button>
+                  </div>
+
+                  {(!product.variants || product.variants.length === 0) ? (
+                    <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs">
+                      No variants added. Base price and base stock will be used for this product.
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {product.variants.map((v, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row gap-2.5 items-start sm:items-center"
+                        >
+                          <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+                            <div>
+                              <span className="block text-[10px] font-bold text-slate-500 mb-0.5">Label (e.g. 20kg Bucket)</span>
+                              <input
+                                type="text"
+                                value={v.label || ""}
+                                placeholder="e.g. 20kg"
+                                onChange={(e) => updateVariantRow(idx, "label", e.target.value)}
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold"
+                              />
+                            </div>
+                            <div>
+                              <span className="block text-[10px] font-bold text-slate-500 mb-0.5">SKU</span>
+                              <input
+                                type="text"
+                                value={v.sku || ""}
+                                placeholder="SKU-20KG"
+                                onChange={(e) => updateVariantRow(idx, "sku", e.target.value)}
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-mono"
+                              />
+                            </div>
+                            <div>
+                              <span className="block text-[10px] font-bold text-slate-500 mb-0.5">Price (PKR)</span>
+                              <input
+                                type="number"
+                                value={v.price || 0}
+                                onChange={(e) => updateVariantRow(idx, "price", Number(e.target.value))}
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold"
+                              />
+                            </div>
+                            <div>
+                              <span className="block text-[10px] font-bold text-slate-500 mb-0.5">Stock</span>
+                              <input
+                                type="number"
+                                value={v.stock || 0}
+                                onChange={(e) => updateVariantRow(idx, "stock", Number(e.target.value))}
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold"
+                              />
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeVariantRow(idx)}
+                            className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg cursor-pointer self-end sm:self-center"
+                            title="Remove variant"
+                          >
+                            <RemoveCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              {/* SECTION: BULK TIERS */}
+              {editorSection === "bulkTiers" ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-xs sm:text-sm text-[#0a3d52]">Wholesale Bulk Pricing Tiers</h4>
+                      <p className="text-[11px] text-slate-500">
+                        Automatic quantity discounts (e.g. Buy 10+ units $\rightarrow$ Rs 4,800/unit).
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addBulkTierRow}
+                      className="px-3 py-1.5 rounded-lg bg-[#0a3d52] text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <AddIcon sx={{ fontSize: 16 }} />
+                      Add Tier
+                    </button>
+                  </div>
+
+                  {(!product.bulkTiers || product.bulkTiers.length === 0) ? (
+                    <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs">
+                      No bulk pricing tiers set. Standard unit price will apply at all quantities.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {product.bulkTiers.map((t, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-3"
+                        >
+                          <div className="flex-1 grid grid-cols-2 gap-2">
+                            <div>
+                              <span className="block text-[10px] font-bold text-slate-500 mb-0.5">Minimum Qty</span>
+                              <input
+                                type="number"
+                                value={t.minQty || 0}
+                                placeholder="10"
+                                onChange={(e) => updateBulkTierRow(idx, "minQty", e.target.value)}
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold"
+                              />
+                            </div>
+                            <div>
+                              <span className="block text-[10px] font-bold text-slate-500 mb-0.5">Discounted Price / Unit (PKR)</span>
+                              <input
+                                type="number"
+                                value={t.price || 0}
+                                placeholder="4800"
+                                onChange={(e) => updateBulkTierRow(idx, "price", e.target.value)}
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-emerald-600"
+                              />
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeBulkTierRow(idx)}
+                            className="p-1.5 text-rose-500 hover:bg-rose-100 rounded-lg cursor-pointer"
+                            title="Remove tier"
+                          >
+                            <RemoveCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              {/* SECTION: MEDIA */}
               {editorSection === "media" ? (
                 <>
                   <label className="block">
@@ -409,6 +595,7 @@ export const AdminProductsTab = ({
                 </>
               ) : null}
 
+              {/* SECTION: DETAILS */}
               {editorSection === "details" ? (
                 <label className="block">
                   <span className="block text-[10px] font-extrabold uppercase tracking-wide text-[#6b8190] mb-1">
@@ -429,63 +616,42 @@ export const AdminProductsTab = ({
                   type="button"
                   onClick={onSave}
                   disabled={isSaving}
-                  className="flex-1 min-h-[46px] rounded-xl text-[13px] font-extrabold uppercase tracking-wide text-white bg-gradient-to-b from-[#ff8460] to-[#ff6a45] shadow-[0_4px_0_#c63f1d] disabled:opacity-60"
+                  className="flex-1 min-h-[46px] rounded-xl text-[13px] font-extrabold uppercase tracking-wide text-white bg-gradient-to-b from-[#ff8460] to-[#ff6a45] shadow-[0_4px_0_#c63f1d] disabled:opacity-60 cursor-pointer"
                 >
                   {isSaving ? "Saving…" : editingProductId ? "Update product" : "Publish product"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setEditorSection(
-                      editorSection === "basics" ? "media" : editorSection === "media" ? "details" : "basics"
-                    )
-                  }
-                  className="min-h-[46px] px-4 rounded-xl text-[13px] font-extrabold text-[#0a3d52] bg-[#f8fafc] border border-[#e2e8ec]"
-                >
-                  {editorSection === "details" ? "Back to basics" : "Next section →"}
                 </button>
               </div>
             </div>
 
             <aside className="rounded-2xl border border-[#e2e8ec] bg-[#f8fafc] p-3.5 order-first lg:order-none">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#94a3b8] mb-3">Live preview</p>
-              <div className="rounded-2xl bg-white border border-[#e2e8ec] overflow-hidden">
-                <div className="relative aspect-[4/3] bg-[#eef2f5]">
-                  <img
-                    src={product.imageUrl || "/products/Banner1.jpeg"}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-                    {product.featured ? (
-                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-[#ff6b4a] text-white">
-                        Featured
-                      </span>
-                    ) : null}
-                    <span
-                      className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md text-white ${
-                        product.active === false ? "bg-slate-800" : "bg-emerald-600"
-                      }`}
-                    >
-                      {product.active === false ? "Hidden" : "Live"}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
-                    {product.category || "General"}
-                  </p>
-                  <h4 className="text-[13px] font-extrabold text-[#0a3d52] mt-0.5 line-clamp-2">
-                    {product.name || "Product name"}
-                  </h4>
-                  <p className="text-[14px] font-black text-[#ff6b4a] mt-1.5 tabular-nums">
+              <h4 className="text-[12px] font-extrabold uppercase tracking-wide text-[#0a3d52] mb-2">
+                Live Preview
+              </h4>
+              <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs">
+                <img
+                  src={product.imageUrl || "/products/Banner1.jpeg"}
+                  alt={product.name || "Preview"}
+                  className="w-full h-36 object-cover rounded-lg mb-2"
+                  onError={(e) => {
+                    e.currentTarget.src = "/products/Banner1.jpeg";
+                  }}
+                />
+                <h5 className="font-bold text-xs text-[#0a3d52] truncate">
+                  {product.name || "Product Name"}
+                </h5>
+                <p className="text-[11px] text-slate-400">{product.category || "General"}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="font-extrabold text-xs text-[#0a3d52]">
                     PKR {Number(product.price || 0).toLocaleString()}
-                  </p>
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-500">
+                    Stock: {product.stock || 0}
+                  </span>
                 </div>
               </div>
             </aside>
           </div>
-        </section>
+        </div>
       )}
     </div>
   );

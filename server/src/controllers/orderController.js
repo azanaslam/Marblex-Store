@@ -1,5 +1,8 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const ShippingRate = require("../models/ShippingRate");
+const Coupon = require("../models/Coupon");
+const { validateCouponLogic } = require("./couponController");
 const mongoose = require("mongoose");
 const Stripe = require("stripe");
 const { whatsappNumber, stripeSecretKey, stripeWebhookSecret, stripeCurrency, frontendUrl, cloudinaryCloudName, cloudinaryApiKey, cloudinaryApiSecret } = require("../config/env");
@@ -12,7 +15,7 @@ const notifyAdminNewOrder = (order) => {
   try {
     const { sendPushToStaff } = require("../utils/webPush");
     const num = order.orderNumber || String(order._id || "").slice(-6);
-    const amt = Number(order.subtotal || 0).toLocaleString("en-PK");
+    const amt = Number(order.total || order.subtotal || 0).toLocaleString("en-PK");
     sendPushToStaff({
       title: "New MARBLEX order",
       body: `#${num} - PKR ${amt} - ${String(order.paymentMethod || "order").toUpperCase()}`,
@@ -34,14 +37,37 @@ if (cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret) {
 
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 
-// Atomic stock management helpers
+// Helper to calculate bulk tier pricing
+const getTierPrice = (tiers, quantity, basePrice) => {
+  if (!tiers || !Array.isArray(tiers) || tiers.length === 0) return basePrice;
+  const sorted = [...tiers].sort((a, b) => b.minQty - a.minQty);
+  for (const tier of sorted) {
+    if (quantity >= tier.minQty) {
+      return Number(tier.price);
+    }
+  }
+  return basePrice;
+};
+
+// Atomic stock management helpers (supports both base product and product variants)
 const decrementOrderStock = async (order) => {
   if (!order || order.stockDeducted) return;
   try {
     for (const item of order.items || []) {
       if (!item.productId) continue;
-      const prod = await Product.findById(item.productId).select("stock").lean();
-      if (prod && typeof prod.stock === "number" && prod.stock >= 0) {
+      const prod = await Product.findById(item.productId);
+      if (!prod) continue;
+
+      if (item.variantSku && Array.isArray(prod.variants)) {
+        await Product.findOneAndUpdate(
+          {
+            _id: item.productId,
+            "variants.sku": item.variantSku,
+            "variants.stock": { $gte: item.quantity },
+          },
+          { $inc: { "variants.$.stock": -item.quantity } }
+        );
+      } else if (typeof prod.stock === "number" && prod.stock >= 0) {
         await Product.findOneAndUpdate(
           { _id: item.productId, stock: { $gte: item.quantity } },
           { $inc: { stock: -item.quantity } }
@@ -60,8 +86,12 @@ const restoreOrderStock = async (order) => {
   try {
     for (const item of order.items || []) {
       if (!item.productId) continue;
-      const prod = await Product.findById(item.productId).select("stock").lean();
-      if (prod && typeof prod.stock === "number") {
+      if (item.variantSku) {
+        await Product.findOneAndUpdate(
+          { _id: item.productId, "variants.sku": item.variantSku },
+          { $inc: { "variants.$.stock": item.quantity } }
+        );
+      } else {
         await Product.findByIdAndUpdate(item.productId, { $inc: { stock: item.quantity } });
       }
     }
@@ -177,12 +207,32 @@ const createOrder = async (req, res) => {
     for (const item of items) {
       const pId = String(item.productId || item._id || "");
       const dbProd = dbProductMap.get(pId);
-
       const quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
-      // Use database price if product exists; fallback to item.price only if legacy product
-      const unitPrice = dbProd ? Number(dbProd.price) : Number(item.price) || 0;
-      const itemName = dbProd ? dbProd.name : String(item.name || "Product").trim();
-      const itemImage = dbProd?.imageUrl || item.imageUrl || "";
+
+      let unitPrice = dbProd ? Number(dbProd.price) : Number(item.price) || 0;
+      let itemName = dbProd ? dbProd.name : String(item.name || "Product").trim();
+      let itemImage = dbProd?.imageUrl || item.imageUrl || "";
+      let variantSku = String(item.variantSku || "").trim();
+      let variantLabel = String(item.variantLabel || "").trim();
+
+      // Check product variant matching
+      if (dbProd && variantSku && Array.isArray(dbProd.variants)) {
+        const matchedVariant = dbProd.variants.find((v) => v.sku === variantSku);
+        if (matchedVariant) {
+          unitPrice = Number(matchedVariant.price ?? unitPrice);
+          variantLabel = matchedVariant.label || variantLabel;
+          if (matchedVariant.image) itemImage = matchedVariant.image;
+
+          // Check variant bulk tiers first, fallback to product bulk tiers
+          if (Array.isArray(matchedVariant.bulkTiers) && matchedVariant.bulkTiers.length > 0) {
+            unitPrice = getTierPrice(matchedVariant.bulkTiers, quantity, unitPrice);
+          } else if (Array.isArray(dbProd.bulkTiers) && dbProd.bulkTiers.length > 0) {
+            unitPrice = getTierPrice(dbProd.bulkTiers, quantity, unitPrice);
+          }
+        }
+      } else if (dbProd && Array.isArray(dbProd.bulkTiers) && dbProd.bulkTiers.length > 0) {
+        unitPrice = getTierPrice(dbProd.bulkTiers, quantity, unitPrice);
+      }
 
       normalizedItems.push({
         productId: dbProd ? dbProd._id : undefined,
@@ -190,6 +240,8 @@ const createOrder = async (req, res) => {
         imageUrl: itemImage,
         price: unitPrice >= 0 ? unitPrice : 0,
         quantity,
+        variantSku,
+        variantLabel,
       });
     }
 
@@ -197,19 +249,31 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: "No valid products found in order" });
     }
 
-    // 3b. Verify Stock Availability (Undefined/null/negative stock is treated as unlimited for backwards compatibility)
+    // 3b. Verify Stock Availability (Supports base product and variants)
     const outOfStockItems = [];
     for (const item of normalizedItems) {
       if (item.productId) {
         const dbProd = dbProductMap.get(String(item.productId));
-        if (dbProd && typeof dbProd.stock === "number" && dbProd.stock >= 0) {
-          if (dbProd.stock < item.quantity) {
-            outOfStockItems.push({
-              productId: dbProd._id,
-              name: dbProd.name,
-              available: dbProd.stock,
-              requested: item.quantity,
-            });
+        if (dbProd) {
+          if (item.variantSku && Array.isArray(dbProd.variants)) {
+            const v = dbProd.variants.find((vr) => vr.sku === item.variantSku);
+            if (v && typeof v.stock === "number" && v.stock >= 0) {
+              if (v.stock < item.quantity) {
+                outOfStockItems.push({
+                  name: `${dbProd.name} (${v.label || v.sku})`,
+                  available: v.stock,
+                  requested: item.quantity,
+                });
+              }
+            }
+          } else if (typeof dbProd.stock === "number" && dbProd.stock >= 0) {
+            if (dbProd.stock < item.quantity) {
+              outOfStockItems.push({
+                name: dbProd.name,
+                available: dbProd.stock,
+                requested: item.quantity,
+              });
+            }
           }
         }
       }
@@ -226,6 +290,47 @@ const createOrder = async (req, res) => {
     }
 
     const subtotal = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    // 3c. Calculate Delivery Charges by City
+    let deliveryCharge = 0;
+    if (orderChannel === "website" && city) {
+      try {
+        const cleanCity = String(city).trim().toLowerCase();
+        const allRates = await ShippingRate.find({ active: true }).lean();
+        const matched =
+          allRates.find((r) => r.city.toLowerCase() === cleanCity) ||
+          allRates.find((r) => r.city.toLowerCase() === "other cities");
+
+        if (matched) {
+          if (matched.freeAbove && subtotal >= matched.freeAbove) {
+            deliveryCharge = 0;
+          } else {
+            deliveryCharge = Number(matched.charge) || 0;
+          }
+        }
+      } catch (rateErr) {
+        console.error("Shipping rate lookup error:", rateErr);
+      }
+    }
+
+    // 3d. Validate & Calculate Coupon Discount
+    let discount = 0;
+    let appliedCoupon = "";
+    if (req.body.couponCode) {
+      try {
+        const cResult = await validateCouponLogic(req.body.couponCode, subtotal, req.user);
+        if (cResult.valid) {
+          discount = cResult.discount;
+          appliedCoupon = cResult.code;
+          // Increment usedCount atomically
+          await Coupon.findOneAndUpdate({ code: appliedCoupon }, { $inc: { usedCount: 1 } });
+        }
+      } catch (cErr) {
+        return res.status(400).json({ message: cErr.message });
+      }
+    }
+
+    const total = Math.max(0, subtotal + deliveryCharge - discount);
 
     // 4. Validate Payment Method
     const validMethods = ["cod", "stripe", "easypaisa", "jazzcash", "bank_transfer"];
@@ -269,6 +374,10 @@ const createOrder = async (req, res) => {
       orderSource: orderChannel,
       items: normalizedItems,
       subtotal,
+      deliveryCharge,
+      discount,
+      couponCode: appliedCoupon,
+      total,
       paymentMethod: chosenMethod,
       paymentStatus: initialPaymentStatus,
       orderStatus: "pending",
@@ -290,6 +399,10 @@ const createOrder = async (req, res) => {
         orderId: order._id,
         orderNumber: order.orderNumber,
         subtotal,
+        deliveryCharge,
+        discount,
+        couponCode: appliedCoupon,
+        total,
         whatsappNumber,
       });
     }
@@ -304,17 +417,33 @@ const createOrder = async (req, res) => {
 
       try {
         const allowedFrontend = String(frontendUrl || "http://localhost:5173").split(",")[0].trim();
-        const lineItems = normalizedItems.map((item) => ({
-          price_data: {
-            currency: stripeCurrency || "pkr",
-            product_data: {
-              name: item.name,
-              images: item.imageUrl ? [item.imageUrl] : undefined,
+        const lineItems = normalizedItems.map((item) => {
+          const itemTitle = item.variantLabel ? `${item.name} (${item.variantLabel})` : item.name;
+          return {
+            price_data: {
+              currency: stripeCurrency || "pkr",
+              product_data: {
+                name: itemTitle,
+                images: item.imageUrl ? [item.imageUrl] : undefined,
+              },
+              unit_amount: Math.round(item.price * 100),
             },
-            unit_amount: Math.round(item.price * 100),
-          },
-          quantity: item.quantity,
-        }));
+            quantity: item.quantity,
+          };
+        });
+
+        if (deliveryCharge > 0) {
+          lineItems.push({
+            price_data: {
+              currency: stripeCurrency || "pkr",
+              product_data: {
+                name: "Standard Delivery Charges",
+              },
+              unit_amount: Math.round(deliveryCharge * 100),
+            },
+            quantity: 1,
+          });
+        }
 
         const session = await stripe.checkout.sessions.create({
           mode: "payment",
@@ -337,6 +466,10 @@ const createOrder = async (req, res) => {
           orderId: order._id,
           orderNumber: order.orderNumber,
           subtotal,
+          deliveryCharge,
+          discount,
+          couponCode: appliedCoupon,
+          total,
           checkoutUrl: session.url,
         });
       } catch (stripeErr) {
@@ -357,6 +490,10 @@ const createOrder = async (req, res) => {
       orderId: order._id,
       orderNumber: order.orderNumber,
       subtotal,
+      deliveryCharge,
+      discount,
+      couponCode: appliedCoupon,
+      total,
       paymentMethod: chosenMethod,
       paymentStatus: order.paymentStatus,
       customerName: order.customerName,
@@ -513,13 +650,15 @@ const getMyOrderInvoice = async (req, res) => {
       .map(
         (item) => `
       <tr>
-        <td>${escapeHtml(item.name)}</td>
+        <td>${escapeHtml(item.name)}${item.variantLabel ? ` <span style="font-size:12px;color:#7a8c99">(${escapeHtml(item.variantLabel)})</span>` : ""}</td>
         <td style="text-align:center">${item.quantity}</td>
         <td style="text-align:right">PKR ${Number(item.price || 0).toLocaleString()}</td>
         <td style="text-align:right">PKR ${Number((item.price || 0) * (item.quantity || 0)).toLocaleString()}</td>
       </tr>`
       )
       .join("");
+
+    const grandTotal = Number(order.total !== undefined ? order.total : order.subtotal || 0);
 
     const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>Invoice ${escapeHtml(orderNo)}</title>
@@ -530,7 +669,8 @@ const getMyOrderInvoice = async (req, res) => {
   table{width:100%;border-collapse:collapse;margin-top:28px}
   th,td{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;text-align:left}
   th{background:#0b2f3c;color:#fff}
-  .total{margin-top:16px;text-align:right;font-size:18px;font-weight:700}
+  .summary-row{display:flex;justify-content:flex-end;gap:20px;padding:6px 0;font-size:14px}
+  .total{margin-top:12px;text-align:right;font-size:18px;font-weight:700}
   .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#eaf7f0;color:#1a8a55;font-size:12px;font-weight:700}
   @media print{.no-print{display:none}}
 </style></head><body>
@@ -557,7 +697,12 @@ const getMyOrderInvoice = async (req, res) => {
     <thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Line Total</th></tr></thead>
     <tbody>${rows || `<tr><td colspan="4">No items</td></tr>`}</tbody>
   </table>
-  <div class="total">Subtotal: <span class="accent">PKR ${Number(order.subtotal || 0).toLocaleString()}</span></div>
+  <div style="margin-top:20px;text-align:right">
+    <div class="summary-row"><span>Subtotal:</span><strong>PKR ${Number(order.subtotal || 0).toLocaleString()}</strong></div>
+    ${Number(order.deliveryCharge || 0) > 0 ? `<div class="summary-row"><span>Delivery Charges:</span><strong>PKR ${Number(order.deliveryCharge).toLocaleString()}</strong></div>` : ""}
+    ${Number(order.discount || 0) > 0 ? `<div class="summary-row" style="color:#16a34a"><span>Discount (${escapeHtml(order.couponCode || "PROMO")}):</span><strong>- PKR ${Number(order.discount).toLocaleString()}</strong></div>` : ""}
+    <div class="total">Grand Total: <span class="accent">PKR ${grandTotal.toLocaleString()}</span></div>
+  </div>
   <p style="margin-top:28px;font-size:12px;color:#7a8c99">Payment: ${escapeHtml(String(order.paymentMethod || "").toUpperCase())}${order.transactionReference ? ` - Ref: ${escapeHtml(order.transactionReference)}` : ""}</p>
   <p style="font-size:12px;color:#9aa9b4">40-Ferozpur Road, Lahore, Pakistan - Automated invoice from MARBLEX Client Portal</p>
 </body></html>`;

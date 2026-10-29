@@ -40,6 +40,8 @@ import { AdminProfileTab } from "../components/AdminProfileTab";
 import { AdminCommandCenter } from "../components/AdminCommandCenter";
 import { AdminProductsTab } from "../components/AdminProductsTab";
 import { AdminPartnerSubmissionsTab } from "../components/AdminPartnerSubmissionsTab";
+import { AdminDeliveryTab } from "../components/AdminDeliveryTab";
+import { AdminCouponsTab } from "../components/AdminCouponsTab";
 import { PushEnableCard } from "../components/PushEnableCard";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { PwaUpdateToast } from "../components/PwaUpdateToast";
@@ -252,6 +254,8 @@ export const AdminPage = () => {
       category: "General",
       featured: false,
       active: true,
+      variants: [],
+      bulkTiers: [],
     });
     setEditingProductId("");
     setEditorSection("basics");
@@ -330,6 +334,8 @@ export const AdminPage = () => {
       category: item.category || "General",
       featured: Boolean(item.featured),
       active: item.active !== false,
+      variants: Array.isArray(item.variants) ? item.variants : [],
+      bulkTiers: Array.isArray(item.bulkTiers) ? item.bulkTiers : [],
     });
     setEditorSection("basics");
     setProductStudioTab("editor");
@@ -580,6 +586,8 @@ export const AdminPage = () => {
     { id: 8, label: "Partner submissions", icon: "🤝", badge: adminUnreadReviews },
     { id: 9, label: "Order lookup", icon: "🔎" },
     { id: 10, label: "Client inquiries", icon: "📧", badge: contactRequests.filter((c) => c.status === "unread").length },
+    { id: 18, label: "Delivery rates", icon: "🚚" },
+    { id: 19, label: "Coupon codes", icon: "🎟️" },
     { id: 16, label: "Client reviews", icon: "⭐" },
     { id: 11, label: "SMTP settings", icon: "⚙️" },
     { id: 17, label: "Account profile", icon: "👤" },
@@ -587,7 +595,7 @@ export const AdminPage = () => {
 
   const navGroups = [
     { title: "", items: [0] },
-    { title: "Revenue & sales", items: [1, 2, 12, 13, 9] },
+    { title: "Revenue & sales", items: [1, 2, 12, 13, 18, 19, 9] },
     { title: "Catalog & docs", items: [4, 15, 5, 8] },
     { title: "Customers & support", items: [3, 6, 14, 7, 10, 16] },
     { title: "System", items: [11, 17] },
@@ -1536,6 +1544,20 @@ export const AdminPage = () => {
           {activeTab === 15 && (
             <TabWrapper3D tabKey={15}>
               <AdminDocumentsTab token={token} showToast={showToast} />
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 18: DELIVERY RATES ================= */}
+          {activeTab === 18 && (
+            <TabWrapper3D tabKey={18}>
+              <AdminDeliveryTab token={token} showToast={showToast} />
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 19: COUPON CODES ================= */}
+          {activeTab === 19 && (
+            <TabWrapper3D tabKey={19}>
+              <AdminCouponsTab token={token} showToast={showToast} />
             </TabWrapper3D>
           )}
 

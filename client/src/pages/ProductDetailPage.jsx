@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
@@ -233,9 +233,47 @@ export const ProductDetailPage = ({ addToCart }) => {
     }
   }, [loading, product]);
 
-  const hasStock = typeof product?.stock === "number" && product?.stock >= 0;
-  const isOutOfStock = hasStock && product.stock === 0;
-  const isLowStock = hasStock && product.stock > 0 && product.stock <= 5;
+  const [selectedVariantSku, setSelectedVariantSku] = useState("");
+
+  // Sync selected variant when product changes
+  useEffect(() => {
+    if (product?.variants && product.variants.length > 0) {
+      setSelectedVariantSku(product.variants[0].sku);
+    } else {
+      setSelectedVariantSku("");
+    }
+  }, [product]);
+
+  const currentVariant = useMemo(() => {
+    if (!product?.variants || product.variants.length === 0) return null;
+    return product.variants.find((v) => v.sku === selectedVariantSku) || product.variants[0];
+  }, [product, selectedVariantSku]);
+
+  // Bulk pricing tiers (variant tiers override product tiers)
+  const activeTiers = useMemo(() => {
+    if (currentVariant?.bulkTiers && currentVariant.bulkTiers.length > 0) {
+      return currentVariant.bulkTiers;
+    }
+    return product?.bulkTiers || [];
+  }, [currentVariant, product]);
+
+  const basePrice = currentVariant ? Number(currentVariant.price ?? product?.price ?? 0) : Number(product?.price ?? 0);
+
+  const tierPrice = useMemo(() => {
+    if (!activeTiers || activeTiers.length === 0) return basePrice;
+    const sorted = [...activeTiers].sort((a, b) => b.minQty - a.minQty);
+    for (const t of sorted) {
+      if (quantity >= t.minQty) {
+        return Number(t.price);
+      }
+    }
+    return basePrice;
+  }, [activeTiers, quantity, basePrice]);
+
+  const currentStock = currentVariant && typeof currentVariant.stock === "number" ? currentVariant.stock : product?.stock;
+  const hasStock = typeof currentStock === "number" && currentStock >= 0;
+  const isOutOfStock = hasStock && currentStock === 0;
+  const isLowStock = hasStock && currentStock > 0 && currentStock <= 5;
 
   // SEO Product and Breadcrumbs JSON-LD Structured Data
   useEffect(() => {
@@ -315,11 +353,21 @@ export const ProductDetailPage = ({ addToCart }) => {
 
   const handleAddToCart = () => {
     if (!product || isOutOfStock) return;
-    addToCart({ ...product, quantity, selectedMaterial, selectedColor });
+    addToCart({
+      ...product,
+      price: tierPrice,
+      quantity,
+      selectedMaterial,
+      selectedColor,
+      variantSku: currentVariant?.sku || "",
+      variantLabel: currentVariant?.label || "",
+      stock: currentStock,
+    });
     track("add_to_cart", {
       item_id: String(product._id || id),
       item_name: product.name,
-      price: product.price,
+      variant: currentVariant?.label || "",
+      price: tierPrice,
       quantity,
       currency: "PKR",
     });
@@ -675,6 +723,61 @@ export const ProductDetailPage = ({ addToCart }) => {
               </button>
             )}
           </div>
+
+          {/* Product Variant Selector */}
+          {product.variants && product.variants.length > 0 && (
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                Packaging / Size Variant
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {product.variants.map((v) => {
+                  const isSel = currentVariant?.sku === v.sku;
+                  return (
+                    <button
+                      key={v.sku || v.label}
+                      type="button"
+                      onClick={() => setSelectedVariantSku(v.sku)}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        isSel
+                          ? "border-[#ff6b4a] bg-[#ff6b4a]/10 text-[#ff6b4a] shadow-sm ring-1 ring-[#ff6b4a]"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-[#0c222e] dark:text-slate-300"
+                      }`}
+                    >
+                      <span>{v.label || v.sku}</span>
+                      <span className="ml-1.5 opacity-70 text-[11px]">
+                        PKR {Number(v.price).toLocaleString()}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Bulk Pricing Tier Display */}
+          {activeTiers.length > 0 && (
+            <div className="rounded-2xl border border-blue-200/80 bg-blue-50/50 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+              <div className="text-[11px] font-black uppercase tracking-wider text-[#0a3d52] dark:text-sky-300 mb-2">
+                📦 Bulk Order Discount Tiers
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {activeTiers.map((t, idx) => (
+                  <div
+                    key={idx}
+                    className={`rounded-xl p-2 border text-xs font-semibold ${
+                      quantity >= t.minQty
+                        ? "border-emerald-400 bg-emerald-50 text-emerald-900 font-bold dark:border-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                        : "border-slate-200 bg-white text-slate-700 dark:border-slate-800 dark:bg-[#0c222e] dark:text-slate-300"
+                    }`}
+                  >
+                    <div className="text-[11px]">Buy {t.minQty}+ units</div>
+                    <div className="text-sm font-black text-[#ff6b4a] mt-0.5">PKR {Number(t.price).toLocaleString()} <span className="text-[10px] font-normal text-slate-400">/ea</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <div className="space-y-1.5">

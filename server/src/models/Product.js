@@ -11,6 +11,27 @@ const productSchema = new mongoose.Schema(
     stock: { type: Number, default: 0, min: 0 },
     featured: { type: Boolean, default: false },
     active: { type: Boolean, default: true, index: true },
+    variants: [
+      {
+        sku: { type: String, trim: true },
+        label: { type: String, trim: true },
+        price: { type: Number, min: 0 },
+        stock: { type: Number, min: 0 },
+        image: { type: String, default: "" },
+        bulkTiers: [
+          {
+            minQty: { type: Number, min: 1 },
+            price: { type: Number, min: 0 },
+          },
+        ],
+      },
+    ],
+    bulkTiers: [
+      {
+        minQty: { type: Number, min: 1 },
+        price: { type: Number, min: 0 },
+      },
+    ],
   },
   { timestamps: true }
 );

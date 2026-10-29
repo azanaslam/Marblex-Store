@@ -6,10 +6,15 @@ const GUEST_CART_KEY = "marblex_cart";
 export const mergeCartLists = (targetList = [], sourceList = []) => {
   const mergedMap = new Map();
 
+  const getItemKey = (item) => {
+    const id = item.productId || item._id || item.id;
+    return item.variantSku ? `${id}_${item.variantSku}` : String(id);
+  };
+
   targetList.forEach((item) => {
     const id = item.productId || item._id || item.id;
     if (id) {
-      mergedMap.set(String(id), {
+      mergedMap.set(getItemKey(item), {
         ...item,
         productId: id,
         quantity: Math.max(1, parseInt(item.quantity, 10) || 1),
@@ -20,7 +25,7 @@ export const mergeCartLists = (targetList = [], sourceList = []) => {
   sourceList.forEach((item) => {
     const id = item.productId || item._id || item.id;
     if (id) {
-      const key = String(id);
+      const key = getItemKey(item);
       const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
       if (mergedMap.has(key)) {
         const existing = mergedMap.get(key);
@@ -30,6 +35,8 @@ export const mergeCartLists = (targetList = [], sourceList = []) => {
           imageUrl: existing.imageUrl || item.imageUrl,
           price: existing.price || item.price,
           name: existing.name || item.name,
+          variantSku: existing.variantSku || item.variantSku || "",
+          variantLabel: existing.variantLabel || item.variantLabel || "",
         });
       } else {
         mergedMap.set(key, {
@@ -132,22 +139,39 @@ export const useCart = () => {
   const addToCart = useCallback((product) => {
     const qtyToAdd = Math.max(1, parseInt(product.quantity, 10) || 1);
     const prodId = product._id || product.productId || product.id;
+    const variantSku = product.variantSku || "";
+    const variantLabel = product.variantLabel || "";
+    const itemKey = variantSku ? `${prodId}_${variantSku}` : String(prodId);
     const stock = typeof product.stock === "number" && product.stock >= 0 ? product.stock : undefined;
 
     setCart((prev) => {
-      const existing = prev.find((item) => (item.productId || item._id) === prodId);
+      const existing = prev.find((item) => {
+        const k = item.variantSku ? `${item.productId || item._id}_${item.variantSku}` : String(item.productId || item._id);
+        return k === itemKey;
+      });
+
       if (existing) {
         const itemStock = stock !== undefined ? stock : existing.stock;
         let nextQty = existing.quantity + qtyToAdd;
         if (typeof itemStock === "number" && itemStock >= 0) {
           nextQty = Math.min(nextQty, itemStock);
         }
-        return prev.map((item) =>
-          (item.productId || item._id) === prodId
-            ? { ...item, quantity: nextQty, stock: itemStock, imageUrl: item.imageUrl || product.imageUrl }
-            : item
-        );
+        return prev.map((item) => {
+          const k = item.variantSku ? `${item.productId || item._id}_${item.variantSku}` : String(item.productId || item._id);
+          return k === itemKey
+            ? {
+                ...item,
+                quantity: nextQty,
+                price: product.price ?? item.price,
+                stock: itemStock,
+                imageUrl: item.imageUrl || product.imageUrl,
+                variantSku,
+                variantLabel: variantLabel || item.variantLabel,
+              }
+            : item;
+        });
       }
+
       let finalQty = qtyToAdd;
       if (typeof stock === "number" && stock >= 0) {
         finalQty = Math.min(finalQty, stock);
@@ -162,6 +186,10 @@ export const useCart = () => {
           quantity: finalQty,
           stock,
           imageUrl: product.imageUrl,
+          variantSku,
+          variantLabel,
+          bulkTiers: product.bulkTiers,
+          variants: product.variants,
         },
       ];
     });

@@ -11,6 +11,8 @@ const contactRoutes = require("./contact");
 const portalRoutes = require("./portalRoutes");
 const clientReviewRoutes = require("./clientReviewRoutes");
 const pushRoutes = require("./pushRoutes");
+const shippingRoutes = require("./shippingRoutes");
+const couponRoutes = require("./couponRoutes");
 
 const router = express.Router();
 
@@ -26,5 +28,7 @@ router.use("/contact", contactRoutes);
 router.use("/portal", portalRoutes);
 router.use("/client-reviews", clientReviewRoutes);
 router.use("/push", pushRoutes);
+router.use("/shipping", shippingRoutes);
+router.use("/coupons", couponRoutes);
 
 module.exports = router;
