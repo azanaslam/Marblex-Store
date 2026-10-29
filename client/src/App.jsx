@@ -28,6 +28,8 @@ const AboutPage = named(() => import("./pages/AboutPage"), "AboutPage");
 const BlogDetailsPage = named(() => import("./pages/BlogDetailsPage"), "BlogDetailsPage");
 const PortalHost = named(() => import("./pages/portal/PortalHost"), "PortalHost");
 const ShareTargetPage = named(() => import("./pages/ShareTargetPage"), "ShareTargetPage");
+const CalculatorPage = named(() => import("./pages/CalculatorPage"), "CalculatorPage");
+const ProductFinderPage = named(() => import("./pages/ProductFinderPage"), "ProductFinderPage");
 
 function RouteFallback() {
   return (
@@ -100,6 +102,8 @@ function App() {
                 <Route path="/blogs" element={<BlogsPage />} />
                 <Route path="/blogs/:id" element={<BlogDetailsPage />} />
                 <Route path="/catalogs" element={<CatalogsPage />} />
+                <Route path="/calculator" element={<CalculatorPage cart={cart} setCart={setCart} />} />
+                <Route path="/product-finder" element={<ProductFinderPage cart={cart} setCart={setCart} />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/share" element={<ShareTargetPage />} />
                 <Route path="/dashboard/*" element={<PortalHost />} />

@@ -78,3 +78,4 @@ export const track = (event, params = {}) => {
     }
   }
 };
+

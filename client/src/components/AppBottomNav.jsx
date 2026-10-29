@@ -144,6 +144,17 @@ export function AppBottomNav({
             Home
           </RouterLink>
 
+          <RouterLink
+            to="/calculator"
+            ref={(el) => (itemsRef.current[5] = el)}
+            className={itemCls(pathname.startsWith("/calculator"))}
+            aria-current={pathname.startsWith("/calculator") ? "page" : undefined}
+            onClick={(e) => handleTabTap(e.currentTarget)}
+          >
+            <StorefrontRoundedIcon sx={{ fontSize: 22 }} />
+            Calc
+          </RouterLink>
+
           <button
             type="button"
             ref={(el) => (itemsRef.current[1] = el)}

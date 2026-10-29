@@ -985,6 +985,48 @@ export const ProductDetailPage = ({ addToCart }) => {
         </div>
       </div>
 
+      {/* Compact Material Coverage Calculator Section */}
+      <section className="anim-reveal rounded-[1.7rem] border border-orange-200/80 dark:border-orange-900/40 bg-gradient-to-br from-orange-50/50 via-white to-orange-50/30 dark:from-[#112832] dark:via-[#0e222b] dark:to-[#112832] p-5 sm:p-7 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-100 dark:border-slate-800 pb-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-[#ff6b4a] mb-1">
+              <span>📐 Contractor Tool</span>
+            </div>
+            <h3 className="font-heading text-lg sm:text-xl font-black text-[#0a3d52] dark:text-white">
+              Coverage & Quantity Estimator for {productName}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Input your site dimensions to calculate precise commercial drum/roll requirements.
+            </p>
+          </div>
+          <Link
+            to={'/calculator?product=' + (product?._id || id)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0a3d52] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#082e3e] transition-colors shrink-0 shadow-xs"
+          >
+            <span>Open Full Calculator</span>
+            <span>→</span>
+          </Link>
+        </div>
+
+        <div className="pt-4 flex flex-wrap items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-4">
+            <span className="font-semibold text-slate-600 dark:text-slate-300">
+              Standard Coverage: <strong>{product?.coverage?.perUnit || 0.25} kg/L per {product?.coverage?.unit || "sqft"}</strong>
+            </span>
+            <span className="hidden sm:inline text-slate-300">•</span>
+            <span className="font-semibold text-slate-600 dark:text-slate-300">
+              Coats: <strong>{product?.coverage?.coats || 2}</strong>
+            </span>
+          </div>
+          <Link
+            to="/product-finder"
+            className="text-xs font-bold text-[#ff6b4a] hover:underline"
+          >
+            Not sure if this is the right product? Use Product Finder →
+          </Link>
+        </div>
+      </section>
+
       {/* Specs */}
       <section className="anim-reveal overflow-hidden rounded-[1.7rem] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0c222e]">
         <div className="flex flex-col gap-4 border-b border-slate-100 p-5 dark:border-slate-800/80 sm:p-7 lg:flex-row lg:items-center lg:justify-between lg:p-8">

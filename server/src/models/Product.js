@@ -32,6 +32,19 @@ const productSchema = new mongoose.Schema(
         price: { type: Number, min: 0 },
       },
     ],
+    // Phase 3: Coverage calculation & applications finder
+    coverage: {
+      unit: { type: String, enum: ["sqm", "sqft", "lm"], default: "sqft" },
+      perUnit: { type: Number, default: 0 }, // consumption per sqm/sqft or lm (e.g. 0.25 kg/sqft)
+      coats: { type: Number, default: 2 },
+      wastagePercent: { type: Number, default: 10 },
+      packSizes: { type: [Number], default: [] }, // available pack weights/volumes in ascending order e.g. [5, 20]
+    },
+    applications: {
+      type: [String],
+      default: [],
+      index: true, // e.g. ["roof", "basement", "water-tank", "floor", "joint", "bathroom"]
+    },
   },
   { timestamps: true }
 );
@@ -39,5 +52,6 @@ const productSchema = new mongoose.Schema(
 // High-speed compound indexes for lightning fast queries
 productSchema.index({ active: 1, createdAt: -1 });
 productSchema.index({ category: 1, active: 1 });
+productSchema.index({ applications: 1, active: 1 });
 
 module.exports = mongoose.model("Product", productSchema);

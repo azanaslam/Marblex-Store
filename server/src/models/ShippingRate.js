@@ -32,3 +32,4 @@ const shippingRateSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("ShippingRate", shippingRateSchema);
+

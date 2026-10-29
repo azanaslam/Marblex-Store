@@ -17,3 +17,4 @@ router.put("/admin/:id", auth, adminOnly, adminUpdateCoupon);
 router.delete("/admin/:id", auth, adminOnly, adminDeleteCoupon);
 
 module.exports = router;
+

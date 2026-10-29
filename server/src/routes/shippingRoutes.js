@@ -17,3 +17,4 @@ router.put("/admin/rates/:id", auth, adminOnly, adminUpdateShippingRate);
 router.delete("/admin/rates/:id", auth, adminOnly, adminDeleteShippingRate);
 
 module.exports = router;
+

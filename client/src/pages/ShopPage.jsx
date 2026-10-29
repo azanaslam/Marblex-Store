@@ -1374,6 +1374,22 @@ export const ShopPage = ({ addToCart }) => {
             Certified industrial solutions engineered for waterproofing, structural integrity, and long-term durability.
           </p>
         </div>
+
+        {/* Smart Engineering Tools */}
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <RouterLink
+            to="/product-finder"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/40 text-[#ff6b4a] font-bold text-xs uppercase tracking-wider hover:bg-orange-100 transition-colors shadow-2xs"
+          >
+            <span>🧭 Help Me Choose (Product Finder)</span>
+          </RouterLink>
+          <RouterLink
+            to="/calculator"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0a3d52] dark:bg-sky-500 text-white font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-opacity shadow-2xs"
+          >
+            <span>📐 Material Calculator</span>
+          </RouterLink>
+        </div>
       </div>
 
       {/* 5. Horizontal Category Filters Bar */}

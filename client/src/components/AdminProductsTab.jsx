@@ -302,6 +302,7 @@ export const AdminProductsTab = ({
                 { id: "basics", label: "Basics" },
                 { id: "variants", label: "Variants" },
                 { id: "bulkTiers", label: "Bulk Tiers" },
+                { id: "coverage", label: "Coverage & Tools" },
                 { id: "media", label: "Media" },
                 { id: "details", label: "Details" },
               ].map((s) => (
@@ -593,6 +594,147 @@ export const AdminProductsTab = ({
                     ))}
                   </div>
                 </>
+              ) : null}
+
+              {/* SECTION: COVERAGE & APPLICATIONS */}
+              {editorSection === "coverage" ? (
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-bold text-xs sm:text-sm text-[#0a3d52]">Coverage Calculator Settings</h4>
+                    <p className="text-[11px] text-slate-500">
+                      Configure consumption parameters used by the on-site calculator.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-500 mb-0.5">Coverage Unit</span>
+                      <select
+                        value={product.coverage?.unit || "sqft"}
+                        onChange={(e) =>
+                          setProduct({
+                            ...product,
+                            coverage: { ...(product.coverage || {}), unit: e.target.value },
+                          })
+                        }
+                        className={fieldClass}
+                      >
+                        <option value="sqft">Square Feet (sq ft)</option>
+                        <option value="sqm">Square Metres (sq m)</option>
+                        <option value="lm">Linear Metres (lm / waterstop)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-500 mb-0.5">Consumption per Unit</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={product.coverage?.perUnit || 0.25}
+                        onChange={(e) =>
+                          setProduct({
+                            ...product,
+                            coverage: { ...(product.coverage || {}), perUnit: Number(e.target.value) },
+                          })
+                        }
+                        className={fieldClass}
+                        placeholder="e.g. 0.25 kg or litres"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-500 mb-0.5">Recommended Coats</span>
+                      <input
+                        type="number"
+                        value={product.coverage?.coats || 2}
+                        onChange={(e) =>
+                          setProduct({
+                            ...product,
+                            coverage: { ...(product.coverage || {}), coats: Number(e.target.value) },
+                          })
+                        }
+                        className={fieldClass}
+                      />
+                    </div>
+
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-500 mb-0.5">Default Wastage %</span>
+                      <input
+                        type="number"
+                        value={product.coverage?.wastagePercent !== undefined ? product.coverage.wastagePercent : 10}
+                        onChange={(e) =>
+                          setProduct({
+                            ...product,
+                            coverage: { ...(product.coverage || {}), wastagePercent: Number(e.target.value) },
+                          })
+                        }
+                        className={fieldClass}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                      Commercial Pack Sizes (comma-separated numbers e.g. 5, 20)
+                    </span>
+                    <input
+                      type="text"
+                      value={Array.isArray(product.coverage?.packSizes) ? product.coverage.packSizes.join(", ") : "5, 20"}
+                      onChange={(e) => {
+                        const sizes = e.target.value
+                          .split(",")
+                          .map((s) => Number(s.trim()))
+                          .filter((n) => !isNaN(n) && n > 0);
+                        setProduct({
+                          ...product,
+                          coverage: { ...(product.coverage || {}), packSizes: sizes },
+                        });
+                      }}
+                      className={fieldClass}
+                      placeholder="e.g. 5, 20"
+                    />
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100">
+                    <span className="block text-[11px] font-extrabold uppercase tracking-wide text-[#0a3d52] mb-1.5">
+                      Suitable Project Applications (for Product Selector)
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: "roof", label: "Roof & Terrace" },
+                        { id: "basement", label: "Basement / Retaining" },
+                        { id: "water-tank", label: "Water Tank / Pool" },
+                        { id: "bathroom", label: "Bathroom / Wet Area" },
+                        { id: "floor", label: "Industrial Floor" },
+                        { id: "joint", label: "Expansion Joints" },
+                      ].map((app) => {
+                        const currentApps = product.applications || [];
+                        const isChecked = currentApps.includes(app.id);
+                        return (
+                          <label
+                            key={app.id}
+                            className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                const next = e.target.checked
+                                  ? [...currentApps, app.id]
+                                  : currentApps.filter((x) => x !== app.id);
+                                setProduct({ ...product, applications: next });
+                              }}
+                              className="accent-[#0a3d52]"
+                            />
+                            <span>{app.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               ) : null}
 
               {/* SECTION: DETAILS */}

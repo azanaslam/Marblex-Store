@@ -10,6 +10,8 @@ const getSitemap = async (req, res) => {
     const staticRoutes = [
       { path: "", priority: "1.0", changefreq: "daily" },
       { path: "/services", priority: "0.8", changefreq: "weekly" },
+      { path: "/calculator", priority: "0.8", changefreq: "weekly" },
+      { path: "/product-finder", priority: "0.8", changefreq: "weekly" },
       { path: "/about", priority: "0.7", changefreq: "monthly" },
       { path: "/catalogs", priority: "0.7", changefreq: "weekly" },
       { path: "/blogs", priority: "0.8", changefreq: "daily" },
