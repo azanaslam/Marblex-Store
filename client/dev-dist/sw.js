@@ -86,14 +86,14 @@ define(['./workbox-2427537b'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "/index.html",
-    "revision": "0.rrnvbla57bo"
+    "revision": "0.4vamvona7ok"
   }], {
     "ignoreURLParametersMatching": [/^utm_/, /^fbclid$/, /^v$/]
   });
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/],
-    denylist: [/^\/api/, /^\/admin/, /\/marblex-client-portal\.html/i, /\.[a-z0-9]+$/i]
+    denylist: [/^\/api/, /\/marblex-client-portal\.html/i, /\.[a-z0-9]+$/i]
   }));
   workbox.registerRoute(({
     url

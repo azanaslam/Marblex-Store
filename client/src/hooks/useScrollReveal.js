@@ -21,8 +21,8 @@ export const useScrollReveal = () => {
         });
       },
       {
-        threshold: 0.08,
-        rootMargin: "0px 0px -40px 0px",
+        threshold: 0.05,           // Earlier trigger — element barely peeks in
+        rootMargin: "0px 0px -20px 0px", // Less negative = reveals sooner
       }
     );
 

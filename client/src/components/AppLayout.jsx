@@ -193,11 +193,11 @@ export const AppLayout = ({ cartCount, children }) => {
     const footer = mobileMenuItemsRef.current.querySelectorAll("[data-mobile-nav-footer]");
     gsap.fromTo(
       items,
-      { opacity: 0, y: 8 },
-      { opacity: 1, y: 0, duration: 0.28, stagger: 0.035, ease: "power2.out" }
+      { opacity: 0, y: 14, filter: "blur(3px)" },
+      { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.55, stagger: 0.06, ease: "power3.out" }
     );
     if (footer.length) {
-      gsap.fromTo(footer, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, delay: 0.12, ease: "power2.out" });
+      gsap.fromTo(footer, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.55, delay: 0.22, ease: "power3.out" });
     }
   }, [isMenuOpen]);
 
@@ -319,7 +319,7 @@ export const AppLayout = ({ cartCount, children }) => {
       tl.fromTo(
         announcementRef.current,
         { y: -36, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.65 },
+        { y: 0, opacity: 1, duration: 0.9 },
         0
       );
     }
@@ -328,7 +328,7 @@ export const AppLayout = ({ cartCount, children }) => {
       tl.fromTo(
         headerRef.current,
         { y: -28, opacity: 0, filter: "blur(10px)" },
-        { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.85, clearProps: "filter" },
+        { y: 0, opacity: 1, filter: "blur(0px)", duration: 1.05, clearProps: "filter" },
         0.12
       );
     }
@@ -337,7 +337,7 @@ export const AppLayout = ({ cartCount, children }) => {
       tl.fromTo(
         logoRef.current,
         { opacity: 0, scale: 0.88, x: -18 },
-        { opacity: 1, scale: 1, x: 0, duration: 0.7 },
+        { opacity: 1, scale: 1, x: 0, duration: 0.9, ease: "power4.out" },
         0.28
       );
     }
@@ -346,7 +346,7 @@ export const AppLayout = ({ cartCount, children }) => {
       tl.fromTo(
         navPillsRef.current.children,
         { opacity: 0, y: -12 },
-        { opacity: 1, y: 0, duration: 0.55, stagger: 0.045 },
+        { opacity: 1, y: 0, duration: 0.75, stagger: 0.065 },
         0.35
       );
     }
@@ -355,7 +355,7 @@ export const AppLayout = ({ cartCount, children }) => {
       tl.fromTo(
         actionsRef.current.children,
         { opacity: 0, scale: 0.9, y: -10 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.55, stagger: 0.05 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.7, stagger: 0.065 },
         0.4
       );
     }
@@ -402,7 +402,7 @@ export const AppLayout = ({ cartCount, children }) => {
     // Fallback if splash event was missed (remount after reveal already fired)
     const safetyTimer = setTimeout(() => {
       if (!cancelled) runNavEntrance();
-    }, 4200);
+    }, 5800);
 
     return () => {
       cancelled = true;

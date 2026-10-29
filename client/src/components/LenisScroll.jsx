@@ -24,9 +24,13 @@ export function LenisScroll({ children }) {
     <ReactLenis
       root
       options={{
-        lerp: 0.1, // Inertia smooth factor (0.1 is buttery smooth)
-        duration: 1.5, // Scroll transition duration
+        lerp: 0.075,        // Silkier inertia — closer to 0 = more fluid momentum
+        duration: 1.8,      // Longer deceleration for cinematic feel
         smoothWheel: true,
+        smoothTouch: false, // Native touch feel on mobile (no lag)
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Expo ease-out
+        wheelMultiplier: 0.9, // Slightly reduced scroll speed = more controlled
+        touchMultiplier: 1.5,
       }}
     >
       <ScrollToTop />
