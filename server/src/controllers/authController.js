@@ -5,6 +5,7 @@ const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const DirectMessage = require("../models/DirectMessage");
 const { createToken } = require("../utils/createToken");
+const { requestOtp, verifyOtp, normalizePhone } = require("../services/otp/otpService");
 const {
   send2FACodeEmail,
   sendWelcomeEmail,
@@ -710,7 +711,100 @@ const testEmailDelivery = async (req, res) => {
   }
 };
 
+const requestPhoneOtpHandler = async (req, res) => {
+  try {
+    const { phone, purpose = "login" } = req.body;
+    if (!phone) {
+      return res.status(400).json({ message: "Phone number is required." });
+    }
+    const result = await requestOtp(phone, purpose);
+    return res.json({
+      ok: true,
+      message: "Verification code sent.",
+      phone: result.phone,
+      cooldownSeconds: result.cooldownSeconds,
+    });
+  } catch (error) {
+    const status = error.status || 400;
+    return res.status(status).json({ message: error.message, retryAfter: error.retryAfter });
+  }
+};
+
+const verifyPhoneOtpHandler = async (req, res) => {
+  try {
+    const { phone, code, name, company, city } = req.body;
+    if (!phone || !code) {
+      return res.status(400).json({ message: "Phone number and verification code are required." });
+    }
+
+    const verification = await verifyOtp(phone, code, "login");
+    const normalizedPhone = verification.phone;
+
+    let user = await User.findOne({ phone: normalizedPhone });
+
+    if (user) {
+      if (user.isBlocked) {
+        return res.status(403).json({ message: "Your account is suspended. Please contact administrator." });
+      }
+      const payload = await buildAuthPayload(user, res);
+      return res.json(payload);
+    }
+
+    // New phone signup: automatically create user
+    const defaultName = (name || "").trim() || `Contractor ${normalizedPhone.slice(-4)}`;
+    const randomPw = crypto.randomBytes(16).toString("hex");
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(randomPw, salt);
+    const autoEmail = `${normalizedPhone.replace(/[^0-9]/g, "")}@phone.marblex.pk`;
+
+    user = await User.create({
+      name: defaultName,
+      email: autoEmail,
+      phone: normalizedPhone,
+      company: company || "",
+      city: city || "",
+      passwordHash,
+      role: "user",
+      authProvider: "phone",
+      isAccessGranted: true, // Phone verified contractor
+      isEmailVerified: true,
+    });
+
+    const payload = await buildAuthPayload(user, res);
+    return res.status(201).json({
+      ...payload,
+      isNewUser: true,
+      message: "Account created and phone number verified successfully.",
+    });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+};
+
+const linkPhoneHandler = async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+    if (!phone || !code) {
+      return res.status(400).json({ message: "Phone number and code required." });
+    }
+    const verification = await verifyOtp(phone, code, "phone_link");
+    const normalizedPhone = verification.phone;
+
+    // Check if phone already taken
+    const existing = await User.findOne({ phone: normalizedPhone, _id: { $ne: req.user.id } });
+    if (existing) {
+      return res.status(400).json({ message: "This phone number is already linked to another account." });
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, { phone: normalizedPhone }, { new: true });
+    return res.json({ ok: true, message: "Phone number linked successfully.", phone: user.phone });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
+  setAuthCookie,
   register,
   login,
   ssoLogin,
@@ -729,6 +823,9 @@ module.exports = {
   disableTotp,
   testEmailDelivery,
   logout,
+  requestPhoneOtpHandler,
+  verifyPhoneOtpHandler,
+  linkPhoneHandler,
 };
 
 

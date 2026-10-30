@@ -1,7 +1,10 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const User = require("../models/User");
 const ShippingRate = require("../models/ShippingRate");
 const Coupon = require("../models/Coupon");
+const Config = require("../models/Config");
+const { verifyOtp } = require("../services/otp/otpService");
 const { validateCouponLogic } = require("./couponController");
 const mongoose = require("mongoose");
 const Stripe = require("stripe");
@@ -358,6 +361,33 @@ const createOrder = async (req, res) => {
     if (isDealerUser) validMethods.push("on_account");
 
     const chosenMethod = validMethods.includes(paymentMethod) ? paymentMethod : "cod";
+
+    // COD High-Value Verification Check
+    if (chosenMethod === "cod") {
+      const codConfig = await Config.findOne({ key: "cod_settings" });
+      const codOtpRequired = codConfig?.value?.otpRequired ?? Boolean(process.env.COD_OTP_REQUIRED === "true");
+      const codThreshold = Number(codConfig?.value?.threshold ?? process.env.COD_OTP_THRESHOLD ?? 15000);
+
+      if (codOtpRequired && total >= codThreshold) {
+        const { phoneOtpCode } = req.body;
+        if (!phoneOtpCode) {
+          return res.status(400).json({
+            codOtpRequired: true,
+            threshold: codThreshold,
+            message: `COD orders above PKR ${codThreshold.toLocaleString()} require phone SMS verification. Please enter the verification code sent to ${phone}.`,
+          });
+        }
+        try {
+          await verifyOtp(phone, phoneOtpCode, "cod_verify");
+        } catch (otpErr) {
+          return res.status(400).json({
+            codOtpRequired: true,
+            threshold: codThreshold,
+            message: `Invalid or expired phone verification code: ${otpErr.message}`,
+          });
+        }
+      }
+    }
 
     // Handle on_account credit check & atomic balance deduction
     if (chosenMethod === "on_account") {

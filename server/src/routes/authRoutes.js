@@ -20,7 +20,19 @@ const {
   confirmTotp,
   disableTotp,
   testEmailDelivery,
+  requestPhoneOtpHandler,
+  verifyPhoneOtpHandler,
+  linkPhoneHandler,
 } = require("../controllers/authController");
+
+const {
+  getRegistrationOptions,
+  verifyRegistration,
+  getAuthenticationOptions,
+  verifyAuthentication,
+  listUserPasskeys,
+  deletePasskey,
+} = require("../controllers/passkeyController");
 
 const router = express.Router();
 
@@ -42,6 +54,19 @@ router.post("/change-password", auth, changePassword);
 router.post("/2fa/totp/setup", auth, setupTotp);
 router.post("/2fa/totp/confirm", auth, confirmTotp);
 router.post("/2fa/totp/disable", auth, disableTotp);
+
+// Phone OTP Authentication (SMS / WhatsApp)
+router.post("/phone/request-otp", requestPhoneOtpHandler);
+router.post("/phone/verify-otp", verifyPhoneOtpHandler);
+router.post("/phone/link", auth, linkPhoneHandler);
+
+// WebAuthn Passkeys (Biometric / Fingerprint / Face ID)
+router.get("/passkey/generate-registration-options", auth, getRegistrationOptions);
+router.post("/passkey/verify-registration", auth, verifyRegistration);
+router.post("/passkey/generate-authentication-options", getAuthenticationOptions);
+router.post("/passkey/verify-authentication", verifyAuthentication);
+router.get("/passkey/list", auth, listUserPasskeys);
+router.delete("/passkey/:credentialId", auth, deletePasskey);
 
 module.exports = router;
 

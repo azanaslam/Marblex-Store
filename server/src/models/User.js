@@ -22,7 +22,8 @@ const userSchema = new mongoose.Schema(
     /** New signups are false until admin approves in dashboard. Admins ignore this. */
     isAccessGranted: { type: Boolean, default: false },
     avatarUrl: { type: String, default: "" },
-    phone: { type: String, default: "" },
+    phone: { type: String, default: "", index: true, trim: true },
+    currentChallenge: { type: String, default: null },
     company: { type: String, default: "" },
     industryType: { type: String, default: "Waterproofing & Construction" },
     city: { type: String, default: "" },
@@ -39,7 +40,7 @@ const userSchema = new mongoose.Schema(
     isEmailVerified: { type: Boolean, default: false },
     /** Google subject id when signed in via Google Identity */
     googleId: { type: String, default: null, sparse: true },
-    authProvider: { type: String, enum: ["local", "google", "microsoft", "linkedin"], default: "local" },
+    authProvider: { type: String, enum: ["local", "google", "microsoft", "linkedin", "phone"], default: "local" },
 
     // Phase 4: B2B & Dealer Configuration
     dealerDiscountPercent: { type: Number, default: 0, min: 0, max: 100 },

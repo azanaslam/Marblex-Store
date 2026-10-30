@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { http } from "../api/http";
 import { setAuthSession } from "../auth/session";
 import { promptGoogleSignIn, preloadGoogleIdentity } from "../auth/googleSignIn";
+import FingerprintRoundedIcon from "@mui/icons-material/FingerprintRounded";
+import PhoneAndroidRoundedIcon from "@mui/icons-material/PhoneAndroidRounded";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -17,8 +20,83 @@ export const LoginPage = () => {
   const [customSsoEmail, setCustomSsoEmail] = useState("");
   const [ssoLoading, setSsoLoading] = useState(false);
 
-  // Form Fields
-  const [fullName, setFullName] = useState("");
+  // Phone OTP Flow
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [contractorName, setContractorName] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [phoneCooldown, setPhoneCooldown] = useState(0);
+
+  // Phone cooldown timer
+  useEffect(() => {
+    if (phoneCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setPhoneCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phoneCooldown]);
+
+  const handleRequestPhoneOtp = async () => {
+    if (!phoneNumber || phoneNumber.trim().length < 9) {
+      setMsg({ text: "Please enter a valid phone number (e.g. 0308 1234567)", type: "error" });
+      return;
+    }
+    setLoading(true);
+    setMsg({ text: "", type: "" });
+    try {
+      const { data } = await http.post("/auth/phone/request-otp", { phone: phoneNumber });
+      setOtpSent(true);
+      setPhoneCooldown(data.cooldownSeconds || 60);
+      setMsg({ text: "Verification code sent to your mobile phone via SMS.", type: "success" });
+    } catch (err) {
+      setMsg({ text: err.response?.data?.message || "Failed to send code.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    if (!otpCode || otpCode.trim().length < 6) {
+      setMsg({ text: "Please enter the 6-digit verification code.", type: "error" });
+      return;
+    }
+    setLoading(true);
+    setMsg({ text: "", type: "" });
+    try {
+      const { data } = await http.post("/auth/phone/verify-otp", {
+        phone: phoneNumber,
+        code: otpCode,
+        name: contractorName.trim() || undefined,
+      });
+      setAuthSession({ token: data.token, user: data.user });
+      navigate(data.user.role === "admin" ? "/admin" : "/dashboard");
+    } catch (err) {
+      setMsg({ text: err.response?.data?.message || "Invalid or expired code.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasskeySignIn = async () => {
+    setLoading(true);
+    setMsg({ text: "", type: "" });
+    try {
+      const { data: options } = await http.post("/auth/passkey/generate-authentication-options", {
+        email: email.trim() || undefined,
+      });
+      const asseResp = await startAuthentication({ optionsJSON: options });
+      const { data: authResult } = await http.post("/auth/passkey/verify-authentication", {
+        response: asseResp,
+        challenge: options.challenge,
+      });
+      setAuthSession({ token: authResult.token, user: authResult.user });
+      navigate(authResult.user.role === "admin" ? "/admin" : "/dashboard");
+    } catch (err) {
+      setMsg({ text: err.response?.data?.message || err.message || "Biometric login cancelled.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -2687,6 +2765,8 @@ export const LoginPage = () => {
                   <h1>
                     {mode === "in" ? (
                       <>Welcome to MAR<span style={{ color: "#ff6b4a" }}>BLEX</span></>
+                    ) : mode === "phone" ? (
+                      <>Sign In with <span style={{ color: "#ff6b4a" }}>Phone OTP</span></>
                     ) : (
                       <>Create your MAR<span style={{ color: "#ff6b4a" }}>BLEX</span> account</>
                     )}
@@ -2694,19 +2774,28 @@ export const LoginPage = () => {
                   <p>
                     {mode === "in"
                       ? "Sign in to manage orders, track shipments and review your quotations."
+                      : mode === "phone"
+                      ? "Fast verification for contractors via SMS code. No password needed."
                       : "Start your experience with MARBLEX by signing up in under a minute."}
                   </p>
                 </div>
 
                 {/* Tabs with sliding pill */}
-                <div className={`mx-tabs ${mode === "reg" ? "reg" : ""}`}>
+                <div className={`mx-tabs ${mode === "reg" ? "reg" : mode === "phone" ? "phone" : ""}`}>
                   <span className="mx-pill" />
                   <button
                     type="button"
                     className={mode === "in" ? "on" : ""}
                     onClick={() => handleTabChange("in")}
                   >
-                    Sign In
+                    Email
+                  </button>
+                  <button
+                    type="button"
+                    className={mode === "phone" ? "on" : ""}
+                    onClick={() => handleTabChange("phone")}
+                  >
+                    📱 Phone OTP
                   </button>
                   <button
                     type="button"
@@ -2717,7 +2806,97 @@ export const LoginPage = () => {
                   </button>
                 </div>
 
-                {/* Main Form */}
+                {/* Biometric Passkey Quick Sign-In Option */}
+                {mode === "in" && (
+                  <button
+                    type="button"
+                    onClick={handlePasskeySignIn}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider transition-all mb-4 cursor-pointer"
+                  >
+                    <FingerprintRoundedIcon sx={{ fontSize: 20 }} />
+                    <span>Sign In with Fingerprint / Face ID / Passkey</span>
+                  </button>
+                )}
+
+                {/* Phone OTP Mode Form */}
+                {mode === "phone" ? (
+                  <div className="mx-form space-y-4 py-2">
+                    <div>
+                      <div className="mx-lbl">
+                        <label htmlFor="ph-num" style={{ margin: 0 }}>Mobile Phone Number<i>*</i></label>
+                      </div>
+                      <div className="mx-in flex items-center">
+                        <PhoneAndroidRoundedIcon sx={{ fontSize: 18, color: "var(--muted)", ml: 1 }} />
+                        <input
+                          id="ph-num"
+                          type="tel"
+                          placeholder="0300 1234567 or +92300..."
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          disabled={loading || (otpSent && phoneCooldown > 0)}
+                          style={{ paddingLeft: "10px" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRequestPhoneOtp}
+                          disabled={loading || phoneCooldown > 0}
+                          className="shrink-0 px-3 py-1.5 mr-1.5 rounded-lg bg-[#ff6b4a] hover:bg-[#e05333] text-white text-[11px] font-bold uppercase transition disabled:opacity-40"
+                        >
+                          {phoneCooldown > 0 ? `${phoneCooldown}s` : otpSent ? "Resend" : "Send Code"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {otpSent && (
+                      <>
+                        <div>
+                          <div className="mx-lbl">
+                            <label htmlFor="otp-inp" style={{ margin: 0 }}>6-Digit Verification Code<i>*</i></label>
+                          </div>
+                          <div className="mx-in">
+                            <input
+                              id="otp-inp"
+                              type="text"
+                              maxLength={6}
+                              placeholder="123456"
+                              value={otpCode}
+                              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                              disabled={loading}
+                              style={{ letterSpacing: "0.25em", textAlign: "center", fontWeight: "bold", fontSize: "16px" }}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="mx-lbl">
+                            <label htmlFor="ct-name" style={{ margin: 0 }}>Contractor / Your Name (optional for new user)</label>
+                          </div>
+                          <div className="mx-in">
+                            <input
+                              id="ct-name"
+                              type="text"
+                              placeholder="e.g. Tariq Mehmood"
+                              value={contractorName}
+                              onChange={(e) => setContractorName(e.target.value)}
+                              disabled={loading}
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleVerifyPhoneOtp}
+                          disabled={loading || otpCode.length < 6}
+                          className="w-full py-3 rounded-xl bg-[#0a3d52] hover:bg-[#0d4e68] text-white font-bold text-xs uppercase tracking-wider transition disabled:opacity-40"
+                        >
+                          {loading ? "Verifying..." : "Verify & Sign In"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                /* Main Form */
                 <form
                   ref={formRef}
                   onSubmit={handleSubmit}
@@ -2933,6 +3112,7 @@ export const LoginPage = () => {
                     </button>
                   </div>
                 </form>
+                )}
 
                 {/* Legal / Admin Help */}
                 <p className="mx-legal">

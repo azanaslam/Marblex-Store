@@ -17,6 +17,8 @@ import {
 } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import FingerprintRoundedIcon from "@mui/icons-material/FingerprintRounded";
+import { startRegistration } from "@simplewebauthn/browser";
 import { authHeaders, http } from "../../api/http";
 import { getAuthUser, setAuthSession } from "../../auth/session";
 import { PORTAL_TEAL } from "./portalUtils";
@@ -110,6 +112,31 @@ export const PortalAccount = () => {
       setToast({ open: true, severity: "success", message: "Password updated." });
     } catch (err) {
       setToast({ open: true, severity: "error", message: err.response?.data?.message || "Failed" });
+    }
+  };
+
+  const handleRegisterPasskey = async () => {
+    try {
+      const { data: options } = await http.get("/auth/passkey/generate-registration-options", {
+        headers: authHeaders(token),
+      });
+      const attResp = await startRegistration({ optionsJSON: options });
+      await http.post(
+        "/auth/passkey/verify-registration",
+        { body: attResp, friendlyName: "Personal Device Biometric" },
+        { headers: authHeaders(token) }
+      );
+      setToast({
+        open: true,
+        severity: "success",
+        message: "Biometric Passkey registered successfully! You can now sign in with fingerprint or Face ID.",
+      });
+    } catch (err) {
+      setToast({
+        open: true,
+        severity: "error",
+        message: err.response?.data?.message || err.message || "Failed to register passkey.",
+      });
     }
   };
 
@@ -371,7 +398,21 @@ export const PortalAccount = () => {
             </Button>
           </Stack>
           <Divider sx={{ my: 2.5 }} />
-          <Alert severity="success">Email 2FA is enabled on every sign-in for this account.</Alert>
+          <Typography sx={{ fontWeight: 800, mb: 1 }}>Biometric & Passkeys</Typography>
+          <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 2 }}>
+            Register your fingerprint, Face ID, or device PIN for fast passwordless sign-in. Passkey logins satisfy 2FA automatically.
+          </Typography>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<FingerprintRoundedIcon />}
+            onClick={handleRegisterPasskey}
+            sx={{ textTransform: "none", fontWeight: 700, borderRadius: 2 }}
+          >
+            Enable Fingerprint / Face ID / Passkey
+          </Button>
+          <Divider sx={{ my: 2.5 }} />
+          <Alert severity="success">Email 2FA and Biometric Passkeys are supported for this account.</Alert>
         </Paper>
       )}
 
