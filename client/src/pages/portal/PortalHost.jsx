@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../config/constants";
 import { getAuthToken, getAuthUser, setAuthSession } from "../../auth/session";
 import { useStandaloneApp } from "../../hooks/useStandaloneApp";
@@ -32,6 +32,7 @@ const sameUser = (a, b) => {
 export const PortalHost = () => {
   const token = getAuthToken();
   const location = useLocation();
+  const navigate = useNavigate();
   const isApp = useStandaloneApp();
   const iframeRef = useRef(null);
   const lastInitKeyRef = useRef("");
@@ -39,6 +40,10 @@ export const PortalHost = () => {
   useEffect(() => {
     const onMsg = (e) => {
       if (e.origin !== window.location.origin) return;
+      if (e.data?.type === "MARBLEX_NAVIGATE" && e.data.path) {
+        navigate(e.data.path);
+        return;
+      }
       if (e.data?.type !== "MARBLEX_AUTH_SYNC" || !e.data.user) return;
       const t = getAuthToken();
       if (!t) return;
@@ -49,7 +54,7 @@ export const PortalHost = () => {
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const iframe = iframeRef.current;

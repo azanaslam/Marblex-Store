@@ -128,7 +128,19 @@ export const HeroBanner = () => {
     window.addEventListener("marblex:intro_reveal", startPlayback);
 
     // If preloader already finished earlier, start playback immediately
-    if (typeof window !== "undefined" && (window.__MARBLEX_INTRO_DONE__ || sessionStorage.getItem("marblex_intro_done") === "1")) {
+    const isDone =
+      typeof window !== "undefined" &&
+      (window.__MARBLEX_INTRO_DONE__ ||
+        sessionStorage.getItem("marblex_intro_done") === "1" ||
+        (() => {
+          try {
+            const ts = Number(localStorage.getItem("marblex_intro_ts") || 0);
+            return ts > 0 && Date.now() - ts < 24 * 60 * 60 * 1000;
+          } catch {
+            return false;
+          }
+        })());
+    if (isDone) {
       startPlayback();
     } else {
       // Fallback: If preloader already finished or user navigated from another page

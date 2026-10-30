@@ -1428,7 +1428,7 @@ function openList(i){
   <div class="re-foot"><button type="button" class="g" data-x>Close</button><button type="button" class="b" id="ll-shop">${I('store')}Browse shop</button></div>
   </div></div>`;
   m.firstChild.onclick=e=>{if(e.target.classList.contains('mo')||e.target.closest('[data-x]'))close()};
-  const goShop=$('#ll-shop');if(goShop)goShop.onclick=()=>{try{window.top.location.href='/'}catch(_){window.location.href='/'}};
+  const goShop=$('#ll-shop');if(goShop)goShop.onclick=()=>{try{window.top.postMessage({type:'MARBLEX_NAVIGATE',path:'/'},'*');}catch(_){try{window.top.location.href='/'}catch(__){window.location.href='/'}}};
 }
 function newList(){
   const m=$('#modal');
@@ -1765,7 +1765,7 @@ else if(d.det)det(d.det);
 else if(d.cp){try{navigator.clipboard.writeText('#'+d.cp)}catch(_){}toast('Order ID #'+d.cp+' copied')}
 else if(d.fa){close();$('#fabw').classList.remove('on');({rfq,tkt,list:newList,ds:reqDs})[d.fa]()}
 else if(d.a==='more')openDrawer();
-else if(d.a==='shop')window.top.location.href='/';
+else if(d.a==='shop'){try{window.top.postMessage({type:'MARBLEX_NAVIGATE',path:'/'},'*');}catch(_){window.top.location.href='/'}}
 else if(d.a==='out')modal('Sign out?','<p class="mut">You will need to sign in again to access your portal.</p>',()=>{try{localStorage.removeItem('auth_token');localStorage.removeItem('auth_user');}catch(e){}window.top.location.href='/login';},'Sign out');
 else if(d.tab){S.t[S.v]=d.tab;go(S.v,1)}
 else if(d.open){const doc=S.docs[+d.open];if(doc)openDoc(doc);else toast('Document not found.',1)}

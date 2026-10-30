@@ -1,6 +1,19 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import gsap from "gsap";
 
+const isIntroDone = () => {
+  try {
+    if (typeof window === "undefined") return false;
+    if (window.__MARBLEX_INTRO_DONE__ === true) return true;
+    if (sessionStorage.getItem("marblex_intro_done") === "1") return true;
+    const ts = Number(localStorage.getItem("marblex_intro_ts") || 0);
+    if (ts > 0 && Date.now() - ts < 24 * 60 * 60 * 1000) return true;
+  } catch {
+    /* ignore */
+  }
+  return false;
+};
+
 export const BrandSplashPreloader = ({ onComplete }) => {
   const containerRef = useRef(null);
   const curtainRef = useRef(null);
@@ -12,18 +25,7 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   const accentLineRef = useRef(null);
   const subtitleRef = useRef(null);
   const badgeRef = useRef(null);
-  const [visible, setVisible] = useState(() => {
-    try {
-      if (typeof window !== "undefined") {
-        if (window.__MARBLEX_INTRO_DONE__ === true || sessionStorage.getItem("marblex_intro_done") === "1") {
-          return false;
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-    return true;
-  });
+  const [visible, setVisible] = useState(() => !isIntroDone());
 
   const marLetters = ["M", "A", "R"];
   const blexLetters = ["B", "L", "E", "X"];
@@ -32,6 +34,7 @@ export const BrandSplashPreloader = ({ onComplete }) => {
     // Persist so navbar/layout remounts (Strict Mode, Suspense) don't stay stuck hidden
     try {
       sessionStorage.setItem("marblex_intro_done", "1");
+      localStorage.setItem("marblex_intro_ts", Date.now().toString());
     } catch {
       /* ignore */
     }
@@ -82,9 +85,9 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   }, [onComplete]);
 
   useEffect(() => {
-    // If intro already ran in this session, immediately notify listeners & exit
+    // If intro already ran, immediately notify listeners & exit
     try {
-      if (window.__MARBLEX_INTRO_DONE__ === true || sessionStorage.getItem("marblex_intro_done") === "1") {
+      if (isIntroDone()) {
         window.__MARBLEX_INTRO_DONE__ = true;
         window.dispatchEvent(new CustomEvent("marblex:intro_reveal"));
         onComplete?.();

@@ -39,7 +39,13 @@ export function AppBottomNav({
     const introDone =
       window.__MARBLEX_INTRO_DONE__ === true ||
       (() => {
-        try { return sessionStorage.getItem("marblex_intro_done") === "1"; } catch { return false; }
+        try {
+          if (sessionStorage.getItem("marblex_intro_done") === "1") return true;
+          const ts = Number(localStorage.getItem("marblex_intro_ts") || 0);
+          return ts > 0 && Date.now() - ts < 24 * 60 * 60 * 1000;
+        } catch {
+          return false;
+        }
       })();
 
     const runEntrance = () => {

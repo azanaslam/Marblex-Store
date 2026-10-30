@@ -370,7 +370,9 @@ export const AppLayout = ({ cartCount, children }) => {
       window.__MARBLEX_INTRO_DONE__ === true ||
       (() => {
         try {
-          return sessionStorage.getItem("marblex_intro_done") === "1";
+          if (sessionStorage.getItem("marblex_intro_done") === "1") return true;
+          const ts = Number(localStorage.getItem("marblex_intro_ts") || 0);
+          return ts > 0 && Date.now() - ts < 24 * 60 * 60 * 1000;
         } catch {
           return false;
         }
@@ -573,7 +575,8 @@ export const AppLayout = ({ cartCount, children }) => {
       {/* 2. Sleek Compact Main Navbar */}
       <header
         ref={headerRef}
-        className={`sticky top-0 z-40 w-full border-b transition-[background-color,box-shadow,padding] duration-200 ease-in-out ${isMenuOpen ? "z-[10200]" : "z-40"} ${isDark
+        style={{ zIndex: isMenuOpen ? 10200 : 40 }}
+        className={`sticky top-0 w-full border-b transition-[background-color,box-shadow,padding] duration-200 ease-in-out ${isDark
           ? scrolled || isMenuOpen
             ? "bg-[#0c222f]/95 backdrop-blur-md border-slate-800 shadow-md shadow-black/20 py-1.5 sm:py-2"
             : "bg-[#091b24] border-slate-800/80 py-2 sm:py-2.5"
@@ -860,7 +863,8 @@ export const AppLayout = ({ cartCount, children }) => {
               {/* Mobile Menu Toggle */}
               <button
                 type="button"
-                className={`lg:hidden relative ${isMenuOpen ? "z-[10201]" : "z-[70]"} flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 ${isMenuOpen
+                style={{ zIndex: isMenuOpen ? 10205 : 70 }}
+                className={`lg:hidden relative flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border transition-all duration-300 touch-manipulation cursor-pointer ${isMenuOpen
                   ? isDark
                     ? "border-[#ff6b4a]/50 bg-[#ff6b4a]/15 text-[#ff8c73] rotate-90"
                     : "border-[#ff6b4a]/40 bg-[#ff6b4a]/10 text-[#ff6b4a] rotate-90"
@@ -868,14 +872,21 @@ export const AppLayout = ({ cartCount, children }) => {
                     ? "border-slate-700 bg-[#0e2735] text-white hover:bg-slate-800"
                     : "border-slate-200 bg-[#f8fafc] text-[#08222e] hover:bg-slate-100"
                   }`}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAccountMenuOpen(false);
+                  setIsMenuOpen((open) => !open);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   setAccountMenuOpen(false);
                   setIsMenuOpen((open) => !open);
                 }}
                 aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
                 aria-expanded={isMenuOpen}
               >
-                {isMenuOpen ? <CloseIcon sx={{ fontSize: 18 }} /> : <MenuIcon sx={{ fontSize: 18 }} />}
+                {isMenuOpen ? <CloseIcon sx={{ fontSize: 20 }} /> : <MenuIcon sx={{ fontSize: 20 }} />}
               </button>
             </div>
           </div>
@@ -891,8 +902,12 @@ export const AppLayout = ({ cartCount, children }) => {
         <button
           type="button"
           aria-label="Close menu backdrop"
-          className="absolute inset-0 bg-[#091b24]/55 backdrop-blur-[2px]"
+          className="absolute inset-0 bg-[#091b24]/55 backdrop-blur-[2px] cursor-pointer"
           onClick={() => setIsMenuOpen(false)}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            setIsMenuOpen(false);
+          }}
         />
 
         <div
@@ -915,18 +930,25 @@ export const AppLayout = ({ cartCount, children }) => {
               </div>
               <button
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (typeof navigator !== "undefined" && navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
+                  setIsMenuOpen(false);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (typeof navigator !== "undefined" && navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
                   setIsMenuOpen(false);
                 }}
                 aria-label="Close navigation"
-                className={`flex h-8 w-8 items-center justify-center rounded-full border transition active:scale-90 ${
+                className={`flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border transition active:scale-90 touch-manipulation cursor-pointer ${
                   isDark
                     ? "bg-slate-800 border-slate-700 text-slate-300 hover:text-white"
                     : "bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <CloseIcon sx={{ fontSize: 17 }} />
+                <CloseIcon sx={{ fontSize: 18 }} />
               </button>
             </div>
 
