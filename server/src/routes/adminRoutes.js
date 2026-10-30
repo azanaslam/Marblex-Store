@@ -48,5 +48,10 @@ router.post("/chat/thread/:userId", auth, staffOnly, sendAdminReply);
 router.post("/broadcast", auth, staffOnly, createBroadcast);
 router.get("/email-settings", auth, adminOnly, getEmailConfig);
 router.post("/email-settings", auth, adminOnly, updateEmailConfig);
+router.get("/reports", auth, adminOnly, require("../controllers/adminController").getReports);
+router.get("/export/orders.csv", auth, adminOnly, require("../controllers/adminController").exportOrdersCsv);
+router.get("/export/customers.csv", auth, adminOnly, require("../controllers/adminController").exportCustomersCsv);
+router.get("/export/products.csv", auth, adminOnly, require("../controllers/adminController").exportProductsCsv);
+router.get("/abandoned-carts", auth, adminOnly, require("../controllers/adminController").getAbandonedCarts);
 
 module.exports = router;

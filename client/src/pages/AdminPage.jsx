@@ -42,6 +42,7 @@ import { AdminProductsTab } from "../components/AdminProductsTab";
 import { AdminPartnerSubmissionsTab } from "../components/AdminPartnerSubmissionsTab";
 import { AdminDeliveryTab } from "../components/AdminDeliveryTab";
 import { AdminCouponsTab } from "../components/AdminCouponsTab";
+import { AdminReportsTab } from "../components/AdminReportsTab";
 import { PushEnableCard } from "../components/PushEnableCard";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { PwaUpdateToast } from "../components/PwaUpdateToast";
@@ -594,6 +595,7 @@ export const AdminPage = () => {
     { id: 7, label: "Global broadcast", icon: "📣" },
     { id: 8, label: "Partner submissions", icon: "🤝", badge: adminUnreadReviews },
     { id: 9, label: "Order lookup", icon: "🔎" },
+    { id: 20, label: "Reports & Analytics", icon: "📊" },
     { id: 10, label: "Client inquiries", icon: "📧", badge: contactRequests.filter((c) => c.status === "unread").length },
     { id: 18, label: "Delivery rates", icon: "🚚" },
     { id: 19, label: "Coupon codes", icon: "🎟️" },
@@ -604,7 +606,7 @@ export const AdminPage = () => {
 
   const navGroups = [
     { title: "", items: [0] },
-    { title: "Revenue & sales", items: [1, 2, 12, 13, 18, 19, 9] },
+    { title: "Revenue & sales", items: [20, 1, 2, 12, 13, 18, 19, 9] },
     { title: "Catalog & docs", items: [4, 15, 5, 8] },
     { title: "Customers & support", items: [3, 6, 14, 7, 10, 16] },
     { title: "System", items: [11, 17] },
@@ -1567,6 +1569,13 @@ export const AdminPage = () => {
           {activeTab === 19 && (
             <TabWrapper3D tabKey={19}>
               <AdminCouponsTab token={token} showToast={showToast} />
+            </TabWrapper3D>
+          )}
+
+          {/* ================= TAB 20: EXECUTIVE REPORTS & ANALYTICS ================= */}
+          {activeTab === 20 && (
+            <TabWrapper3D tabKey={20}>
+              <AdminReportsTab />
             </TabWrapper3D>
           )}
 

@@ -3,6 +3,7 @@ import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
 import { useTranslation } from "react-i18next";
 import { track } from "../analytics";
+import { OptimizedImage } from "./OptimizedImage";
 
 // 1. Bespoke Vector Icons matching User Reference Images 1:1
 const WaterproofShieldIcon = ({ className = "w-4 h-4" }) => (
@@ -249,15 +250,12 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
     >
       {/* 1. Image Area (~42% Card Height) */}
       <div className="relative h-[195px] sm:h-[205px] shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-900 rounded-t-[22px]">
-        <img
+        <OptimizedImage
           src={imageSrc}
           alt={product.name || "Product"}
-          loading="lazy"
-          decoding="async"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = "/products/Banner1.jpeg";
-          }}
+          width={380}
+          height={205}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
         />
 

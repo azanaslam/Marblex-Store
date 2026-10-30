@@ -25,6 +25,7 @@ import { ProductDetailSkeleton } from "../components/LoaderSkeleton";
 import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
 import { setJsonLd, removeJsonLd } from "../utils/jsonLd";
 import { track } from "../analytics";
+import { OptimizedImage } from "../components/OptimizedImage";
 import gsap from "gsap";
 
 const ASSURANCE = [
@@ -617,13 +618,13 @@ export const ProductDetailPage = ({ addToCart }) => {
           {/* Mobile: single hero */}
           <div className="relative overflow-hidden rounded-[1.6rem] border border-slate-200 bg-slate-100 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:hidden">
             <div className="aspect-[4/5]">
-              <img
+              <OptimizedImage
                 src={currentImage}
                 alt={productName}
+                priority={true}
+                width={500}
+                height={625}
                 className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "/products/Banner1.jpeg";
-                }}
               />
             </div>
             <div className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
@@ -637,26 +638,25 @@ export const ProductDetailPage = ({ addToCart }) => {
           {/* Desktop/tablet: dual stage */}
           <div className="hidden gap-3.5 sm:grid sm:grid-cols-12 sm:items-stretch">
             <div className="group relative min-h-[320px] overflow-hidden rounded-[1.6rem] border border-slate-200 bg-slate-100 shadow-xs dark:border-slate-700 dark:bg-slate-800 sm:col-span-5 lg:min-h-[420px]">
-              <img
+              <OptimizedImage
                 src={galleryImages[1] || galleryImages[0]}
                 alt="Architectural Application"
+                width={400}
+                height={420}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                onError={(e) => {
-                  e.currentTarget.src = "/products/Banner1.jpeg";
-                }}
               />
               <div className="absolute left-3 top-3 rounded-md bg-black/60 px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
                 Site Application
               </div>
             </div>
             <div className="group relative min-h-[320px] overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-[#0c222e] sm:col-span-7 lg:min-h-[420px]">
-              <img
+              <OptimizedImage
                 src={currentImage}
                 alt={productName}
+                priority={true}
+                width={600}
+                height={420}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                onError={(e) => {
-                  e.currentTarget.src = "/products/Banner1.jpeg";
-                }}
               />
               <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-md bg-emerald-700/80 px-2.5 py-1 text-[9.5px] font-extrabold uppercase tracking-wider text-white backdrop-blur-md">
                 <CheckCircleRoundedIcon sx={{ fontSize: 13 }} /> Verified Quality
@@ -1299,7 +1299,13 @@ export const ProductDetailPage = ({ addToCart }) => {
                   className="w-44 shrink-0 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c222e] p-3 shadow-xs hover:border-[#ff6b4a]/50 transition group"
                 >
                   <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 mb-2">
-                    <img src={item.imageUrl || "/products/Banner1.jpeg"} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                    <OptimizedImage
+                      src={item.imageUrl || "/products/Banner1.jpeg"}
+                      alt={item.name}
+                      width={160}
+                      height={160}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    />
                   </div>
                   <h4 className="text-xs font-bold truncate text-[#0f1929] dark:text-white group-hover:text-[#ff6b4a] transition-colors">{item.name}</h4>
                   <p className="text-[11px] font-extrabold text-[#ff6b4a] mt-0.5">Rs. {Number(item.price || 0).toLocaleString("en-PK")}</p>

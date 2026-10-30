@@ -301,6 +301,150 @@ const recordDealerPayment = async (req, res) => {
   }
 };
 
+const getReports = async (req, res) => {
+  try {
+    const Product = require("../models/Product");
+    const { startDate, endDate } = req.query;
+    const now = new Date();
+    const start = startDate ? new Date(startDate) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : now;
+
+    const matchDate = { createdAt: { $gte: start, $lte: end } };
+
+    const [salesByDay, ordersByStatus, paymentMethods, revenueByCity, topProducts, lowStock, dealers] = await Promise.all([
+      Order.aggregate([
+        { $match: matchDate },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "Asia/Karachi" } },
+            revenue: { $sum: "$subtotal" },
+            orders: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Order.aggregate([
+        { $match: matchDate },
+        { $group: { _id: "$orderStatus", count: { $sum: 1 }, revenue: { $sum: "$subtotal" } } },
+      ]),
+      Order.aggregate([
+        { $match: matchDate },
+        { $group: { _id: "$paymentMethod", count: { $sum: 1 }, revenue: { $sum: "$subtotal" } } },
+      ]),
+      Order.aggregate([
+        { $match: matchDate },
+        { $group: { _id: "$city", revenue: { $sum: "$subtotal" }, count: { $sum: 1 } } },
+        { $sort: { revenue: -1 } },
+        { $limit: 10 },
+      ]),
+      Order.aggregate([
+        { $match: matchDate },
+        { $unwind: "$items" },
+        {
+          $group: {
+            _id: "$items.name",
+            qty: { $sum: "$items.quantity" },
+            revenue: { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
+          },
+        },
+        { $sort: { revenue: -1 } },
+        { $limit: 10 },
+      ]),
+      Product.find({ active: { $ne: false }, stock: { $lte: 5 } })
+        .select("name category stock price")
+        .sort({ stock: 1 })
+        .lean(),
+      User.find({ role: "dealer", creditUsed: { $gt: 0 } })
+        .select("name email phone creditLimit creditUsed")
+        .sort({ creditUsed: -1 })
+        .lean(),
+    ]);
+
+    res.json({
+      range: { start, end },
+      salesByDay,
+      ordersByStatus,
+      paymentMethods,
+      revenueByCity,
+      topProducts,
+      lowStock,
+      dealers,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to generate reports", error: err.message });
+  }
+};
+
+const exportOrdersCsv = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const filter = {};
+    if (startDate && endDate) {
+      filter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    const orders = await Order.find(filter).sort({ createdAt: -1 }).lean();
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="marblex_orders.csv"');
+
+    let csv = "Order Number,Date,Customer Name,Email,Phone,City,Status,Payment Method,Payment Status,Subtotal,Delivery,Discount,Total\n";
+    for (const o of orders) {
+      const date = o.createdAt ? new Date(o.createdAt).toISOString().split("T")[0] : "";
+      const total = (o.subtotal || 0) + (o.deliveryCharge || 0) - (o.discount || 0);
+      csv += `"${o.orderNumber || ""}","${date}","${(o.name || "").replace(/"/g, '""')}","${o.email || ""}","${o.phone || ""}","${(o.city || "").replace(/"/g, '""')}","${o.orderStatus || ""}","${o.paymentMethod || ""}","${o.paymentStatus || ""}",${o.subtotal || 0},${o.deliveryCharge || 0},${o.discount || 0},${total}\n`;
+    }
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to export orders", error: err.message });
+  }
+};
+
+const exportCustomersCsv = async (req, res) => {
+  try {
+    const users = await User.find().select("name email phone role creditLimit creditUsed createdAt").sort({ createdAt: -1 }).lean();
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="marblex_customers.csv"');
+
+    let csv = "Name,Email,Phone,Role,Credit Limit,Credit Balance,Registered Date\n";
+    for (const u of users) {
+      const date = u.createdAt ? new Date(u.createdAt).toISOString().split("T")[0] : "";
+      csv += `"${(u.name || "").replace(/"/g, '""')}","${u.email || ""}","${u.phone || ""}","${u.role || "customer"}",${u.creditLimit || 0},${u.creditUsed || 0},"${date}"\n`;
+    }
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to export customers", error: err.message });
+  }
+};
+
+const exportProductsCsv = async (req, res) => {
+  try {
+    const Product = require("../models/Product");
+    const products = await Product.find().sort({ createdAt: -1 }).lean();
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="marblex_products.csv"');
+
+    let csv = "Product Name,Category,Price,Dealer Price,Stock,Active\n";
+    for (const p of products) {
+      csv += `"${(p.name || "").replace(/"/g, '""')}","${p.category || "General"}",${p.price || 0},${p.dealerPrice || 0},${p.stock || 0},${p.active !== false ? "Yes" : "No"}\n`;
+    }
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to export products", error: err.message });
+  }
+};
+
+const getAbandonedCarts = async (req, res) => {
+  try {
+    const AbandonedCart = require("../models/AbandonedCart");
+    const carts = await AbandonedCart.find({ recovered: false }).sort({ updatedAt: -1 }).limit(50).lean();
+    res.json(carts);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch abandoned carts", error: err.message });
+  }
+};
+
 module.exports = {
   getOverview,
   getAllBlogs,
@@ -315,6 +459,11 @@ module.exports = {
   toggleUserAccess,
   updateUserRole,
   recordDealerPayment,
+  getReports,
+  exportOrdersCsv,
+  exportCustomersCsv,
+  exportProductsCsv,
+  getAbandonedCarts,
   getEmailConfig: async (req, res) => {
     try {
       const config = await Config.findOne({ key: "email_settings" });

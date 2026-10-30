@@ -191,6 +191,9 @@ const orderSchema = new mongoose.Schema(
 
 // High-speed compound indexes for customer lookups and admin dashboards
 orderSchema.index({ createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ city: 1, createdAt: -1 });
+orderSchema.index({ paymentMethod: 1, createdAt: -1 });
 orderSchema.index({ channel: 1, paymentStatus: 1, createdAt: -1 });
 orderSchema.index({ userId: 1, createdAt: -1 });
 

@@ -12,12 +12,36 @@ const invalidateCache = () => {
 
 const getProducts = async (req, res) => {
   try {
-    const now = Date.now();
-    // High performance query with .lean() to bypass Mongoose hydration overhead
-    const products = await Product.find({ active: { $ne: false } })
+    const filter = { active: { $ne: false } };
+    if (req.query.category && req.query.category !== "All") {
+      filter.category = req.query.category;
+    }
+    if (req.query.q && req.query.q.trim()) {
+      const q = req.query.q.trim();
+      filter.$or = [
+        { name: { $regex: q, $options: "i" } },
+        { nameUr: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } },
+        { category: { $regex: q, $options: "i" } },
+      ];
+    }
+
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
+    const isPaginated = !isNaN(page) && !isNaN(limit) && limit > 0;
+
+    let query = Product.find(filter)
       .select("name nameUr imageUrl extraImages description descriptionUr price dealerPrice category categoryUr stock featured active variants bulkTiers coverage applications createdAt")
-      .sort({ createdAt: -1 })
-      .lean();
+      .sort({ createdAt: -1 });
+
+    let total = 0;
+    if (isPaginated) {
+      total = await Product.countDocuments(filter);
+      const skip = (Math.max(1, page) - 1) * limit;
+      query = query.skip(skip).limit(limit);
+    }
+
+    const products = await query.lean();
 
     // Check if requester is logged in dealer
     const user = req.user;
@@ -65,6 +89,14 @@ const getProducts = async (req, res) => {
     });
 
     res.setHeader("Cache-Control", "no-cache");
+    if (isPaginated) {
+      return res.json({
+        products: mapped,
+        total,
+        page: Math.max(1, page),
+        totalPages: Math.ceil(total / limit),
+      });
+    }
     return res.json(mapped);
   } catch (error) {
     return res.status(500).json({ message: "Failed to fetch products", error: error.message });
