@@ -187,12 +187,26 @@ export const BrandSplashPreloader = ({ onComplete }) => {
     };
   }, [handleFinish]);
 
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+        handleFinish();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [handleFinish]);
+
   if (!visible) return null;
 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[999999] overflow-hidden select-none"
+      onClick={handleFinish}
+      role="button"
+      tabIndex={0}
+      aria-label="Skip brand animation"
+      className="fixed inset-0 z-[999999] overflow-hidden select-none cursor-pointer"
     >
       {/* Clean Light Studio Canvas */}
       <div

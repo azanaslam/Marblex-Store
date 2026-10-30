@@ -18,6 +18,7 @@ import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import ZoomInOutlinedIcon from "@mui/icons-material/ZoomInOutlined";
+import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
 import { authHeaders, http } from "../api/http";
 import { getAuthToken } from "../auth/session";
 import { ProductDetailSkeleton } from "../components/LoaderSkeleton";
@@ -276,6 +277,74 @@ export const ProductDetailPage = ({ addToCart }) => {
   const isOutOfStock = hasStock && currentStock === 0;
   const isLowStock = hasStock && currentStock > 0 && currentStock <= 5;
 
+  // Swipe-back gesture on mobile
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const onTouchStart = (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const onTouchEnd = (e) => {
+      const deltaX = e.changedTouches[0].clientX - touchStartX;
+      const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY);
+      if (touchStartX < 60 && deltaX > 75 && deltaY < 80) {
+        if (typeof navigator !== "undefined" && navigator.vibrate) {
+          navigator.vibrate(12);
+        }
+        navigate(-1);
+      }
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [navigate]);
+
+  // Record to Recently Viewed
+  useEffect(() => {
+    if (!product || !product._id) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem("marblex_recently_viewed") || "[]");
+      const filtered = stored.filter((p) => p._id !== product._id);
+      const updated = [
+        {
+          _id: product._id,
+          name: product.name,
+          nameUr: product.nameUr,
+          price: product.price,
+          imageUrl: product.imageUrl,
+          category: product.category,
+        },
+        ...filtered,
+      ].slice(0, 8);
+      localStorage.setItem("marblex_recently_viewed", JSON.stringify(updated));
+    } catch {}
+  }, [product]);
+
+  const handleNativeShare = async () => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: productName,
+          text: `Check out ${productName} on MARBLEX Chemical & Rubber`,
+          url: window.location.href,
+        });
+        if (navigator.vibrate) navigator.vibrate(15);
+      } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Link copied to clipboard!");
+      } catch {}
+    }
+  };
+
   // SEO Product and Breadcrumbs JSON-LD Structured Data
   useEffect(() => {
     if (!product) return;
@@ -519,15 +588,26 @@ export const ProductDetailPage = ({ addToCart }) => {
             {productName}
           </h1>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="no-shimmer inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0a3d52] shadow-xs transition hover:border-[#ff6b4a]/40 hover:text-[#ff6b4a] dark:border-slate-700 dark:bg-[#0e2735] dark:text-slate-200"
-        >
-          <ArrowBackRoundedIcon sx={{ fontSize: 14 }} />
-          <span className="hidden sm:inline">Back to Catalog</span>
-          <span className="sm:hidden">Back</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleNativeShare}
+            aria-label="Share product"
+            className="no-shimmer inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0a3d52] shadow-xs transition hover:border-[#ff6b4a]/40 hover:text-[#ff6b4a] dark:border-slate-700 dark:bg-[#0e2735] dark:text-slate-200 cursor-pointer"
+          >
+            <ShareOutlinedIcon sx={{ fontSize: 15 }} />
+            <span className="hidden sm:inline">Share</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="no-shimmer inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-[#0a3d52] shadow-xs transition hover:border-[#ff6b4a]/40 hover:text-[#ff6b4a] dark:border-slate-700 dark:bg-[#0e2735] dark:text-slate-200"
+          >
+            <ArrowBackRoundedIcon sx={{ fontSize: 14 }} />
+            <span className="hidden sm:inline">Back to Catalog</span>
+            <span className="sm:hidden">Back</span>
+          </button>
+        </div>
       </div>
 
       {/* Main stage */}
@@ -1196,6 +1276,39 @@ export const ProductDetailPage = ({ addToCart }) => {
           ))}
         </div>
       </section>
+
+      {/* Recently Viewed Row */}
+      {(() => {
+        let recents = [];
+        try {
+          recents = JSON.parse(localStorage.getItem("marblex_recently_viewed") || "[]").filter((p) => p._id !== id);
+        } catch {
+          recents = [];
+        }
+        if (!recents.length) return null;
+        return (
+          <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800">
+            <h3 className="text-lg font-bold font-heading mb-4 text-[#0a3d52] dark:text-white">
+              Recently Viewed Products
+            </h3>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+              {recents.map((item) => (
+                <Link
+                  key={item._id}
+                  to={`/product/${item._id}`}
+                  className="w-44 shrink-0 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c222e] p-3 shadow-xs hover:border-[#ff6b4a]/50 transition group"
+                >
+                  <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 mb-2">
+                    <img src={item.imageUrl || "/products/Banner1.jpeg"} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                  </div>
+                  <h4 className="text-xs font-bold truncate text-[#0f1929] dark:text-white group-hover:text-[#ff6b4a] transition-colors">{item.name}</h4>
+                  <p className="text-[11px] font-extrabold text-[#ff6b4a] mt-0.5">Rs. {Number(item.price || 0).toLocaleString("en-PK")}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Mobile sticky CTA */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/90 bg-white/95 px-3 py-2.5 backdrop-blur-md dark:border-slate-800 dark:bg-[#0c222e]/95 sm:hidden">

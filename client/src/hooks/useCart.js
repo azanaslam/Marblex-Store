@@ -137,6 +137,15 @@ export const useCart = () => {
   }, []);
 
   const addToCart = useCallback((product) => {
+    try {
+      localStorage.setItem("marblex_added_to_cart", "1");
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([25, 40, 25]);
+      }
+    } catch {
+      /* ignore */
+    }
+
     const qtyToAdd = Math.max(1, parseInt(product.quantity, 10) || 1);
     const prodId = product._id || product.productId || product.id;
     const variantSku = product.variantSku || "";

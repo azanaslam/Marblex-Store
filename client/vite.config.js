@@ -88,21 +88,38 @@ export default defineConfig({
             description: 'Browse MARBLEX catalog',
           },
           {
-            name: 'WhatsApp desk',
-            short_name: 'WhatsApp',
-            url: '/?focus=whatsapp',
-            description: 'Open negotiation / quote',
+            name: 'Coverage Calculator',
+            short_name: 'Calculator',
+            url: '/calculator',
+            description: 'Material estimator',
           },
           {
-            name: 'Cart',
+            name: 'Track Orders',
+            short_name: 'Orders',
+            url: '/dashboard',
+            description: 'Order history & live tracking',
+          },
+          {
+            name: 'Cart & Checkout',
             short_name: 'Cart',
             url: '/cart',
             description: 'Review cart & checkout',
           },
+        ],
+        screenshots: [
           {
-            name: 'Contact',
-            short_name: 'Contact',
-            url: '/contact',
+            src: '/hero/desktop_waterproofing.jpg',
+            sizes: '1280x720',
+            type: 'image/jpeg',
+            form_factor: 'wide',
+            label: 'MARBLEX Industrial Store Desktop',
+          },
+          {
+            src: '/hero/mobile_waterproofing.jpg',
+            sizes: '720x1280',
+            type: 'image/jpeg',
+            form_factor: 'narrow',
+            label: 'MARBLEX Mobile Store & PWA',
           },
         ],
         share_target: {
@@ -147,6 +164,38 @@ export default defineConfig({
           '**/images/**',
         ],
         runtimeCaching: [
+          {
+            urlPattern: ({ url, request }) =>
+              request.method === 'POST' &&
+              (url.pathname.startsWith('/api/quotes') ||
+                url.pathname.startsWith('/api/support') ||
+                url.pathname.startsWith('/api/contact')),
+            handler: 'NetworkOnly',
+            options: {
+              backgroundSync: {
+                name: 'marblex-offline-forms-queue',
+                options: {
+                  maxRetentionTime: 24 * 60, // Retry for up to 24 hours
+                },
+              },
+            },
+          },
+          {
+            urlPattern: ({ url }) => url.pathname === '/api/products' || /^\/api\/products\/[a-zA-Z0-9_-]+$/.test(url.pathname),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'marblex-products-catalog',
+              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            },
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.endsWith('.pdf') || url.pathname.includes('/pdfs/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'marblex-pdf-catalogs',
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/api'),
             handler: 'NetworkFirst',

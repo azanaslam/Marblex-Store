@@ -231,6 +231,24 @@ export function InstallPwaPrompt() {
       return undefined;
     }
 
+    // Smart PWA Timing: Show after 2nd visit or after first add-to-cart
+    let visits = 1;
+    let addedToCart = false;
+    try {
+      visits = Number(localStorage.getItem("marblex_pwa_visits") || 0);
+      addedToCart = localStorage.getItem("marblex_added_to_cart") === "1";
+    } catch {
+      /* ignore */
+    }
+
+    if (visits < 2 && !addedToCart) {
+      // First visit before adding to cart: record visit and defer prompt
+      try {
+        localStorage.setItem("marblex_pwa_visits", String(visits + 1));
+      } catch {}
+      return undefined;
+    }
+
     let dismissed = false;
     try {
       dismissed = sessionStorage.getItem(DISMISS_KEY) === "1";

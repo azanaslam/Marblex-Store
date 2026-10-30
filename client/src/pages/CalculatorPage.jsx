@@ -169,6 +169,25 @@ export const CalculatorPage = ({ cart = [], setCart }) => {
     });
   };
 
+  const handleWebShare = async () => {
+    if (!selectedProduct || !coverageData) return;
+    const shareData = {
+      title: `${selectedProduct.name} - Coverage Calculation`,
+      text: `Calculated ${coverageData.totalQty} kg/L for ${dimensionValue} ${unit}. Estimated: PKR ${coverageData.estimatedCost.toLocaleString()}.`,
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+        alert("Estimation copied to clipboard!");
+      }
+    } catch {
+      /* user dismissed share dialog */
+    }
+  };
+
   return (
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10 text-[#0b2f3c] dark:text-[#eaf3f7]">
       {/* Header */}
@@ -407,14 +426,24 @@ export const CalculatorPage = ({ cart = [], setCart }) => {
               <span>{addedToast ? "Added to Cart!" : "Add Recommended Packs to Cart"}</span>
             </button>
 
-            <button
-              type="button"
-              onClick={shareOnWhatsApp}
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-            >
-              <WhatsAppIcon sx={{ fontSize: 18 }} />
-              <span>Share Specification on WhatsApp</span>
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={shareOnWhatsApp}
+                className="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              >
+                <WhatsAppIcon sx={{ fontSize: 18 }} />
+                <span>WhatsApp</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleWebShare}
+                className="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              >
+                <ShareIcon sx={{ fontSize: 18 }} />
+                <span>Share Result</span>
+              </button>
+            </div>
 
             <Link
               to={`/contact?subject=${encodeURIComponent(`RFQ for ${selectedProduct?.name} (${coverageData?.totalQty} units)`)}`}

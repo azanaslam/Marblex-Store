@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.marblex.shop",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:7D:0F:52:AB:E0:85:42:86:E0:23:7C:1E:8B:3F:8F:A1:66:9A:3E:03:A5:14:F2:76:F2:E3:4A:8D:12"
+      ]
+    }
+  }
+]

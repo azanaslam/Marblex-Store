@@ -109,6 +109,7 @@ function App() {
                 <Route path="/calculator" element={<CalculatorPage cart={cart} setCart={setCart} />} />
                 <Route path="/product-finder" element={<ProductFinderPage cart={cart} setCart={setCart} />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/notifications" element={<Navigate to="/dashboard/notifications" replace />} />
                 <Route path="/share" element={<ShareTargetPage />} />
                 <Route path="/dashboard/*" element={<PortalHost />} />
                 <Route path="/payment/success" element={<PaymentResultPage success />} />
