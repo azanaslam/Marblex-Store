@@ -15,7 +15,7 @@ const getProducts = async (req, res) => {
     const now = Date.now();
     // High performance query with .lean() to bypass Mongoose hydration overhead
     const products = await Product.find({ active: { $ne: false } })
-      .select("name imageUrl extraImages description price dealerPrice category stock featured active variants bulkTiers coverage applications createdAt")
+      .select("name nameUr imageUrl extraImages description descriptionUr price dealerPrice category categoryUr stock featured active variants bulkTiers coverage applications createdAt")
       .sort({ createdAt: -1 })
       .lean();
 

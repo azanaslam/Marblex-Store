@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
@@ -44,6 +45,8 @@ import gsap from "gsap";
 
 export const CartPage = ({ cart = [], setCart }) => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const isUrdu = i18n.language === "ur";
   const authUser = getAuthUser();
   const containerRef = useRef(null);
 
@@ -685,7 +688,7 @@ export const CartPage = ({ cart = [], setCart }) => {
                               title={item.name}
                             >
                               <h3 className="font-bold text-sm sm:text-[15px] leading-snug line-clamp-2 text-[#0a3d52] dark:text-white mb-0.5 group-hover/title:text-[#ff6b4a] transition-colors">
-                                {item.name}
+                                {isUrdu && item.nameUr ? item.nameUr : item.name}
                               </h3>
                             </RouterLink>
                             {item.variantLabel && (

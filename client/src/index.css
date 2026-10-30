@@ -45,6 +45,25 @@
   img[loading="lazy"] {
     content-visibility: auto;
   }
+
+  [dir="rtl"],
+  .urdu-mode {
+    font-family: 'Noto Naskh Arabic', 'Urdu Typesetting', 'Segoe UI', Tahoma, sans-serif;
+    letter-spacing: normal;
+  }
+
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4,
+  [dir="rtl"] h5,
+  [dir="rtl"] h6,
+  .urdu-mode h1,
+  .urdu-mode h2,
+  .urdu-mode h3 {
+    font-family: 'Noto Naskh Arabic', 'Urdu Typesetting', 'Space Grotesk', sans-serif;
+    line-height: 1.5;
+  }
 }
 
 @layer components {

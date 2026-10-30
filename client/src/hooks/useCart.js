@@ -182,6 +182,7 @@ export const useCart = () => {
         {
           productId: prodId,
           name: product.name,
+          nameUr: product.nameUr || "",
           price: product.price,
           quantity: finalQty,
           stock,

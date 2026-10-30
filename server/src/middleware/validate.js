@@ -92,11 +92,14 @@ const ticketSchema = z.object({
 
 const productSchema = z.object({
   name: z.string().trim().min(2, "Product name must be at least 2 characters"),
+  nameUr: z.string().trim().optional(),
   price: z.coerce.number().min(0, "Price must be a non-negative number"),
   imageUrl: z.string().trim().optional(),
   extraImages: z.array(z.string()).optional(),
   description: z.string().trim().optional(),
+  descriptionUr: z.string().trim().optional(),
   category: z.string().trim().optional(),
+  categoryUr: z.string().trim().optional(),
   stock: z.coerce.number().int().min(0).optional(),
   featured: z.boolean().optional(),
   active: z.boolean().optional(),

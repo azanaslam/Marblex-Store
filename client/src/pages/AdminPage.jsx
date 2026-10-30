@@ -88,12 +88,15 @@ export const AdminPage = () => {
   const [products, setProducts] = useState([]);
   const [product, setProduct] = useState({
     name: "",
+    nameUr: "",
     imageUrl: "",
     extraImages: ["", "", ""],
     description: "",
+    descriptionUr: "",
     price: 0,
     stock: 0,
     category: "General",
+    categoryUr: "",
     featured: false,
     active: true,
   });
@@ -246,12 +249,15 @@ export const AdminPage = () => {
   const resetProductForm = () => {
     setProduct({
       name: "",
+      nameUr: "",
       imageUrl: "",
       extraImages: ["", "", ""],
       description: "",
+      descriptionUr: "",
       price: 0,
       stock: 0,
       category: "General",
+      categoryUr: "",
       featured: false,
       active: true,
       variants: [],
@@ -324,14 +330,17 @@ export const AdminPage = () => {
     setEditingProductId(item._id);
     setProduct({
       name: item.name || "",
+      nameUr: item.nameUr || "",
       imageUrl: item.imageUrl || "",
       extraImages: Array.isArray(item.extraImages) && item.extraImages.length
         ? [...item.extraImages, "", "", ""].slice(0, 3)
         : ["", "", ""],
       description: item.description || "",
+      descriptionUr: item.descriptionUr || "",
       price: Number(item.price) || 0,
       stock: Number(item.stock) || 0,
       category: item.category || "General",
+      categoryUr: item.categoryUr || "",
       featured: Boolean(item.featured),
       active: item.active !== false,
       variants: Array.isArray(item.variants) ? item.variants : [],

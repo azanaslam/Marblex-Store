@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
@@ -24,6 +25,7 @@ export function AppBottomNav({
 }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const navRef = useRef(null);
   const itemsRef = useRef([]);
   const hasAnimatedRef = useRef(false);
@@ -147,7 +149,7 @@ export function AppBottomNav({
             onClick={(e) => handleTabTap(e.currentTarget)}
           >
             <HomeRoundedIcon sx={{ fontSize: 22 }} />
-            Home
+            {t("bottomNav.home", "Home")}
           </RouterLink>
 
           <RouterLink
@@ -158,7 +160,7 @@ export function AppBottomNav({
             onClick={(e) => handleTabTap(e.currentTarget)}
           >
             <StorefrontRoundedIcon sx={{ fontSize: 22 }} />
-            Calc
+            {t("bottomNav.calc", "Calc")}
           </RouterLink>
 
           <button
@@ -184,7 +186,7 @@ export function AppBottomNav({
             }}
           >
             <StorefrontRoundedIcon sx={{ fontSize: 22 }} />
-            Shop
+            {t("bottomNav.shop", "Shop")}
           </button>
 
             <RouterLink
@@ -211,7 +213,7 @@ export function AppBottomNav({
               >
                 <ShoppingCartRoundedIcon sx={{ fontSize: 22 }} />
               </Badge>
-              Cart
+              {t("bottomNav.cart", "Cart")}
             </RouterLink>
 
               <a
@@ -223,7 +225,7 @@ export function AppBottomNav({
                 onClick={(e) => handleTabTap(e.currentTarget)}
               >
                 <WhatsAppIcon sx={{ fontSize: 22 }} className="text-emerald-500" />
-                Chat
+                {t("bottomNav.chat", "Chat")}
               </a>
 
               <RouterLink
@@ -260,7 +262,7 @@ export function AppBottomNav({
                 ) : (
                   <PersonRoundedIcon sx={{ fontSize: 22 }} />
                 )}
-                {isLoggedIn ? "Dashboard" : "Account"}
+                {isLoggedIn ? t("bottomNav.dashboard", "Dashboard") : t("bottomNav.account", "Account")}
               </RouterLink>
             </div>
           </nav>

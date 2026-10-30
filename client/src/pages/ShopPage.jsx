@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { http } from "../api/http";
 import { HeroBanner } from "../components/HeroBanner";
 import { EnterpriseMetricsBar } from "../components/EnterpriseMetricsBar";
@@ -521,6 +522,8 @@ const enterpriseMetrics = [
 export const ShopPage = ({ addToCart }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t, i18n } = useTranslation();
+  const isUrdu = i18n.language === "ur";
   const [products, setProducts] = useState(() => globalProductsCache || demoProducts);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [calcSurface, setCalcSurface] = useState("roof");
@@ -1366,29 +1369,29 @@ export const ShopPage = ({ addToCart }) => {
           </div>
 
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight font-heading">
-            <span className="text-[#0a3d52] dark:text-white">Engineered </span>
-            <span className="text-[#ff6b4a]">Products & Materials</span>
+            <span className="text-[#0a3d52] dark:text-white">{isUrdu ? "صنعتی " : "Engineered "}</span>
+            <span className="text-[#ff6b4a]">{isUrdu ? "پراڈکٹس اور مٹیریلز" : "Products & Materials"}</span>
           </h2>
 
           <p className="text-[#565e69] dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
-            Certified industrial solutions engineered for waterproofing, structural integrity, and long-term durability.
+            {isUrdu ? "واٹر پروفنگ اور تعمیراتی پائیداری کے لیے مصدقہ صنعتی معیار کے کیمیکلز۔" : "Certified industrial solutions engineered for waterproofing, structural integrity, and long-term durability."}
           </p>
         </div>
 
         {/* Smart Engineering Tools */}
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          <RouterLink
+          <Link
             to="/product-finder"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/40 text-[#ff6b4a] font-bold text-xs uppercase tracking-wider hover:bg-orange-100 transition-colors shadow-2xs"
           >
-            <span>🧭 Help Me Choose (Product Finder)</span>
-          </RouterLink>
-          <RouterLink
+            <span>🧭 {isUrdu ? "پراڈکٹ گائیڈ (سلیکٹر)" : "Help Me Choose (Product Finder)"}</span>
+          </Link>
+          <Link
             to="/calculator"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0a3d52] dark:bg-sky-500 text-white font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-opacity shadow-2xs"
           >
-            <span>📐 Material Calculator</span>
-          </RouterLink>
+            <span>📐 {isUrdu ? "مٹیریل کیلکولیٹر" : "Material Calculator"}</span>
+          </Link>
         </div>
       </div>
 

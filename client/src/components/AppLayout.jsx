@@ -26,7 +26,10 @@ import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettin
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
+import TranslateOutlinedIcon from "@mui/icons-material/TranslateOutlined";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { setAppLanguage } from "../i18n/i18n";
 import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
@@ -51,6 +54,8 @@ const FloatingChatWidget = lazy(() =>
 export const AppLayout = ({ cartCount, children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const isUrdu = i18n.language === "ur";
   const [authUserFromStorage, setAuthUserFromStorage] = useState(getAuthUser());
   const [token, setToken] = useState(getAuthToken());
   const [chatUnreadNav, setChatUnreadNav] = useState(0);
@@ -420,14 +425,14 @@ export const AppLayout = ({ cartCount, children }) => {
   }, [runNavEntrance, showNavInstant]);
 
   const navLinks = [
-    { label: "Home", path: "/", icon: HomeOutlinedIcon, desc: "Products & industrial catalog" },
-    { label: "About Us", path: "/about", icon: InfoOutlinedIcon, desc: "Company legacy & mission" },
-    { label: "Services", path: "/services", icon: ConstructionOutlinedIcon, desc: "Site systems & applications" },
-    { label: "Contact", path: "/contact", icon: EmailOutlinedIcon, desc: "Engineering desk & support" },
-    { label: "Blogs", path: "/blogs", icon: ArticleOutlinedIcon, desc: "Field guides & insights" },
-    { label: "Catalogs", path: "/catalogs", icon: MenuBookOutlinedIcon, desc: "TDS packs & brochures" },
-    { label: "Calculator", path: "/calculator", icon: ConstructionOutlinedIcon, desc: "Material coverage estimator" },
-    { label: "Product Finder", path: "/product-finder", icon: InfoOutlinedIcon, desc: "Guided system selector" },
+    { label: t("nav.home", "Home"), path: "/", icon: HomeOutlinedIcon, desc: "Products & industrial catalog" },
+    { label: t("nav.about", "About Us"), path: "/about", icon: InfoOutlinedIcon, desc: "Company legacy & mission" },
+    { label: t("nav.services", "Services"), path: "/services", icon: ConstructionOutlinedIcon, desc: "Site systems & applications" },
+    { label: t("nav.contact", "Contact"), path: "/contact", icon: EmailOutlinedIcon, desc: "Engineering desk & support" },
+    { label: t("nav.blogs", "Blogs"), path: "/blogs", icon: ArticleOutlinedIcon, desc: "Field guides & insights" },
+    { label: t("nav.catalogs", "Catalogs"), path: "/catalogs", icon: MenuBookOutlinedIcon, desc: "TDS packs & brochures" },
+    { label: t("nav.calculator", "Calculator"), path: "/calculator", icon: ConstructionOutlinedIcon, desc: "Material coverage estimator" },
+    { label: t("nav.finder", "Product Finder"), path: "/product-finder", icon: InfoOutlinedIcon, desc: "Guided system selector" },
   ];
 
   const isAdminRoute = location.pathname.startsWith("/admin");
@@ -659,6 +664,21 @@ export const AppLayout = ({ cartCount, children }) => {
               {/* Install as app (PWA) — hide prompt chrome when already running as installed app */}
               {!isApp ? <InstallPwaButton variant="nav" isDark={isDark} /> : null}
 
+              {/* Language toggle — English / اردو */}
+              <button
+                type="button"
+                onClick={() => setAppLanguage(isUrdu ? "en" : "ur")}
+                title={isUrdu ? "Switch to English" : "اردو میں دیکھیں"}
+                aria-label="Toggle language"
+                className={`flex h-9 px-2.5 sm:h-10 sm:px-3 rounded-full border transition-all items-center justify-center shrink-0 font-bold text-xs gap-1.5 cursor-pointer touch-manipulation ${isDark
+                  ? "bg-[#0e2735] border-slate-700 text-emerald-300 hover:bg-slate-800 hover:border-emerald-400/50 shadow-xs"
+                  : "bg-[#f8fafc] border-slate-200 text-[#0a3d52] hover:bg-white hover:border-[#0a3d52]/40 shadow-xs"
+                  }`}
+              >
+                <TranslateOutlinedIcon sx={{ fontSize: 16 }} />
+                <span>{isUrdu ? "EN" : "اردو"}</span>
+              </button>
+
               {/* Theme toggle — always in navbar */}
               <button
                 type="button"
@@ -848,6 +868,19 @@ export const AppLayout = ({ cartCount, children }) => {
                         <button
                           type="button"
                           role="menuitem"
+                          onClick={() => {
+                            setAccountMenuOpen(false);
+                            setAppLanguage(isUrdu ? "en" : "ur");
+                          }}
+                          className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
+                            }`}
+                        >
+                          <TranslateOutlinedIcon sx={{ fontSize: 17 }} />
+                          <span className="flex-1 text-left">{isUrdu ? "English زبان" : "اردو زبان"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
                           onClick={logout}
                           className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold text-rose-600 transition hover:bg-rose-50 sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] dark:text-rose-400 dark:hover:bg-rose-950/40"
                         >
@@ -925,16 +958,29 @@ export const AppLayout = ({ cartCount, children }) => {
                   MARBLEX
                 </p>
                 <p className={`mt-0.5 font-heading text-[15px] font-extrabold ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
-                  Navigate
+                  {isUrdu ? "مینیو" : "Navigate"}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (typeof navigator !== "undefined" && navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
-                  setIsMenuOpen(false);
-                }}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAppLanguage(isUrdu ? "en" : "ur")}
+                  className={`flex h-8 px-2.5 items-center justify-center rounded-full border text-[11px] font-bold gap-1 transition ${
+                    isDark
+                      ? "bg-slate-800 border-slate-700 text-emerald-400 hover:bg-slate-700"
+                      : "bg-slate-100 border-slate-200 text-[#0a3d52] hover:bg-slate-200"
+                  }`}
+                >
+                  <TranslateOutlinedIcon sx={{ fontSize: 14 }} />
+                  <span>{isUrdu ? "English" : "اردو"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (typeof navigator !== "undefined" && navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
+                    setIsMenuOpen(false);
+                  }}
                 onTouchEnd={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -951,6 +997,7 @@ export const AppLayout = ({ cartCount, children }) => {
                 <CloseIcon sx={{ fontSize: 18 }} />
               </button>
             </div>
+          </div>
 
             <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-3">
               {navLinks.map((link) => {

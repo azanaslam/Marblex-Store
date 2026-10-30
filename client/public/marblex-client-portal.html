@@ -1828,6 +1828,12 @@ const hydratePortal=async(view)=>{
 window.addEventListener('message',e=>{
   if(!e.data)return;
   if(e.data.type==='MARBLEX_THEME'&&e.data.theme){sT(e.data.theme);return}
+  if(e.data.type==='MARBLEX_LANG_CHANGE'||(e.data.type==='MARBLEX_PORTAL_INIT'&&e.data.lang)){
+    document.documentElement.lang=e.data.lang||'en';
+    document.documentElement.dir=e.data.dir||(e.data.lang==='ur'?'rtl':'ltr');
+    if(e.data.lang==='ur'){document.body.classList.add('urdu-mode')}else{document.body.classList.remove('urdu-mode')}
+    if(e.data.type==='MARBLEX_LANG_CHANGE')return;
+  }
   if(e.data.type==='MARBLEX_MARK_NOTIFS_READ'){markAllNfRead(allNotifCandidates().map(x=>x.id));pushNotifs();if(S.v==='notifs')go('notifs',1);return}
   if(e.data.type==='MARBLEX_PORTAL_REQUEST_UNREAD'){pushNotifs();return}
   if(e.data.type!=='MARBLEX_PORTAL_INIT')return;

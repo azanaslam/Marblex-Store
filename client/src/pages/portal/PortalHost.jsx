@@ -58,11 +58,31 @@ export const PortalHost = () => {
 
   useEffect(() => {
     const iframe = iframeRef.current;
+    if (!iframe) return;
+    const onLangChange = (e) => {
+      try {
+        iframe.contentWindow?.postMessage({
+          type: "MARBLEX_LANG_CHANGE",
+          lang: e.detail?.lang || "en",
+          dir: e.detail?.dir || "ltr",
+        }, window.location.origin);
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("marblex:lang_change", onLangChange);
+    return () => window.removeEventListener("marblex:lang_change", onLangChange);
+  }, []);
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
     if (!iframe || !token) return;
 
     const user = getAuthUser();
     const view = pathToPortalView(location.pathname);
-    const initKey = `${token}|${location.pathname}|app:${isApp ? 1 : 0}`;
+    const lang = localStorage.getItem("marblex_lang") || "en";
+    const dir = lang === "ur" ? "rtl" : "ltr";
+    const initKey = `${token}|${location.pathname}|app:${isApp ? 1 : 0}|${lang}`;
 
     const payload = {
       type: "MARBLEX_PORTAL_INIT",
@@ -71,6 +91,8 @@ export const PortalHost = () => {
       embedded: true,
       appShell: isApp,
       theme: localStorage.getItem("marblex_theme") || "light",
+      lang,
+      dir,
       apiBase: API_BASE_URL,
       token,
       user: user

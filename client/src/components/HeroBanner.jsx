@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import gsap from "gsap";
@@ -95,6 +96,7 @@ const CATEGORIES = [
 
 export const HeroBanner = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const [activeSlide, setActiveSlide] = useState(0);
 
   const heroRef = useRef(null);
@@ -347,7 +349,7 @@ export const HeroBanner = () => {
                   onClick={handleScrollToProducts}
                   className="shimmer-btn w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-7 py-2.5 sm:py-3.5 rounded-full bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] text-white font-bold text-[11px] sm:text-sm uppercase tracking-wider shadow-[0_0_24px_rgba(255,107,74,0.4)] transition-all hover:scale-[0.99] active:scale-95 cursor-pointer whitespace-nowrap"
                 >
-                  <span>Shop Products</span>
+                  <span>{t("hero.exploreProducts", "Shop Products")}</span>
                   <ArrowForwardIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
                 </button>
               </div>
@@ -358,7 +360,7 @@ export const HeroBanner = () => {
               className="shimmer-btn flex-1 sm:flex-initial w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-full bg-white/15 hover:bg-white/25 active:bg-white/30 text-white font-semibold text-[11px] sm:text-sm uppercase tracking-wider border border-white/30 hover:border-white/50 backdrop-blur-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer whitespace-nowrap"
             >
               <WhatsAppIcon sx={{ fontSize: { xs: 16, sm: 18 }, color: "#10b981" }} />
-              <span>Instant Quote</span>
+              <span>{t("hero.getQuote", "Instant Quote")}</span>
             </button>
           </div>
 

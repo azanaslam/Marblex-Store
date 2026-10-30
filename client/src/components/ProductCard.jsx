@@ -1,6 +1,7 @@
 import { memo, useState } from "react";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
+import { useTranslation } from "react-i18next";
 import { track } from "../analytics";
 
 // 1. Bespoke Vector Icons matching User Reference Images 1:1
@@ -201,8 +202,13 @@ const getProductMeta = (product, index) => {
 };
 
 const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }) => {
+  const { t, i18n } = useTranslation();
+  const isUrdu = i18n.language === "ur";
+  const displayName = isUrdu && product.nameUr ? product.nameUr : product.name;
+  const displayDesc = isUrdu && product.descriptionUr ? product.descriptionUr : (product.description || "High-performance engineered solutions for waterproofing and industrial durability.");
+
   const [quantity, setQuantity] = useState(1);
-  const priceLabel = Number(product.price ?? 0).toLocaleString();
+  const priceLabel = Number(product.price ?? 0).toLocaleString("en-PK");
   const imageSrc = product.imageUrl?.trim() || "/products/Banner1.jpeg";
   const { leftBadge, rightBadge, benefits } = getProductMeta(product, index);
 
@@ -278,7 +284,7 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
         {/* Quick View / Explore Details Overlay on Hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center pointer-events-none">
           <span className="translate-y-2 group-hover:translate-y-0 transition-transform duration-300 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/95 dark:bg-[#0c222e]/95 backdrop-blur-md text-[#0a3d52] dark:text-white font-bold text-xs shadow-lg border border-white/20">
-            <span>View Details</span>
+            <span>{t("shop.viewDetails", "View Details")}</span>
             <ArrowOutwardIcon sx={{ fontSize: 13 }} className="text-[#ff6b4a]" />
           </span>
         </div>
@@ -291,9 +297,9 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
         <div className="flex items-start justify-between gap-1 mb-1">
           <h3
             className="text-[15px] sm:text-[16px] font-bold text-[#0f1929] dark:text-white leading-snug group-hover:text-[#ff6b4a] transition-colors line-clamp-1 font-heading"
-            title={product.name}
+            title={displayName}
           >
-            {product.name}
+            {displayName}
           </h3>
           <ArrowOutwardIcon
             sx={{ fontSize: 15 }}
@@ -303,7 +309,7 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
 
         {/* Short Description */}
         <p className="text-[11.5px] text-[#565e69] dark:text-slate-400 leading-relaxed line-clamp-2 mb-3.5 font-normal">
-          {product.description || "High-performance engineered solutions for waterproofing and industrial durability."}
+          {displayDesc}
         </p>
 
         {/* 3 Compact Benefits Row (Custom Visual Icons) */}
@@ -381,8 +387,8 @@ const ProductCardComponent = ({ product, index = 0, onAddToCart, onOpenProduct }
               }`}
             >
               <ShoppingCartOutlinedIcon sx={{ fontSize: { xs: 13, lg: 11, xl: 13 } }} />
-              <span className="lg:hidden">{isOutOfStock ? "Out of Stock" : "Add to Cart"}</span>
-              <span className="hidden lg:inline">{isOutOfStock ? "Sold Out" : "Add"}</span>
+              <span className="lg:hidden">{isOutOfStock ? t("shop.outOfStock", "Out of Stock") : t("shop.addToCart", "Add to Cart")}</span>
+              <span className="hidden lg:inline">{isOutOfStock ? t("shop.outOfStock", "Sold Out") : t("shop.addToCart", "Add")}</span>
             </button>
           </div>
 

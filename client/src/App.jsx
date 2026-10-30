@@ -1,6 +1,7 @@
 import { lazy, Suspense, useMemo } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Box, CircularProgress, CssBaseline, ThemeProvider } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { AppLayoutShell } from "./components/AppLayoutShell";
 import { BrandSplashPreloader } from "./components/BrandSplashPreloader";
 import { LenisScroll } from "./components/LenisScroll";
@@ -8,7 +9,7 @@ import { RouteSeo } from "./components/RouteSeo";
 import { PushNotificationBridge } from "./components/PushNotificationBridge";
 import { ShopPage } from "./pages/ShopPage";
 import { useCart } from "./hooks/useCart";
-import { appTheme } from "./theme/theme";
+import { getAppTheme } from "./theme/theme";
 
 const named = (importer, exportName) =>
   lazy(() => importer().then((module) => ({ default: module[exportName] })));
@@ -50,12 +51,15 @@ function RouteFallback() {
 
 function App() {
   const { cart, setCart, addToCart } = useCart();
+  const { i18n } = useTranslation();
+  const isRtl = i18n.language === "ur";
+  const activeTheme = useMemo(() => getAppTheme(isRtl ? "rtl" : "ltr"), [isRtl]);
   const cartCount = useMemo(() => cart.reduce((sum, i) => sum + i.quantity, 0), [cart]);
 
   return (
-    <div className="page-shell">
+    <div className={`page-shell ${isRtl ? "urdu-mode" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
       <BrandSplashPreloader />
-      <ThemeProvider theme={appTheme}>
+      <ThemeProvider theme={activeTheme}>
         <CssBaseline />
         <BrowserRouter>
           <RouteSeo />

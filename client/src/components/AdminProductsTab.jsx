@@ -339,6 +339,19 @@ export const AdminProductsTab = ({
                       className={fieldClass}
                     />
                   </label>
+                  <label className="block">
+                    <span className="block text-[10px] font-extrabold uppercase tracking-wide text-emerald-600 mb-1">
+                      Product name (Urdu / اردو)
+                    </span>
+                    <input
+                      type="text"
+                      dir="rtl"
+                      value={product.nameUr || ""}
+                      onChange={(e) => setProduct({ ...product, nameUr: e.target.value })}
+                      placeholder="مثال: ماربلیکس واٹر پروفنگ کیمیکل"
+                      className={fieldClass}
+                    />
+                  </label>
                   <div className="grid grid-cols-2 gap-2.5">
                     <label className="block">
                       <span className="block text-[10px] font-extrabold uppercase tracking-wide text-[#6b8190] mb-1">
@@ -739,18 +752,33 @@ export const AdminProductsTab = ({
 
               {/* SECTION: DETAILS */}
               {editorSection === "details" ? (
-                <label className="block">
-                  <span className="block text-[10px] font-extrabold uppercase tracking-wide text-[#6b8190] mb-1">
-                    Technical description
-                  </span>
-                  <textarea
-                    rows={8}
-                    value={product.description}
-                    onChange={(e) => setProduct({ ...product, description: e.target.value })}
-                    placeholder="Industrial specs, usage, waterproofing standards…"
-                    className={`${fieldClass} resize-y`}
-                  />
-                </label>
+                <div className="space-y-3">
+                  <label className="block">
+                    <span className="block text-[10px] font-extrabold uppercase tracking-wide text-[#6b8190] mb-1">
+                      Technical description (English)
+                    </span>
+                    <textarea
+                      rows={6}
+                      value={product.description}
+                      onChange={(e) => setProduct({ ...product, description: e.target.value })}
+                      placeholder="Industrial specs, usage, waterproofing standards…"
+                      className={`${fieldClass} resize-y`}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="block text-[10px] font-extrabold uppercase tracking-wide text-emerald-600 mb-1">
+                      Technical description (Urdu / اردو)
+                    </span>
+                    <textarea
+                      rows={6}
+                      dir="rtl"
+                      value={product.descriptionUr || ""}
+                      onChange={(e) => setProduct({ ...product, descriptionUr: e.target.value })}
+                      placeholder="استعمال کا طریقہ، صنعتی تفصیلات اور فوائد..."
+                      className={`${fieldClass} resize-y`}
+                    />
+                  </label>
+                </div>
               ) : null}
 
               <div className="flex flex-col sm:flex-row gap-2 pt-1">

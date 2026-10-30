@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
@@ -449,8 +450,9 @@ export const ProductDetailPage = ({ addToCart }) => {
   };
 
   const descriptionText =
-    product?.description ||
-    "High-performance engineered polymer and chemical formulation providing exceptional hydrostatic sealing, chemical barrier protection, and high-impact structural resilience.";
+    (isUrdu && product?.descriptionUr)
+      ? product.descriptionUr
+      : (product?.description || "High-performance engineered polymer and chemical formulation providing exceptional hydrostatic sealing, chemical barrier protection, and high-impact structural resilience.");
 
   useEffect(() => {
     if (loading) return;
@@ -478,12 +480,12 @@ export const ProductDetailPage = ({ addToCart }) => {
     );
   }
 
-  const productName = product?.name || "Entryway Flooring";
-  const displayTitle = productName.toLowerCase().includes("system")
-    ? productName
-    : `${productName} System - Carrara Elegance (8mm)`;
-  const priceLabel = Number(product?.price ?? 4000).toLocaleString();
-  const categoryLabel = product?.category || "Engineered Solutions";
+  const { t, i18n } = useTranslation();
+  const isUrdu = i18n.language === "ur";
+  const productName = (isUrdu && product?.nameUr) ? product.nameUr : (product?.name || "Entryway Flooring");
+  const displayTitle = productName;
+  const priceLabel = Number(product?.price ?? 4000).toLocaleString("en-PK");
+  const categoryLabel = (isUrdu && product?.categoryUr) ? product.categoryUr : (product?.category || "Engineered Solutions");
 
   const SpecRow = ({ label, value, accent = false, icon }) => (
     <div className="flex items-start justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/90 px-3.5 py-3 dark:border-slate-800 dark:bg-slate-800/40 sm:items-center">
