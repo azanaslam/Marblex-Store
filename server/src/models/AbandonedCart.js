@@ -25,3 +25,4 @@ const abandonedCartSchema = new mongoose.Schema(
 abandonedCartSchema.index({ updatedAt: -1 });
 
 module.exports = mongoose.model("AbandonedCart", abandonedCartSchema);
+

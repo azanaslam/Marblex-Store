@@ -61,3 +61,4 @@ if (typeof document !== "undefined") {
 }
 
 export default i18n;
+

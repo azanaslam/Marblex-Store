@@ -58,3 +58,4 @@ npx cap open android
 For native Android push notifications in Capacitor:
 - `@capacitor/push-notifications` is ready to be linked with `google-services.json` from Firebase Cloud Messaging (FCM).
 - Web Push (`web-push` + VAPID) already functions seamlessly in installed PWA standalone mode.
+

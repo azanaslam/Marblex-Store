@@ -48,3 +48,4 @@ describe("Cart Totals and Pricing Calculations", () => {
     expect(availableCredit - newOrderTotal).toBe(150000);
   });
 });
+

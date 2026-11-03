@@ -72,3 +72,4 @@ COD_OTP_REQUIRED=true
 COD_OTP_THRESHOLD=15000
 ```
 When an order exceeds the threshold (e.g. Rs. 15,000), checkout prompts the buyer for a one-time SMS verification code before dispatch.
+
