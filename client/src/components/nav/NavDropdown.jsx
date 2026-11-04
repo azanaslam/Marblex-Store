@@ -187,7 +187,7 @@ export const NavDropdown = ({
                   to={child.path}
                   role="menuitem"
                   tabIndex={0}
-                  onClick={() => onClose()}
+                  
                   className={`group flex items-center gap-3 rounded-xl p-2.5 transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b4a] ${
                     isSelected
                       ? isDark

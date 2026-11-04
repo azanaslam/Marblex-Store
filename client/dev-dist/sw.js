@@ -67,14 +67,10 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-2427537b'], (function (workbox) { 'use strict';
+define(['./workbox-a7350fe7'], (function (workbox) { 'use strict';
 
   importScripts("push-handler.js");
-  self.addEventListener('message', event => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-      self.skipWaiting();
-    }
-  });
+  self.skipWaiting();
   workbox.clientsClaim();
   /**
    * The precacheAndRoute() method efficiently caches and responds to
@@ -86,7 +82,7 @@ define(['./workbox-2427537b'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "/index.html",
-    "revision": "0.pcnr7q5d8n"
+    "revision": "0.ve548vgbam8"
   }], {
     "ignoreURLParametersMatching": [/^utm_/, /^fbclid$/, /^v$/]
   });
@@ -95,6 +91,32 @@ define(['./workbox-2427537b'], (function (workbox) { 'use strict';
     allowlist: [/^\/$/],
     denylist: [/^\/api/, /\/marblex-client-portal\.html/i, /\.[a-z0-9]+$/i]
   }));
+  workbox.registerRoute(({
+    url,
+    request
+  }) => request.method === "POST" && (url.pathname.startsWith("/api/quotes") || url.pathname.startsWith("/api/support") || url.pathname.startsWith("/api/contact")), new workbox.NetworkOnly({
+    plugins: [new workbox.BackgroundSyncPlugin("marblex-offline-forms-queue", {
+      maxRetentionTime: 1440
+    })]
+  }), 'GET');
+  workbox.registerRoute(({
+    url
+  }) => url.pathname === "/api/products" || /^\/api\/products\/[a-zA-Z0-9_-]+$/.test(url.pathname), new workbox.StaleWhileRevalidate({
+    "cacheName": "marblex-products-catalog",
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 120,
+      maxAgeSeconds: 604800
+    })]
+  }), 'GET');
+  workbox.registerRoute(({
+    url
+  }) => url.pathname.endsWith(".pdf") || url.pathname.includes("/pdfs/"), new workbox.CacheFirst({
+    "cacheName": "marblex-pdf-catalogs",
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 30,
+      maxAgeSeconds: 2592000
+    })]
+  }), 'GET');
   workbox.registerRoute(({
     url
   }) => url.pathname.startsWith("/api"), new workbox.NetworkFirst({

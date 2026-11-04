@@ -358,6 +358,17 @@ export const AppLayout = ({ cartCount, children }) => {
     };
   }, [runNavEntrance, showNavInstant]);
 
+  // Force navbar entrance animation when directly landing without splash
+  useEffect(() => {
+    if (!hasNavAnimatedRef.current) {
+      // Slight delay to allow layout to settle
+      const timer = setTimeout(() => {
+        runNavEntrance();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isPortalRoute = location.pathname.startsWith("/dashboard");
   // Clients: Azzan dropdown badge = portal activity-feed unread only (0 when all read)
