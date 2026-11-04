@@ -194,35 +194,6 @@ export const CartPage = ({ cart = [], setCart }) => {
     return () => ctx.revert();
   }, []);
 
-  useEffect(() => {
-    if (cart.length > 0) {
-      track("begin_checkout", {
-        value: total,
-        currency: "PKR",
-        num_items: cart.length,
-      });
-    }
-  }, [cart.length, total]);
-
-  const triggerToast = (msg) => {
-    setToastMessage(msg);
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 2800);
-  };
-
-  const copyToClipboard = async (text, key) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedKey(key);
-      triggerToast("Copied to clipboard!");
-      setTimeout(() => setCopiedKey(""), 2000);
-    } catch {
-      triggerToast("Unable to copy. Please select and copy manually.");
-    }
-  };
-
   const fmt = (v) => "PKR " + Number(v || 0).toLocaleString("en-US");
 
   const total = useMemo(
@@ -256,6 +227,35 @@ export const CartPage = ({ cart = [], setCart }) => {
     if (!selectedRate || !selectedRate.freeAbove) return 0;
     return Math.max(0, selectedRate.freeAbove - total);
   }, [selectedRate, total]);
+
+  useEffect(() => {
+    if (cart.length > 0) {
+      track("begin_checkout", {
+        value: total,
+        currency: "PKR",
+        num_items: cart.length,
+      });
+    }
+  }, [cart.length, total]);
+
+  const triggerToast = (msg) => {
+    setToastMessage(msg);
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, 2800);
+  };
+
+  const copyToClipboard = async (text, key) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      triggerToast("Copied to clipboard!");
+      setTimeout(() => setCopiedKey(""), 2000);
+    } catch {
+      triggerToast("Unable to copy. Please select and copy manually.");
+    }
+  };
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) return;
