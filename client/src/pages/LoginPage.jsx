@@ -2764,39 +2764,30 @@ export const LoginPage = () => {
                 {/* Header Text */}
                 <div className="mx-head">
                   <h1>
-                    {mode === "in" ? (
-                      <>Welcome to MAR<span style={{ color: "#ff6b4a" }}>BLEX</span></>
-                    ) : mode === "phone" ? (
-                      <>Sign In with <span style={{ color: "#ff6b4a" }}>Phone OTP</span></>
-                    ) : (
+                    {mode === "reg" ? (
                       <>Create your MAR<span style={{ color: "#ff6b4a" }}>BLEX</span> account</>
+                    ) : (
+                      <>Welcome to MAR<span style={{ color: "#ff6b4a" }}>BLEX</span></>
                     )}
                   </h1>
                   <p>
-                    {mode === "in"
-                      ? "Sign in to manage orders, track shipments and review your quotations."
+                    {mode === "reg"
+                      ? "Start your experience with MARBLEX by signing up in under a minute."
                       : mode === "phone"
                       ? "Fast verification for contractors via SMS code. No password needed."
-                      : "Start your experience with MARBLEX by signing up in under a minute."}
+                      : "Sign in to manage orders, track shipments and review your quotations."}
                   </p>
                 </div>
 
                 {/* Tabs with sliding pill */}
-                <div className={`mx-tabs ${mode === "reg" ? "reg" : mode === "phone" ? "phone" : ""}`}>
+                <div className={`mx-tabs ${mode === "reg" ? "reg" : ""}`}>
                   <span className="mx-pill" />
                   <button
                     type="button"
-                    className={mode === "in" ? "on" : ""}
+                    className={mode !== "reg" ? "on" : ""}
                     onClick={() => handleTabChange("in")}
                   >
-                    Email
-                  </button>
-                  <button
-                    type="button"
-                    className={mode === "phone" ? "on" : ""}
-                    onClick={() => handleTabChange("phone")}
-                  >
-                    📱 Phone OTP
+                    Sign In
                   </button>
                   <button
                     type="button"
@@ -2807,15 +2798,44 @@ export const LoginPage = () => {
                   </button>
                 </div>
 
+                {/* Method Switcher inside Sign In (Email vs Phone OTP) */}
+                {mode !== "reg" && (
+                  <div className="flex items-center gap-1.5 p-1 mb-4 rounded-xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70">
+                    <button
+                      type="button"
+                      onClick={() => handleTabChange("in")}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
+                        mode === "in"
+                          ? "bg-white dark:bg-slate-700 text-[#0a3d52] dark:text-white shadow-xs"
+                          : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                      }`}
+                    >
+                      Email & Password
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTabChange("phone")}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                        mode === "phone"
+                          ? "bg-white dark:bg-slate-700 text-[#ff6b4a] shadow-xs"
+                          : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                      }`}
+                    >
+                      <PhoneAndroidRoundedIcon sx={{ fontSize: 15 }} />
+                      <span>Phone OTP</span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Biometric Passkey Quick Sign-In Option */}
                 {mode === "in" && (
                   <button
                     type="button"
                     onClick={handlePasskeySignIn}
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider transition-all mb-4 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider transition-all mb-4 cursor-pointer"
                   >
-                    <FingerprintRoundedIcon sx={{ fontSize: 20 }} />
+                    <FingerprintRoundedIcon sx={{ fontSize: 18 }} />
                     <span>Sign In with Fingerprint / Face ID / Passkey</span>
                   </button>
                 )}

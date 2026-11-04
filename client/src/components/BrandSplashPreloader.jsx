@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import gsap from "gsap";
 
 const isIntroDone = () => {
@@ -45,36 +46,14 @@ export const BrandSplashPreloader = ({ onComplete }) => {
     }
 
     try {
-      const tl = gsap.timeline({
+      gsap.to(containerRef.current, {
+        opacity: 0,
+        duration: 0.45,
+        ease: "power2.inOut",
         onComplete: () => {
           setVisible(false);
         },
       });
-
-      if (logoWrapperRef.current) {
-        tl.to([logoWrapperRef.current, subtitleRef.current, badgeRef.current, accentLineRef.current], {
-          scale: 1.04,
-          opacity: 0,
-          y: -16,
-          filter: "blur(10px)",
-          duration: 0.7,
-          stagger: 0.035,
-          ease: "power3.inOut",
-        });
-      }
-
-      if (curtainRef.current) {
-        tl.to(
-          curtainRef.current,
-          {
-            opacity: 0,
-            scale: 1.015,
-            duration: 0.75,
-            ease: "power3.inOut",
-          },
-          "-=0.45"
-        );
-      }
     } catch {
       setVisible(false);
     }
@@ -88,9 +67,6 @@ export const BrandSplashPreloader = ({ onComplete }) => {
         window.dispatchEvent(new CustomEvent("marblex:intro_reveal"));
         onComplete?.();
         setVisible(false);
-        try {
-          document.getElementById("marblex-boot-splash")?.remove();
-        } catch {}
         return;
       }
     } catch {
@@ -107,7 +83,7 @@ export const BrandSplashPreloader = ({ onComplete }) => {
     // Safety fallback: auto-dismiss after sufficient duration
     const safetyTimer = setTimeout(() => {
       handleFinish();
-    }, 5500);
+    }, 3800);
 
     const ctx = gsap.context(() => {
       try {
@@ -128,49 +104,48 @@ export const BrandSplashPreloader = ({ onComplete }) => {
         const tl = gsap.timeline({
           defaults: { ease: "power3.out" },
           onComplete: () => {
-            // Deliberate pause (1.4s) to fully appreciate brand before transitioning
-            gsap.delayedCall(1.4, handleFinish);
+            gsap.delayedCall(0.7, handleFinish);
           },
         });
 
-        // Ambient radial glow expansion — slow & majestic
+        // Ambient radial glow expansion
         if (glowRingRef.current) {
-          tl.to(glowRingRef.current, { scale: 1.35, opacity: 0.9, duration: 1.1, ease: "power2.out" }, 0);
+          tl.to(glowRingRef.current, { scale: 1.35, opacity: 0.9, duration: 0.9, ease: "power2.out" }, 0);
         }
 
-        // Emblem card smooth elevation — longer, weightier rise
+        // Emblem card smooth elevation
         if (logoWrapperRef.current) {
-          tl.to(logoWrapperRef.current, { scale: 1, opacity: 1, y: 0, duration: 1.0, ease: "power4.out" }, 0.1);
+          tl.to(logoWrapperRef.current, { scale: 1, opacity: 1, y: 0, duration: 0.8, ease: "power4.out" }, 0.08);
         }
 
-        // Emblem glass shine reflection — slow sweep
+        // Emblem glass shine reflection
         if (shineSweepRef.current) {
-          tl.to(shineSweepRef.current, { xPercent: 220, duration: 1.0, ease: "power1.inOut" }, 0.4);
+          tl.to(shineSweepRef.current, { xPercent: 220, duration: 0.8, ease: "power1.inOut" }, 0.35);
         }
 
-        // MAR Letters Smooth Cascade — slower stagger, more elegant
+        // MAR Letters Smooth Cascade
         if (activeMarLetters.length) {
-          tl.to(activeMarLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.65, stagger: 0.07, ease: "power3.out" }, 0.6);
+          tl.to(activeMarLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, stagger: 0.06, ease: "power3.out" }, 0.45);
         }
 
         // BLEX Letters Smooth Cascade
         if (activeBlexLetters.length) {
-          tl.to(activeBlexLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.65, stagger: 0.07, ease: "power3.out" }, 0.82);
+          tl.to(activeBlexLetters, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, stagger: 0.06, ease: "power3.out" }, 0.62);
         }
 
-        // Gradient line expansion — elegant draw
+        // Gradient line expansion
         if (accentLineRef.current) {
-          tl.to(accentLineRef.current, { scaleX: 1, duration: 0.75, ease: "power2.out" }, 1.05);
+          tl.to(accentLineRef.current, { scaleX: 1, duration: 0.6, ease: "power2.out" }, 0.8);
         }
 
-        // Subtitle text reveal — soft float up
+        // Subtitle text reveal
         if (subtitleRef.current) {
-          tl.to(subtitleRef.current, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.65, ease: "power2.out" }, 1.25);
+          tl.to(subtitleRef.current, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power2.out" }, 0.95);
         }
 
-        // Certified badge pop — premium spring feel
+        // Certified badge pop
         if (badgeRef.current) {
-          tl.to(badgeRef.current, { opacity: 1, scale: 1, y: 0, duration: 0.55, ease: "back.out(1.3)" }, 1.45);
+          tl.to(badgeRef.current, { opacity: 1, scale: 1, y: 0, duration: 0.45, ease: "back.out(1.3)" }, 1.1);
         }
       } catch {
         handleFinish();
@@ -195,20 +170,38 @@ export const BrandSplashPreloader = ({ onComplete }) => {
 
   if (!visible) return null;
 
-  return (
+  const content = (
     <div
       ref={containerRef}
       onClick={handleFinish}
       role="button"
       tabIndex={0}
       aria-label="Skip brand animation"
-      className="fixed inset-0 z-[999999] overflow-hidden select-none cursor-pointer"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 999999,
+        background: "#f5f7fa",
+        overflow: "hidden",
+      }}
+      className="select-none cursor-pointer"
     >
       {/* Clean Light Studio Canvas */}
       <div
         ref={curtainRef}
-        className="w-full h-full bg-[#f5f7fa] flex flex-col items-center justify-center relative px-4 sm:px-6"
-        style={{ perspective: "1000px" }}
+        style={{
+          width: "100%",
+          height: "100%",
+          minHeight: "100vh",
+          background: "#f5f7fa",
+          perspective: "1000px",
+        }}
+        className="flex flex-col items-center justify-center relative px-4 sm:px-6"
       >
         {/* Soft Radial Gradient Glow */}
         <div 
@@ -315,4 +308,6 @@ export const BrandSplashPreloader = ({ onComplete }) => {
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(content, document.body) : content;
 };

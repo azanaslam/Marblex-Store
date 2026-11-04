@@ -38,17 +38,7 @@ export function AppBottomNav({
     if (!items.length) return;
 
     // Check if intro is already done (navigating between pages)
-    const introDone =
-      window.__MARBLEX_INTRO_DONE__ === true ||
-      (() => {
-        try {
-          if (sessionStorage.getItem("marblex_intro_done") === "1") return true;
-          const ts = Number(localStorage.getItem("marblex_intro_ts") || 0);
-          return ts > 0 && Date.now() - ts < 24 * 60 * 60 * 1000;
-        } catch {
-          return false;
-        }
-      })();
+    const introDone = window.__MARBLEX_INTRO_DONE__ === true;
 
     const runEntrance = () => {
       if (hasAnimatedRef.current) return;
