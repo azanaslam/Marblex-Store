@@ -28,5 +28,7 @@
       ]
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "rewrites": [
+    { "source": "/((?!assets/|.*\\..*).*)", "destination": "/" }
+  ]
 }

@@ -62,7 +62,13 @@ export const CatalogsPage = () => {
   const containerRef = useRef(null);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    try {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    } catch {
+      try {
+        window.scrollTo(0, 0);
+      } catch {}
+    }
     if (!containerRef.current) return;
 
     const ctx = gsap.context(() => {

@@ -12,7 +12,27 @@ import { useCart } from "./hooks/useCart";
 import { getAppTheme } from "./theme/theme";
 
 const named = (importer, exportName) =>
-  lazy(() => importer().then((module) => ({ default: module[exportName] })));
+  lazy(async () => {
+    try {
+      const module = await importer();
+      if (!module || !module[exportName]) {
+        throw new Error(`Export "${exportName}" not found in chunk module`);
+      }
+      return { default: module[exportName] };
+    } catch (err) {
+      console.warn(`Dynamic route import failed for ${exportName}, attempting automatic refresh:`, err);
+      const retryKey = `mx_chunk_retry_${exportName}`;
+      const lastRetry = Number(sessionStorage.getItem(retryKey) || 0);
+
+      // Auto-reload once within a 30s window to grab fresh build chunks
+      if (Date.now() - lastRetry > 30000) {
+        sessionStorage.setItem(retryKey, Date.now().toString());
+        window.location.reload();
+        return new Promise(() => {}); // Hold until browser reloads
+      }
+      throw err;
+    }
+  });
 
 const CartPage = named(() => import("./pages/CartPage"), "CartPage");
 const BlogsPage = named(() => import("./pages/BlogsPage"), "BlogsPage");

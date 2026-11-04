@@ -134,6 +134,7 @@ export default defineConfig({
         },
       },
       workbox: {
+        skipWaiting: true,
         clientsClaim: true,
         // Phone push + notificationclick (file lives in public/)
         importScripts: ['push-handler.js'],
