@@ -5,9 +5,6 @@ const isIntroDone = () => {
   try {
     if (typeof window === "undefined") return false;
     if (window.__MARBLEX_INTRO_DONE__ === true) return true;
-    if (sessionStorage.getItem("marblex_intro_done") === "1") return true;
-    const ts = Number(localStorage.getItem("marblex_intro_ts") || 0);
-    if (ts > 0 && Date.now() - ts < 24 * 60 * 60 * 1000) return true;
   } catch {
     /* ignore */
   }
@@ -31,14 +28,13 @@ export const BrandSplashPreloader = ({ onComplete }) => {
   const blexLetters = ["B", "L", "E", "X"];
 
   const handleFinish = useCallback(() => {
-    // Persist so navbar/layout remounts (Strict Mode, Suspense) don't stay stuck hidden
+    window.__MARBLEX_INTRO_DONE__ = true;
     try {
-      sessionStorage.setItem("marblex_intro_done", "1");
-      localStorage.setItem("marblex_intro_ts", Date.now().toString());
+      localStorage.removeItem("marblex_intro_ts");
+      sessionStorage.removeItem("marblex_intro_done");
     } catch {
       /* ignore */
     }
-    window.__MARBLEX_INTRO_DONE__ = true;
     // Broadcast event so Navbar, Hero Banner & Landing Page initiate their entrance seamlessly
     window.dispatchEvent(new CustomEvent("marblex:intro_reveal"));
     onComplete?.();

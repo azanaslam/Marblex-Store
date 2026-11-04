@@ -241,11 +241,6 @@ export const AppLayout = ({ cartCount, children }) => {
       return;
     }
     hasNavAnimatedRef.current = true;
-    try {
-      sessionStorage.setItem("marblex_intro_done", "1");
-    } catch {
-      /* ignore */
-    }
     window.__MARBLEX_INTRO_DONE__ = true;
 
     const tl = gsap.timeline({
@@ -306,16 +301,7 @@ export const AppLayout = ({ cartCount, children }) => {
   useEffect(() => {
     const introDone =
       hasNavAnimatedRef.current ||
-      window.__MARBLEX_INTRO_DONE__ === true ||
-      (() => {
-        try {
-          if (sessionStorage.getItem("marblex_intro_done") === "1") return true;
-          const ts = Number(localStorage.getItem("marblex_intro_ts") || 0);
-          return ts > 0 && Date.now() - ts < 24 * 60 * 60 * 1000;
-        } catch {
-          return false;
-        }
-      })();
+      window.__MARBLEX_INTRO_DONE__ === true;
 
     if (introDone) {
       hasNavAnimatedRef.current = true;
@@ -341,10 +327,10 @@ export const AppLayout = ({ cartCount, children }) => {
 
     window.addEventListener("marblex:intro_reveal", handleIntroReveal);
 
-    // Fallback if splash event was missed (remount after reveal already fired)
+    // Fallback if splash event was missed (remount after reveal already fired or non-splash route)
     const safetyTimer = setTimeout(() => {
       if (!cancelled) runNavEntrance();
-    }, 5800);
+    }, 4500);
 
     return () => {
       cancelled = true;
@@ -357,17 +343,6 @@ export const AppLayout = ({ cartCount, children }) => {
       }
     };
   }, [runNavEntrance, showNavInstant]);
-
-  // Force navbar entrance animation when directly landing without splash
-  useEffect(() => {
-    if (!hasNavAnimatedRef.current) {
-      // Slight delay to allow layout to settle
-      const timer = setTimeout(() => {
-        runNavEntrance();
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isPortalRoute = location.pathname.startsWith("/dashboard");

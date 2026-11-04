@@ -96,7 +96,7 @@ export const SettingsMenu = ({
             ref={panelRef}
             role="menu"
             aria-labelledby="settings-menu-button"
-            className={`absolute end-0 top-[calc(100%+8px)] z-[85] w-72 rounded-2xl border p-3 shadow-xl backdrop-blur-md animate-in fade-in-0 zoom-in-95 ${
+            className={`absolute end-0 top-[calc(100%+8px)] z-[85] w-72 rounded-2xl border p-3 shadow-xl backdrop-blur-md animate-in fade-in-0 zoom-in-95 before:absolute before:-top-3 before:start-0 before:end-0 before:h-3 before:content-[''] ${
               isDark
                 ? "bg-[#0c222f]/95 border-slate-700/80 shadow-[0_20px_45px_-15px_rgba(0,0,0,0.65)]"
                 : "bg-white/95 border-slate-200/90 shadow-[0_20px_45px_-15px_rgba(10,61,82,0.18)]"

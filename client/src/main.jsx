@@ -56,7 +56,7 @@ function ErrorFallback(props) {
       /* ignore */
     }
     if (resetError) resetError();
-    window.location.href = window.location.href;
+    window.location.reload();
   };
 
   return (

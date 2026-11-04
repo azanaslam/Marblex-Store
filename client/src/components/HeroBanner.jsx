@@ -142,18 +142,19 @@ export const HeroBanner = () => {
             return false;
           }
         })());
+    let fallbackTimer = null;
     if (isDone) {
       startPlayback();
     } else {
       // Fallback: If preloader already finished or user navigated from another page
-      const fallbackTimer = setTimeout(() => {
+      fallbackTimer = setTimeout(() => {
         startPlayback();
       }, 1200);
     }
 
     return () => {
       window.removeEventListener("marblex:intro_reveal", startPlayback);
-      clearTimeout(fallbackTimer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
     };
   }, []);
 

@@ -65,6 +65,7 @@ export const AboutHeroBanner = () => {
   const innerRef = useRef(null);
   const dotsRef = useRef(null);
   const currentSlideRef = useRef(0);
+  const goToSlideRef = useRef(null);
 
   const goToSlide = useCallback((index) => {
     if (!bgWrapRef.current || !dotsRef.current) return;
@@ -102,12 +103,16 @@ export const AboutHeroBanner = () => {
           ease: "none",
           onComplete: () => {
             const nextIdx = (currentSlideRef.current + 1) % ABOUT_SLIDES.length;
-            goToSlide(nextIdx);
+            goToSlideRef.current?.(nextIdx);
           },
         }
       );
     }
   }, []);
+
+  useEffect(() => {
+    goToSlideRef.current = goToSlide;
+  }, [goToSlide]);
 
   useEffect(() => {
     const hero = heroRef.current;

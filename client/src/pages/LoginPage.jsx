@@ -97,6 +97,7 @@ export const LoginPage = () => {
       setLoading(false);
     }
   };
+  const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -543,6 +543,21 @@ export const AdminPage = () => {
     }
   };
 
+  const filteredProducts = useMemo(() => {
+    const q = productQuery.trim().toLowerCase();
+    return (products || []).filter((p) => {
+      if (productFilter === "active" && p.active === false) return false;
+      if (productFilter === "featured" && !p.featured) return false;
+      if (productFilter === "low" && Number(p.stock || 0) >= 5) return false;
+      if (productFilter === "hidden" && p.active !== false) return false;
+      if (!q) return true;
+      return (
+        String(p.name || "").toLowerCase().includes(q) ||
+        String(p.category || "").toLowerCase().includes(q)
+      );
+    });
+  }, [products, productFilter, productQuery]);
+
   if (!token) return <Navigate to="/login" replace />;
   const authUser = getAuthUser();
   if (authUser?.role !== "admin") return <Navigate to="/login" replace />;
@@ -844,21 +859,6 @@ export const AdminPage = () => {
       </article>
     );
   };
-
-  const filteredProducts = useMemo(() => {
-    const q = productQuery.trim().toLowerCase();
-    return (products || []).filter((p) => {
-      if (productFilter === "active" && p.active === false) return false;
-      if (productFilter === "featured" && !p.featured) return false;
-      if (productFilter === "low" && Number(p.stock || 0) >= 5) return false;
-      if (productFilter === "hidden" && p.active !== false) return false;
-      if (!q) return true;
-      return (
-        String(p.name || "").toLowerCase().includes(q) ||
-        String(p.category || "").toLowerCase().includes(q)
-      );
-    });
-  }, [products, productFilter, productQuery]);
 
   const bottomTabs = [
     { id: 0, label: "Home", Icon: DashboardRoundedIcon },

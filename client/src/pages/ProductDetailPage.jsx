@@ -122,6 +122,7 @@ export const ProductDetailPage = ({ addToCart }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t, i18n } = useTranslation();
   const [product, setProduct] = useState(location.state?.product || null);
   const [moreProducts, setMoreProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
@@ -550,7 +551,6 @@ export const ProductDetailPage = ({ addToCart }) => {
     );
   }
 
-  const { t, i18n } = useTranslation();
   const isUrdu = i18n.language === "ur";
   const productName = (isUrdu && product?.nameUr) ? product.nameUr : (product?.name || "Entryway Flooring");
   const displayTitle = productName;
