@@ -1,45 +1,22 @@
 import { lazy, Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { Badge, Container } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import WorkspacePremiumOutlinedIcon from "@mui/icons-material/WorkspacePremiumOutlined";
 import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import ConstructionOutlinedIcon from "@mui/icons-material/ConstructionOutlined";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
-import EastRoundedIcon from "@mui/icons-material/EastRounded";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
-import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
-import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
-import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
-import TranslateOutlinedIcon from "@mui/icons-material/TranslateOutlined";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { setAppLanguage } from "../i18n/i18n";
 import gsap from "gsap";
 import { authHeaders, http } from "../api/http";
 import { clearAuthSession, getAuthToken, getAuthUser, onAuthSessionChangeEvent } from "../auth/session";
 import { SiteFooter } from "./SiteFooter";
-import { InstallPwaButton, InstallPwaPrompt } from "./InstallPwaButton";
+import { InstallPwaPrompt } from "./InstallPwaButton";
 import { AppBottomNav } from "./AppBottomNav";
 import { OfflineBanner } from "./OfflineBanner";
 import { PwaUpdateToast } from "./PwaUpdateToast";
 import { PullToRefresh } from "./PullToRefresh";
 import { PushEnableCard } from "./PushEnableCard";
+import { Navbar } from "./nav/Navbar";
+import { MobileDrawer } from "./nav/MobileDrawer";
 import { useStandaloneApp } from "../hooks/useStandaloneApp";
 import { useAppBadge } from "../hooks/useAppBadge";
 import {
@@ -54,8 +31,6 @@ const FloatingChatWidget = lazy(() =>
 export const AppLayout = ({ cartCount, children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
-  const isUrdu = i18n.language === "ur";
   const [authUserFromStorage, setAuthUserFromStorage] = useState(getAuthUser());
   const [token, setToken] = useState(getAuthToken());
   const [chatUnreadNav, setChatUnreadNav] = useState(0);
@@ -63,7 +38,7 @@ export const AppLayout = ({ cartCount, children }) => {
   const [portalUnread, setPortalUnread] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [mobileAnnounceIdx, setMobileAnnounceIdx] = useState(0);
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem("marblex_theme") || "light";
   });
@@ -73,13 +48,22 @@ export const AppLayout = ({ cartCount, children }) => {
   const logoRef = useRef(null);
   const navPillsRef = useRef(null);
   const actionsRef = useRef(null);
-  const mobileMenuPanelRef = useRef(null);
-  const mobileMenuItemsRef = useRef(null);
-  const accountMenuRef = useRef(null);
   const hasNavAnimatedRef = useRef(false);
 
+  const mobileAnnouncements = [
+    "⚡ MARBLEX — Construction Chemicals & Industrial Rubber",
+    "🛡️ ISO Certified — Lab Tested & Trusted Performance",
+    "🌿 15+ Years Proven Performance in Pakistan",
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMobileAnnounceIdx((prev) => (prev + 1) % mobileAnnouncements.length);
+    }, 3800);
+    return () => clearInterval(timer);
+  }, [mobileAnnouncements.length]);
+
   let tokenPayload = null;
-  const isHomePage = location.pathname === "/";
 
   if (token) {
     try {
@@ -96,22 +80,13 @@ export const AppLayout = ({ cartCount, children }) => {
   const displayFirstName = authUser?.name ? authUser.name.split(" ")[0] : "Client";
   const accountAvatarUrl = String(authUser?.avatarUrl || "").trim();
   const accountInitial = (displayFirstName || "M").charAt(0).toUpperCase();
-  const AccountAvatar = ({ className = "" }) => (
-    <span
-      className={`relative flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#0a3d52] to-[#ff6b4a] font-extrabold text-white shadow-sm ${className}`}
-    >
-      {accountAvatarUrl ? (
-        <img src={accountAvatarUrl} alt="" className="h-full w-full object-cover" />
-      ) : (
-        accountInitial
-      )}
-    </span>
-  );
 
   const syncPortalTheme = useCallback((theme) => {
     try {
       localStorage.setItem("mx_dash_theme", theme);
-    } catch { }
+    } catch {
+      /* ignore */
+    }
     const frame = document.querySelector("iframe.mx-portal-frame");
     if (frame?.contentWindow) {
       try {
@@ -119,7 +94,9 @@ export const AppLayout = ({ cartCount, children }) => {
           { type: "MARBLEX_THEME", theme },
           window.location.origin
         );
-      } catch { }
+      } catch {
+        /* ignore */
+      }
     }
   }, []);
 
@@ -147,65 +124,21 @@ export const AppLayout = ({ cartCount, children }) => {
   const logout = () => {
     clearAuthSession();
     setIsMenuOpen(false);
-    setAccountMenuOpen(false);
     navigate("/login", { replace: true });
   };
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 15);
+      setScrolled(window.scrollY > 20);
     };
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
     setIsMenuOpen(false);
-    setAccountMenuOpen(false);
   }, [location.pathname]);
-
-  useEffect(() => {
-    if (!accountMenuOpen) return;
-    const onDocClick = (e) => {
-      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target)) {
-        setAccountMenuOpen(false);
-      }
-    };
-    const onEsc = (e) => {
-      if (e.key === "Escape") setAccountMenuOpen(false);
-    };
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onEsc);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onEsc);
-    };
-  }, [accountMenuOpen]);
-
-  useEffect(() => {
-    if (!isMenuOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.body.classList.add("marblex-menu-open");
-    return () => {
-      document.body.style.overflow = prev;
-      document.body.classList.remove("marblex-menu-open");
-    };
-  }, [isMenuOpen]);
-
-  useEffect(() => {
-    if (!isMenuOpen || !mobileMenuItemsRef.current) return;
-    const items = mobileMenuItemsRef.current.querySelectorAll("[data-mobile-nav-item]");
-    const footer = mobileMenuItemsRef.current.querySelectorAll("[data-mobile-nav-footer]");
-    gsap.fromTo(
-      items,
-      { opacity: 0, y: 14, filter: "blur(3px)" },
-      { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.55, stagger: 0.06, ease: "power3.out" }
-    );
-    if (footer.length) {
-      gsap.fromTo(footer, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.55, delay: 0.22, ease: "power3.out" });
-    }
-  }, [isMenuOpen]);
 
   useEffect(() => {
     const syncAuth = () => {
@@ -272,7 +205,6 @@ export const AppLayout = ({ cartCount, children }) => {
   const openNotifications = (e) => {
     e?.stopPropagation?.();
     e?.preventDefault?.();
-    setAccountMenuOpen(false);
     setIsMenuOpen(false);
 
     if (isAdmin) {
@@ -311,7 +243,9 @@ export const AppLayout = ({ cartCount, children }) => {
     hasNavAnimatedRef.current = true;
     try {
       sessionStorage.setItem("marblex_intro_done", "1");
-    } catch { }
+    } catch {
+      /* ignore */
+    }
     window.__MARBLEX_INTRO_DONE__ = true;
 
     const tl = gsap.timeline({
@@ -424,17 +358,6 @@ export const AppLayout = ({ cartCount, children }) => {
     };
   }, [runNavEntrance, showNavInstant]);
 
-  const navLinks = [
-    { label: t("nav.home", "Home"), path: "/", icon: HomeOutlinedIcon, desc: "Products & industrial catalog" },
-    { label: t("nav.about", "About Us"), path: "/about", icon: InfoOutlinedIcon, desc: "Company legacy & mission" },
-    { label: t("nav.services", "Services"), path: "/services", icon: ConstructionOutlinedIcon, desc: "Site systems & applications" },
-    { label: t("nav.contact", "Contact"), path: "/contact", icon: EmailOutlinedIcon, desc: "Engineering desk & support" },
-    { label: t("nav.blogs", "Blogs"), path: "/blogs", icon: ArticleOutlinedIcon, desc: "Field guides & insights" },
-    { label: t("nav.catalogs", "Catalogs"), path: "/catalogs", icon: MenuBookOutlinedIcon, desc: "TDS packs & brochures" },
-    { label: t("nav.calculator", "Calculator"), path: "/calculator", icon: ConstructionOutlinedIcon, desc: "Material coverage estimator" },
-    { label: t("nav.finder", "Product Finder"), path: "/product-finder", icon: InfoOutlinedIcon, desc: "Guided system selector" },
-  ];
-
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isPortalRoute = location.pathname.startsWith("/dashboard");
   // Clients: Azzan dropdown badge = portal activity-feed unread only (0 when all read)
@@ -447,11 +370,6 @@ export const AppLayout = ({ cartCount, children }) => {
   const isDark = themeMode === "dark";
   const isApp = useStandaloneApp();
   useAppBadge((Number(cartCount) || 0) + (Number(notifCount) || 0));
-
-  // Installed app: no account dropdown chrome
-  useEffect(() => {
-    if (isApp) setAccountMenuOpen(false);
-  }, [isApp]);
 
   if (isAdminRoute) {
     return (
@@ -499,597 +417,82 @@ export const AppLayout = ({ cartCount, children }) => {
       <PwaUpdateToast />
       <OfflineBanner />
 
-      {/* 1. Top Brand Announcement & Trust Badges Header — hide chrome strip in installed app */}
+      {/* 1. Top Brand Announcement & Trust Badges Header */}
       <div
         ref={announcementRef}
-        className={`bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white py-1 md:py-2 px-2 sm:px-6 md:px-8 text-xs font-semibold z-50 border-b border-white/10 shadow-sm overflow-hidden ${
-          isApp
-            ? "hidden"
-            : ""
+        className={`bg-gradient-to-r from-[#0a3d52] via-[#0b4860] to-[#082a38] text-white text-xs font-semibold z-50 border-b border-white/10 shadow-xs overflow-hidden transition-[max-height,opacity,padding] duration-300 ease-in-out ${
+          isApp || scrolled
+            ? "max-h-0 opacity-0 py-0 border-transparent pointer-events-none"
+            : "max-h-12 opacity-100 py-1.5 md:py-2 px-3 sm:px-6 md:px-8"
         }`}
       >
         {/* Desktop View (md and up) */}
-        <div className="hidden md:flex max-w-[1440px] mx-auto items-center justify-between gap-6">
+        <div className="hidden md:flex max-w-[1440px] mx-auto items-center justify-between gap-6 overflow-hidden">
           {/* Left: Brand Announcement */}
-          <div className="flex items-center gap-2.5 text-slate-100 text-xs shrink-0">
-            <span className="text-[#ff8c73] text-sm font-bold">⚡</span>
-            <span className="text-white/30 font-normal">|</span>
-            <span className="tracking-wide">MARBLEX — Premium Construction Chemical & Industrial Rubber Solutions</span>
+          <div className="flex items-center gap-2 text-slate-100 text-xs shrink min-w-0 truncate">
+            <span className="text-[#ff8c73] text-sm font-bold shrink-0">⚡</span>
+            <span className="text-white/30 font-normal shrink-0">|</span>
+            <span className="tracking-wide truncate">
+              MARBLEX — Premium Construction Chemical & Industrial Rubber Solutions
+            </span>
           </div>
 
-          {/* Right: 3 Trust Badges */}
-          <div className="flex items-center gap-6 text-[11px] shrink-0">
-            <div className="flex items-center gap-2">
-              <ShieldOutlinedIcon sx={{ fontSize: 17, color: "#10b981" }} />
-              <div className="flex flex-col text-left leading-tight">
-                <span className="font-bold text-white text-[11px]">ISO Certified</span>
-                <span className="text-[9px] text-slate-200/80 font-normal">Quality You Can Trust</span>
-              </div>
+          {/* Right: Trust Badges */}
+          <div className="flex items-center gap-5 text-[11px] shrink-0 whitespace-nowrap">
+            <div className="flex items-center gap-1.5">
+              <ShieldOutlinedIcon sx={{ fontSize: 16, color: "#10b981" }} />
+              <span className="font-bold text-white">ISO Certified</span>
             </div>
-
-            <div className="flex items-center gap-2">
-              <WorkspacePremiumOutlinedIcon sx={{ fontSize: 17, color: "#10b981" }} />
-              <div className="flex flex-col text-left leading-tight">
-                <span className="font-bold text-white text-[11px]">15+ Years</span>
-                <span className="text-[9px] text-slate-200/80 font-normal">Proven Performance</span>
-              </div>
+            <div className="flex items-center gap-1.5">
+              <WorkspacePremiumOutlinedIcon sx={{ fontSize: 16, color: "#10b981" }} />
+              <span className="font-bold text-white">15+ Years Performance</span>
             </div>
-
-            <div className="flex items-center gap-2">
-              <SpaOutlinedIcon sx={{ fontSize: 17, color: "#10b981" }} />
-              <div className="flex flex-col text-left leading-tight">
-                <span className="font-bold text-white text-[11px]">Sustainable</span>
-                <span className="text-[9px] text-slate-200/80 font-normal">For a Better Tomorrow</span>
-              </div>
+            <div className="flex items-center gap-1.5">
+              <SpaOutlinedIcon sx={{ fontSize: 16, color: "#10b981" }} />
+              <span className="font-bold text-white">Sustainable Formulations</span>
             </div>
           </div>
         </div>
 
-        {/* Mobile View: Continuous Smooth Marquee Ticker (Shows all text & badges seamlessly) */}
-        <div className="md:hidden flex items-center overflow-hidden whitespace-nowrap">
-          <div className="animate-marquee-left flex items-center gap-6 text-[11px]">
-            {[1, 2].map((k) => (
-              <div key={k} className="flex items-center gap-6 shrink-0">
-                <span className="inline-flex items-center gap-1.5 text-slate-100">
-                  <span className="text-[#ff8c73] text-xs font-bold">⚡</span>
-                  <span className="font-bold tracking-wide">MARBLEX</span>
-                  <span className="text-slate-300 font-normal">— Premium Construction Chemical & Industrial Rubber Solutions</span>
-                </span>
-                <span className="text-white/30">•</span>
-                <span className="inline-flex items-center gap-1 text-emerald-400 font-bold">
-                  <ShieldOutlinedIcon sx={{ fontSize: 13 }} />
-                  <span>ISO Certified (Quality You Can Trust)</span>
-                </span>
-                <span className="text-white/30">•</span>
-                <span className="inline-flex items-center gap-1 text-sky-300 font-bold">
-                  <WorkspacePremiumOutlinedIcon sx={{ fontSize: 13 }} />
-                  <span>15+ Years Proven Performance</span>
-                </span>
-                <span className="text-white/30">•</span>
-                <span className="inline-flex items-center gap-1 text-emerald-300 font-bold">
-                  <SpaOutlinedIcon sx={{ fontSize: 13 }} />
-                  <span>Sustainable Eco Formulations</span>
-                </span>
-                <span className="text-white/30">•</span>
-              </div>
-            ))}
-          </div>
+        {/* Mobile View: Single rotating announcement message */}
+        <div className="md:hidden flex items-center justify-center text-[11px] text-center truncate">
+          <span className="truncate tracking-tight font-medium text-slate-100">
+            {mobileAnnouncements[mobileAnnounceIdx]}
+          </span>
         </div>
       </div>
 
       {/* 2. Sleek Compact Main Navbar */}
-      <header
-        ref={headerRef}
-        style={{ zIndex: isMenuOpen ? 10200 : 40 }}
-        className={`sticky top-0 w-full border-b transition-[background-color,box-shadow,padding] duration-200 ease-in-out ${isDark
-          ? scrolled || isMenuOpen
-            ? "bg-[#0c222f]/95 backdrop-blur-md border-slate-800 shadow-md shadow-black/20 py-1.5 sm:py-2"
-            : "bg-[#091b24] border-slate-800/80 py-2 sm:py-2.5"
-          : scrolled || isMenuOpen
-            ? "bg-white/95 backdrop-blur-md border-slate-200/90 shadow-md shadow-[#0a3d52]/5 py-1.5 sm:py-2"
-            : "bg-white border-slate-200/80 py-2 sm:py-2.5"
-          } ${isApp ? "pt-[max(0.45rem,env(safe-area-inset-top,0px))]" : ""}`}
-      >
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-4 md:px-8">
-          <div className="flex items-center justify-between gap-2">
+      <Navbar
+        cartCount={cartCount}
+        authUser={authUser}
+        isUserLoggedIn={isUserLoggedIn}
+        isAdmin={isAdmin}
+        isCustomer={isCustomer}
+        notifCount={notifCount}
+        onLogout={logout}
+        openNotifications={openNotifications}
+        isDark={isDark}
+        toggleTheme={toggleTheme}
+        isApp={isApp}
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+        scrolled={scrolled}
+        logoRef={logoRef}
+        navPillsRef={navPillsRef}
+        actionsRef={actionsRef}
+        headerRef={headerRef}
+      />
 
-            {/* MARBLEX Logo (Left) */}
-            <div ref={logoRef} className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-              {!isHomePage && (
-                <button
-                  onClick={() => navigate(-1)}
-                  className={`md:hidden p-1.5 -ml-1 rounded-lg transition-colors shrink-0 ${isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-[#0a3d52]"
-                    }`}
-                  aria-label="Go Back"
-                >
-                  <ArrowBackIosNewIcon sx={{ fontSize: 15 }} />
-                </button>
-              )}
-              <RouterLink to="/" className="flex min-w-0 items-center gap-2 group">
-                <div className={`h-9 w-9 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl border p-1 sm:p-1.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200 shrink-0 overflow-hidden ${isDark ? "bg-[#0e2735] border-slate-700" : "bg-white border-slate-200"
-                  }`}>
-                  <img
-                    src="/logo-icon-transparent.png"
-                    alt="MARBLEX Logo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="flex min-w-0 flex-col">
-                  <span className={`text-[1.05rem] sm:text-2xl font-black tracking-tight font-heading leading-none ${isDark ? "text-white" : "text-[#0a3d52]"
-                    }`}>
-                    MAR<span className="text-[#ff6b4a]">BLEX</span>
-                  </span>
-                  <span className={`text-[8px] sm:text-[9.5px] font-bold tracking-[0.12em] sm:tracking-[0.16em] uppercase font-subheading mt-0.5 ${isDark ? "text-slate-400" : "text-[#475569]"
-                    }`}>
-                    CHEMICAL & RUBBER
-                  </span>
-                </div>
-              </RouterLink>
-            </div>
-
-            {/* Main Navigation - Desktop (Center Capsule Pill Bar) */}
-            <nav
-              ref={navPillsRef}
-              className={`hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-full border ${isDark ? "bg-[#0e2735] border-slate-700/80" : "bg-[#f1f5f9] border-slate-200/80"
-                }`}
-            >
-              {navLinks.map((link) => {
-                const isActive = location.pathname === link.path;
-                return (
-                  <RouterLink
-                    key={link.label}
-                    to={link.path}
-                    className={`relative px-4 py-2 text-[13px] font-semibold font-subheading rounded-full transition-all duration-150 flex items-center gap-1 ${isActive
-                      ? "bg-[#0a3d52] text-white shadow-xs"
-                      : isDark
-                        ? "text-slate-300 hover:text-white hover:bg-white/10"
-                        : "text-slate-700 hover:text-[#0a3d52] hover:bg-white/70"
-                      }`}
-                  >
-                    <span>{link.label}</span>
-                    {link.hasDropdown && (
-                      <KeyboardArrowDownIcon sx={{ fontSize: 16 }} className="opacity-70" />
-                    )}
-                    {isActive && (
-                      <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-[2.5px] bg-[#ff6b4a] rounded-full shadow-xs" />
-                    )}
-                  </RouterLink>
-                );
-              })}
-            </nav>
-
-            {/* Action Buttons (Right) */}
-            <div ref={actionsRef} className="flex shrink-0 items-center gap-2 sm:gap-2.5 lg:gap-3">
-
-              {/* Install as app (PWA) — hide prompt chrome when already running as installed app */}
-              {!isApp ? <InstallPwaButton variant="nav" isDark={isDark} /> : null}
-
-              {/* Language toggle — English / اردو */}
-              <button
-                type="button"
-                onClick={() => setAppLanguage(isUrdu ? "en" : "ur")}
-                title={isUrdu ? "Switch to English" : "اردو میں دیکھیں"}
-                aria-label="Toggle language"
-                className={`flex h-9 px-2.5 sm:h-10 sm:px-3 rounded-full border transition-all items-center justify-center shrink-0 font-bold text-xs gap-1.5 cursor-pointer touch-manipulation ${isDark
-                  ? "bg-[#0e2735] border-slate-700 text-emerald-300 hover:bg-slate-800 hover:border-emerald-400/50 shadow-xs"
-                  : "bg-[#f8fafc] border-slate-200 text-[#0a3d52] hover:bg-white hover:border-[#0a3d52]/40 shadow-xs"
-                  }`}
-              >
-                <TranslateOutlinedIcon sx={{ fontSize: 16 }} />
-                <span>{isUrdu ? "EN" : "اردو"}</span>
-              </button>
-
-              {/* Theme toggle — always in navbar */}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                title={`Switch to ${isDark ? "Light" : "Dark"} Mode`}
-                aria-label="Toggle Theme"
-                className={`flex w-9 h-9 sm:w-10 sm:h-10 rounded-full border transition-all items-center justify-center shrink-0 ${isDark
-                  ? "bg-[#0e2735] border-slate-700 text-amber-400 hover:bg-slate-800 hover:border-amber-400/50 shadow-xs"
-                  : "bg-[#f8fafc] border-slate-200 text-[#0a3d52] hover:bg-white hover:border-[#0a3d52]/40 shadow-xs"
-                  }`}
-              >
-                {isDark ? (
-                  <LightModeOutlinedIcon sx={{ fontSize: 18 }} />
-                ) : (
-                  <DarkModeOutlinedIcon sx={{ fontSize: 18, color: "#0a3d52" }} />
-                )}
-              </button>
-
-              {/* Cart — hidden in installed app (bottom tab has Cart); desktop/browser keep it */}
-              <RouterLink
-                to="/cart"
-                aria-label="Cart"
-                className={`relative ${
-                  isApp
-                    ? "hidden"
-                    : isUserLoggedIn
-                      ? "hidden sm:flex"
-                      : "flex"
-                  } w-9 h-9 sm:w-auto sm:h-auto items-center justify-center sm:justify-start gap-2 sm:px-3.5 sm:py-2 rounded-full border transition-all font-semibold text-xs sm:text-[13px] ${isDark
-                    ? "border-slate-700 bg-[#0e2735] text-white hover:border-[#ff6b4a]"
-                    : "border-slate-200 bg-[#f8fafc] hover:border-slate-300 text-[#0a3d52]"
-                  }`}
-              >
-                <Badge
-                  badgeContent={cartCount}
-                  invisible={!cartCount || cartCount <= 0}
-                  sx={{
-                    "& .MuiBadge-badge": {
-                      bgcolor: "#ff6b4a",
-                      color: "white",
-                      fontWeight: 800,
-                      fontSize: "9px",
-                      height: "15px",
-                      minWidth: "15px",
-                      top: -4,
-                      right: -4,
-                    },
-                  }}
-                >
-                  <ShoppingCartIcon sx={{ fontSize: 17, color: isDark ? "#ff8c73" : "#0a3d52" }} />
-                </Badge>
-                <span className="hidden sm:inline font-subheading">Cart</span>
-              </RouterLink>
-
-              {/* Vertical Divider Stick */}
-              <span className="hidden lg:block h-5 w-[1px] bg-slate-300 dark:bg-slate-700 mx-0.5" />
-
-              {/* Login / Portal Button with User Icon + Arrow (Visible ONLY on desktop >= lg, inside mobile menu on mobile) */}
-              {!isUserLoggedIn ? (
-                <div className="hidden lg:inline-flex glowing-border-wrap">
-                  <div className="glowing-border-beam" />
-                  <div className="glowing-border-body">
-                    <RouterLink
-                      to="/login"
-                      className="shimmer-btn bg-gradient-to-r from-[#ff6b4a] to-[#ff522b] hover:from-[#ff5a36] hover:to-[#e04520] active:scale-95 text-white h-9 sm:h-10 px-5 sm:px-6 rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-[#ff6b4a]/30 flex items-center gap-2 transition-all cursor-pointer"
-                    >
-                      <PersonOutlinedIcon sx={{ fontSize: 17 }} />
-                      <span>LOGIN</span>
-                      <ArrowForwardIcon sx={{ fontSize: 14 }} className="ml-0.5" />
-                    </RouterLink>
-                  </div>
-                </div>
-              ) : isApp ? null : (
-                <div className="relative" ref={accountMenuRef}>
-                  <div
-                    className={`flex items-center rounded-full border transition-all ${accountMenuOpen
-                        ? isDark
-                          ? "border-[#ff6b4a]/40 bg-[#ff6b4a]/10"
-                          : "border-[#0a3d52]/25 bg-[#0a3d52]/5"
-                        : isDark
-                          ? "border-slate-700 bg-[#0e2735] hover:border-slate-600"
-                          : "border-slate-200 bg-[#f8fafc] hover:border-slate-300"
-                      }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        setAccountMenuOpen((o) => !o);
-                      }}
-                      aria-expanded={accountMenuOpen}
-                      aria-haspopup="menu"
-                      aria-label="Account menu"
-                      className="flex items-center gap-0 rounded-full p-0 lg:gap-2 lg:pl-1.5 lg:pr-2 lg:py-1.5"
-                    >
-                      <AccountAvatar className="h-8 w-8 text-[11px] sm:h-9 sm:w-9 lg:h-8 lg:w-8 lg:text-[12px]" />
-                      <span className="hidden min-w-0 text-left lg:block">
-                        <span className={`block max-w-[7.5rem] truncate text-[12px] font-bold leading-tight ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
-                          {displayFirstName}
-                        </span>
-                        <span className="block text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                          {isAdmin ? "Admin" : "Account"}
-                        </span>
-                      </span>
-                      <KeyboardArrowDownIcon
-                        sx={{ fontSize: 18 }}
-                        className={`mr-1 hidden text-slate-400 transition-transform lg:inline ${accountMenuOpen ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                  </div>
-
-                  {accountMenuOpen && (
-                    <div
-                      role="menu"
-                      className={`absolute right-0 top-[calc(100%+8px)] z-[80] w-[min(16.5rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border shadow-[0_18px_40px_-22px_rgba(8,34,46,.5)] ${isDark ? "border-slate-700/80 bg-[#0c222f]" : "border-slate-200/90 bg-white"
-                        }`}
-                    >
-                      <div className={`flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5 sm:py-3 ${isDark ? "bg-white/[0.02]" : "bg-slate-50/80"}`}>
-                        <AccountAvatar className="h-8 w-8 shrink-0 text-[11px] sm:h-9 sm:w-9 sm:text-[12px]" />
-                        <div className="min-w-0 flex-1">
-                          <p className={`truncate text-[12.5px] font-bold leading-tight sm:text-[13px] ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
-                            {authUser?.name || displayFirstName}
-                          </p>
-                          <p className="truncate text-[10.5px] text-slate-400 sm:text-[11px]">
-                            {authUser?.email || (isAdmin ? "Administrator" : "Client account")}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className={`border-t p-1 sm:p-1.5 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
-                        {!isAdmin && (
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={openNotifications}
-                            className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
-                              }`}
-                          >
-                            <NotificationsNoneOutlinedIcon sx={{ fontSize: 17 }} />
-                            <span className="flex-1 text-left">Notifications</span>
-                            {notifCount > 0 && (
-                              <span className="rounded-full bg-[#ff6b4a] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
-                                {notifCount > 99 ? "99+" : notifCount}
-                              </span>
-                            )}
-                          </button>
-                        )}
-                        {isAdmin && notifCount > 0 && (
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={openNotifications}
-                            className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
-                              }`}
-                          >
-                            <NotificationsNoneOutlinedIcon sx={{ fontSize: 17 }} />
-                            <span className="flex-1 text-left">Notifications</span>
-                            <span className="rounded-full bg-[#ff6b4a] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
-                              {notifCount > 99 ? "99+" : notifCount}
-                            </span>
-                          </button>
-                        )}
-                        {isAdmin && (
-                          <RouterLink
-                            to="/admin"
-                            role="menuitem"
-                            onClick={() => setAccountMenuOpen(false)}
-                            className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
-                              }`}
-                          >
-                            <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 17 }} />
-                            <span className="flex-1">Admin console</span>
-                          </RouterLink>
-                        )}
-                        {isCustomer && (
-                          <RouterLink
-                            to="/dashboard"
-                            role="menuitem"
-                            onClick={() => setAccountMenuOpen(false)}
-                            className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
-                              }`}
-                          >
-                            <BusinessCenterOutlinedIcon sx={{ fontSize: 17 }} />
-                            <span className="flex-1">Client portal</span>
-                          </RouterLink>
-                        )}
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => {
-                            setAccountMenuOpen(false);
-                            setAppLanguage(isUrdu ? "en" : "ur");
-                          }}
-                          className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold transition sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] ${isDark ? "text-slate-200 hover:bg-white/5" : "text-[#0a3d52] hover:bg-slate-50"
-                            }`}
-                        >
-                          <TranslateOutlinedIcon sx={{ fontSize: 17 }} />
-                          <span className="flex-1 text-left">{isUrdu ? "English زبان" : "اردو زبان"}</span>
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={logout}
-                          className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[12.5px] font-semibold text-rose-600 transition hover:bg-rose-50 sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-[13px] dark:text-rose-400 dark:hover:bg-rose-950/40"
-                        >
-                          <LogoutRoundedIcon sx={{ fontSize: 17 }} />
-                          Sign out
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Mobile Menu Toggle */}
-              <button
-                type="button"
-                style={{ zIndex: isMenuOpen ? 10205 : 70 }}
-                className={`lg:hidden relative flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border transition-all duration-300 touch-manipulation cursor-pointer ${isMenuOpen
-                  ? isDark
-                    ? "border-[#ff6b4a]/50 bg-[#ff6b4a]/15 text-[#ff8c73] rotate-90"
-                    : "border-[#ff6b4a]/40 bg-[#ff6b4a]/10 text-[#ff6b4a] rotate-90"
-                  : isDark
-                    ? "border-slate-700 bg-[#0e2735] text-white hover:bg-slate-800"
-                    : "border-slate-200 bg-[#f8fafc] text-[#08222e] hover:bg-slate-100"
-                  }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setAccountMenuOpen(false);
-                  setIsMenuOpen((open) => !open);
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setAccountMenuOpen(false);
-                  setIsMenuOpen((open) => !open);
-                }}
-                aria-label={isMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
-                aria-expanded={isMenuOpen}
-              >
-                {isMenuOpen ? <CloseIcon sx={{ fontSize: 20 }} /> : <MenuIcon sx={{ fontSize: 20 }} />}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Navigation — full sheet, sticky actions (no cut-off) */}
-      <div
-        className={`lg:hidden fixed inset-0 z-[10100] transition-[opacity,visibility] duration-300 ${isMenuOpen ? "pointer-events-auto visible opacity-100" : "pointer-events-none invisible opacity-0"
-          }`}
-        aria-hidden={!isMenuOpen}
-      >
-        <button
-          type="button"
-          aria-label="Close menu backdrop"
-          className="absolute inset-0 bg-[#091b24]/55 backdrop-blur-[2px] cursor-pointer"
-          onClick={() => setIsMenuOpen(false)}
-          onTouchEnd={(e) => {
-            e.preventDefault();
-            setIsMenuOpen(false);
-          }}
-        />
-
-        <div
-          ref={mobileMenuPanelRef}
-          className={`absolute inset-x-3 top-[calc(env(safe-area-inset-top,0px)+5.85rem)] bottom-[max(0.65rem,env(safe-area-inset-bottom,0px))] flex max-h-[calc(100dvh-6.5rem)] flex-col overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(8,34,46,0.55)] transition-all duration-300 ease-out sm:inset-x-4 sm:top-[calc(env(safe-area-inset-top,0px)+6.1rem)] ${isDark ? "border-slate-700 bg-[#0c222f]" : "border-slate-200/95 bg-white"
-            } ${isMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}
-        >
-          <div
-            ref={mobileMenuItemsRef}
-            className="flex min-h-0 flex-1 flex-col"
-          >
-            <div data-mobile-nav-brand className="shrink-0 border-b border-slate-100 px-4 pb-3 pt-3.5 dark:border-slate-800 flex items-center justify-between">
-              <div>
-                <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${isDark ? "text-emerald-400/80" : "text-[#0a3d52]/70"}`}>
-                  MARBLEX
-                </p>
-                <p className={`mt-0.5 font-heading text-[15px] font-extrabold ${isDark ? "text-white" : "text-[#0a3d52]"}`}>
-                  {isUrdu ? "مینیو" : "Navigate"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setAppLanguage(isUrdu ? "en" : "ur")}
-                  className={`flex h-8 px-2.5 items-center justify-center rounded-full border text-[11px] font-bold gap-1 transition ${
-                    isDark
-                      ? "bg-slate-800 border-slate-700 text-emerald-400 hover:bg-slate-700"
-                      : "bg-slate-100 border-slate-200 text-[#0a3d52] hover:bg-slate-200"
-                  }`}
-                >
-                  <TranslateOutlinedIcon sx={{ fontSize: 14 }} />
-                  <span>{isUrdu ? "English" : "اردو"}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (typeof navigator !== "undefined" && navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
-                    setIsMenuOpen(false);
-                  }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (typeof navigator !== "undefined" && navigator.vibrate) { try { navigator.vibrate(10); } catch {} }
-                  setIsMenuOpen(false);
-                }}
-                aria-label="Close navigation"
-                className={`flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border transition active:scale-90 touch-manipulation cursor-pointer ${
-                  isDark
-                    ? "bg-slate-800 border-slate-700 text-slate-300 hover:text-white"
-                    : "bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <CloseIcon sx={{ fontSize: 18 }} />
-              </button>
-            </div>
-          </div>
-
-            <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-3">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
-                const isActive = location.pathname === link.path;
-                return (
-                  <RouterLink
-                    key={link.label}
-                    to={link.path}
-                    data-mobile-nav-item
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center gap-3 rounded-2xl px-3 py-3 transition active:scale-[0.99] ${isActive
-                        ? isDark
-                          ? "bg-[#ff6b4a]/15 ring-1 ring-[#ff6b4a]/35 text-[#ff8c73]"
-                          : "bg-[#0a3d52]/10 ring-1 ring-[#0a3d52]/15 text-[#0a3d52]"
-                        : isDark
-                          ? "text-slate-200 hover:bg-white/5"
-                          : "text-[#0a3d52] hover:bg-slate-50"
-                      }`}
-                  >
-                    <span
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isActive
-                          ? isDark
-                            ? "bg-[#ff6b4a]/25 text-[#ff8c73]"
-                            : "bg-[#0a3d52] text-white"
-                          : isDark
-                            ? "bg-slate-800 text-slate-300"
-                            : "bg-slate-100 text-[#0a3d52]"
-                        }`}
-                    >
-                      <Icon sx={{ fontSize: 20 }} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[14px] font-bold tracking-tight">{link.label}</span>
-                      <span className={`mt-0.5 block truncate text-[11px] font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                        {link.desc}
-                      </span>
-                    </span>
-                    <EastRoundedIcon
-                      sx={{ fontSize: 16 }}
-                      className={isActive ? "opacity-80" : "opacity-25"}
-                    />
-                  </RouterLink>
-                );
-              })}
-            </nav>
-
-            <div
-              data-mobile-nav-footer
-              className={`shrink-0 space-y-2 border-t px-3 pb-3.5 pt-3 ${isDark ? "border-slate-800 bg-[#0a1a23]/80" : "border-slate-100 bg-slate-50/90"}`}
-            >
-              <div className="grid grid-cols-2 gap-2">
-                <a
-                  href="https://wa.me/923084585792"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white"
-                >
-                  <WhatsAppIcon sx={{ fontSize: 16 }} />
-                  WhatsApp
-                </a>
-                <a
-                  href="tel:03084585792"
-                  className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider ${isDark ? "bg-slate-800 text-slate-100" : "bg-[#0a3d52] text-white"
-                    }`}
-                >
-                  <LocalPhoneOutlinedIcon sx={{ fontSize: 16 }} />
-                  Call
-                </a>
-              </div>
-              {!isApp ? (
-                <div onClick={() => setIsMenuOpen(false)}>
-                  <InstallPwaButton variant="menu" isDark={isDark} />
-                </div>
-              ) : (
-                <PushEnableCard isDark={isDark} />
-              )}
-
-              {!isUserLoggedIn ? (
-                <RouterLink
-                  to="/login"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#ff6b4a] py-2.5 text-xs font-bold uppercase tracking-wider text-white"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <PersonOutlinedIcon sx={{ fontSize: 16 }} />
-                  <span>Login</span>
-                </RouterLink>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* 3. Mobile Navigation Drawer */}
+      <MobileDrawer
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        isDark={isDark}
+        toggleTheme={toggleTheme}
+        isApp={isApp}
+        isUserLoggedIn={isUserLoggedIn}
+      />
 
       {/* Main Content Area */}
       <PullToRefresh disabled={isPortalRoute}>
